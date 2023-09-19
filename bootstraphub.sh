@@ -18,7 +18,7 @@ thinkboxtar="Deadline-10.3.0.10-linux-installers.tar"
 thinkboxrun="./DeadlineRepository-10.3.0.10-linux-x64-installer.run"
 mongourl="https://fastdl.mongodb.org/linux/"
 mongotar="mongodb-linux-x86_64-rhel80-4.4.16.tgz"
-tarurl="https://drive.google.com/file/d/1bBMsXbQSKpVZVxcPfpek_TEUkueggkkA/view?usp=sharing"
+keybundle_url_default="https://drive.google.com/file/d/1bBMsXbQSKpVZVxcPfpek_TEUkueggkkA/view?usp=sharing"
 
 nebulasha256="4600c23344a07c9eda7da4b844730d2e5eb6c36b806eb0e54e4833971f336f70"
 #nebulasha256="20d363a917f802dff3db13471b38d4f29c0bef6728f0808ce0f766f073ef3927"
@@ -132,6 +132,14 @@ if ! [ "$nebula_name" = "i_agree_this_is_unsafe_hub" ]; then
 	    deadline_user=$deadline_user_default
 	fi
 
+	echo -e "\nENTER Google Drive URL to your keybundle"
+	read -p "    (default: $keybundle_url_default): " keybundle_url
+	if [ -z "$keybundle_url" ]; then
+	    keybundle_url=$keybundle_url_default
+	fi
+
+
+
 	if ! [ "$nebula_name" = "I_agree_this_is_unsafe_hub" ]; then
 		echo -e "\nEnter Linux/smb password of deadline user"
 		echo "Keystrokes hidden, then hit return"
@@ -142,6 +150,8 @@ if ! [ "$nebula_name" = "i_agree_this_is_unsafe_hub" ]; then
 		    exit
 		fi
 	fi
+else
+	keybundle_url=$keybundle_url_default
 fi
 
 # Ensure max security
@@ -197,7 +207,6 @@ if [ -z "$test_user" ]; then
 fi
 echo "${deadline_user}:${linux_password}" | chpasswd
 
-
 # Install Nebula
 # ==============
 if ! ( test -d /etc/nebula ); then
@@ -219,31 +228,34 @@ chmod +x /usr/local/bin/nebula-cert
 chcon -t bin_t /usr/local/bin/nebula # SELinux security clearance
 rm -f nebula-linux-amd64.tar.gz
 
+
+echo "$keybundle_url"
+
 # Get Nebula credentials
 # ======================
 
-if [[ "$tarurl" == "https://drive.google.com/file/d"* ]]; then
+
+
+if [[ "$keybundle_url" == *"https://drive.google.com/file/d"* ]]; then
 	# if find content-length, then gdrive link is not restricted, this is a guess
-	head=$(curl -s --head ${tarurl} | grep "content-length")
+	head=$(curl -s --head ${keybundle_url} | grep "content-length")
 	if [[ "$head" == *"content-length"* ]]; then
 		# Extract Google uuid 
-		googlefileid=$(echo $tarurl | egrep -o '(\w|-){26,}')
-		echo $googlefileid
+		googlefileid=$(echo $keybundle_url | egrep -o '(\w|-){26,}')
 		head2=$(curl -s --head -L "https://drive.google.com/uc?export=download&id=${googlefileid}" | grep "content-length")
-		echo $head2
 		if [[ "$head2" == *"content-length"* ]]; then
 			echo "Downloading https://drive.google.com/uc?export=download&id=${googlefileid}"
 			curl -L "https://drive.google.com/uc?export=download&id=${googlefileid}" -o ${nebula_name}.keybundle.enc
 		else
-			echo "FAIL: ${tarurl} is not public, Set General Access to Anyone with Link"
+			echo "FAIL: ${keybundle_url} is not public, Set General Access to Anyone with Link"
 			exit
 		fi
 	else
-		echo "FAIL: ${tarurl} is not a valid Google Drive link"
+		echo "FAIL: ${keybundle_url} is not a valid Google Drive link"
 		exit
 	fi
 else
-	curl -s -L -O "${tarurl}${nebula_name}.keybundle.enc" 
+	curl -s -L -O "${keybundle_url}${nebula_name}.keybundle.enc" 
 fi
 
 while :
@@ -257,6 +269,9 @@ do
         IFS= read -rs $encryption_passphrase < /dev/tty
     fi 
 done  
+
+
+
 
 # extract credentials
 # =================== 
@@ -285,7 +300,7 @@ if ! [[ "${testkeybundle}" == *"Not found"* ]]; then
 else
         echo -e "=========="
         echo -e "FAIL: ${nebula_name}.key missing"
-	echo  "${tarurl} might be corrupted or not shared publicly"
+	echo  "${keybundle_url} might be corrupted or not shared publicly"
 	echo  "Use keyoomerfarm.sh to generate correct name in credential, reupload"
 	echo  "Check your Google Drive file link is \"Anyone who has link\""
 	exit
@@ -591,6 +606,3 @@ else
 	echo -e "https://www.awsthinkbox.com"
 	echo -e "==================================================================="
 fi
-
-
-
