@@ -536,6 +536,7 @@ if ! test -f /mnt/DeadlineRepository10/ThinkboxEULA.txt ; then
 
 	cd ${orig_dir}
 	if ! ( test -f "${thinkboxtar}" ); then
+		echo -e "\nDownloading AWS Thinkbox Deadline Software"
 		curl -sL -O ${thinkboxurl}${thinkboxtar}
 	fi
 	MatchFile="$(echo "2da400837c202b2e0b306d606c3f832e4eae91822e2ac98f7ab6db241af77a43 ${thinkboxtar}" | sha256sum --check)"
@@ -554,6 +555,8 @@ if ! test -f /mnt/DeadlineRepository10/ThinkboxEULA.txt ; then
 
 	echo ${thinkboxrun} --mode unattended --unattendedmodeui none --prefix /mnt/DeadlineRepository10 --dbLicenseAcceptance accept --dbhost ${nebula_ip}
 	${thinkboxrun} --mode unattended --unattendedmodeui none --prefix /mnt/DeadlineRepository10 --dbLicenseAcceptance accept --dbhost ${nebula_ip}
+	echo -e "\n\nYou accept AWS Thinkbox Deadline EULA when installing:"
+	echo -e "========================================================"
 	cat /mnt/DeadlineRepository10/ThinkboxEULA.txt
 else
 	echo "Deadline Repository exists...skipping installation"
@@ -561,17 +564,21 @@ fi
 
 echo -e "\n==================================================================="
 echo -e "The Nebula Lighthouse and Deadline Repository succesfully installed"
-echo -e "Write down ${public_ip} ( internet ip address of this Lighthouse ) required for joining this Nebula network"
+echo -e "The oomerfarm hub is ready to accept job submissions"
+echo -e "Write down ${public_ip} ( internet ip address of this Lighthouse )"
+echo -e "Submit a job from a Windows/MacOS/Linux desktop by installing"
 echo -e "==================================================================="
 if [ "$nebula_name" == "i_agree_this_is_unsafe_hub" ]; then
 	echo -e "\n************************************************************"
-	echo -e "By choosing the \"${nebula_name}\" keybundle, you acknowledge that anybody can connect to this" 
-	echo -e "machine via ${public_ip} on port ${nebula_public_port} because the decryption passphrase is in this script"
-	echo -e "This creates a modicum of security by obscurity requiring knowledge of ${public_ip}"
-	echo -e "Only use the ${nebula_name} keybundle for testing purposes"
-	echo -e "Significantly augment security by creating a certificate-authority on a trusted computer"
-	echo -e "allowing the signing of custom certificates and keys"
-	echo -e "Run keyoomerfarm.sh and follow instructions to get started" 
+	echo -e "By choosing the \"${nebula_name}\" keybundle, you acknowledge that anybody can"
+	echo -e "connect to this machine via ${public_ip} on port ${nebula_public_port} because"
+	echo -e "the decryption passphrase is in this script. This creates a modicum of security"
+	echo -e "by obscurity requiring knowledge of ${public_ip}." 
+	echo -e "Only use the \"${nebula_name}\" keybundle for testing purposes."
+	echo -e "/nSignificantly augment security by creating a certificate-authority allowing"
+	echo -e "the signing of custom certificates and keys"
+	echo -e "/nRun keyoomerfarm.sh on a TRUSTED COMPUTER to learn how" 
 	echo -e "then come back and rerun this script on $(hostname) at ${public_ip}"
+	echo -e "using your own keybundle NOT \"${nebula_name}\""
 	echo -e "************************************************************"
 fi
