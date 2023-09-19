@@ -10,7 +10,7 @@
 # Use of crunchbits.com for hub is to streamline docs
 # [tested] MacOS Ventura 13.4
 
-year=2023gdrive
+year=2023
 nebula_version="v1.7.2"
 
 echo -e "======================================================================================"
@@ -287,6 +287,7 @@ done
 
 cp ./_oomerfarm_/nebula-authority/ca.crt "./_oomerfarm_/${year}/${worker_prefix}"
 
+
 origdir=$(pwd)
 cd ./_oomerfarm_/${year}
 find "${worker_prefix}" -type f -exec tar -rvf ${worker_prefix}.keybundle {} \;
@@ -423,7 +424,7 @@ echo -e "\nCredentials are ready to use"
 echo -e "=============================="
 echo -e "\nPut these files on Google Drive:"
 echo -e "\t./_oomerkeys_/${lighthouse_name}.keybundle.enc"
-echo -e "\t./_oomerkeys_/${worker_group}.keybundle.enc" 
+echo -e "\t./_oomerkeys_/${worker_prefix}.keybundle.enc" 
 echo -e "\t./_oomerkeys_/${boss_name}.keybundle.enc"
 
 echo -e "Google Drive share each flle ( Anyone with link )"
