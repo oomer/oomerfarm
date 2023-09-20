@@ -551,7 +551,7 @@ if ! test -f /mnt/DeadlineRepository10/ThinkboxEULA.txt ; then
 
 	cd ${orig_dir}
 	if ! ( test -f "${thinkboxtar}" ); then
-		echo -e "\nDownloading AWS Thinkbox Deadline Software"
+		echo -e "\nDownloading AWS Thinkbox Deadline Software 900MB+ ..."
 		curl -sL -O ${thinkboxurl}${thinkboxtar}
 	fi
 	MatchFile="$(echo "2da400837c202b2e0b306d606c3f832e4eae91822e2ac98f7ab6db241af77a43 ${thinkboxtar}" | sha256sum --check)"
@@ -591,13 +591,15 @@ if [ "$nebula_name" == "i_agree_this_is_unsafe_hub" ]; then
 	echo -ne " connect to this machine via ${public_ip} on port ${nebula_public_port} because"
 	echo -ne " the decryption passphrase is in this script. This creates a modicum of security"
 	echo -ne " by obscurity requiring knowledge of ${public_ip}." 
-	echo -ne " Only use the \"${nebula_name}\" keybundle for testing purposes."
-	echo -ne " /nSignificantly augment security by creating a certificate-authority allowing"
+	echo -e " Only use the \"${nebula_name}\" keybundle for testing purposes."
+	echo 
+	echo -ne " Significantly augment security by creating a certificate-authority allowing"
 	echo -ne " the signing of custom certificates and keys"
-	echo -ne " /nRun keyoomerfarm.sh on a TRUSTED COMPUTER to learn how" 
+	echo 
+	echo -ne " Run keyoomerfarm.sh on a TRUSTED COMPUTER to learn how" 
 	echo -ne " then come back and rerun this script on $(hostname) at ${public_ip}"
 	echo -e " using your own keybundle NOT \"${nebula_name}\""
-	echo -e "/n************************************************************"
+	echo -e "************************************************************"
 else
 	echo -e "\n==================================================================="
 	echo -e "The Nebula Lighthouse and Deadline Repository succesfully installed"

@@ -1,5 +1,7 @@
 # oomerfarm
 
+![image](./img/bootstraphub.gif )
+
 [ DO NOT USE IN PRODUCTION -- WORK IN PROGRESS ]
 [ Windows and Linux desktop not tested yet , it may work ]
 [ Bella plugins not integrated yet ]
