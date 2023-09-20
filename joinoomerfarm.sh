@@ -1,5 +1,5 @@
 #!/bin/sh
-if ! test -d _oomerfarm_; then
+if ! test -d _oomerfarm_/testboss; then
 
 	if ! ( test -f "_oomerfarm_/$year" ); then
 		mkdir -p _oomerfarm_/bin
@@ -147,7 +147,10 @@ EOF
 	echo "This requires your user to be an administrator not a standard user"
 	sudo ./_oomerfarm_/bin/nebula -config ./_oomerfarm_/testboss/config.yml
 else
-	sudo ./_oomerfarm_/bin/nebula -config ./_oomerfarm_/boss/config.yml
-
+	if test -d ./_oomerfarm_/boss; then
+		sudo ./_oomerfarm_/bin/nebula -config ./_oomerfarm_/boss/config.yml
+	else
+		sudo ./_oomerfarm_/bin/nebula -config ./_oomerfarm_/testboss/config.yml
+	fi
 fi
 
