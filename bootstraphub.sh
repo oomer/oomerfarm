@@ -596,7 +596,7 @@ if [ "$nebula_name" == "i_agree_this_is_unsafe_hub" ]; then
 	echo -ne " the signing of custom certificates and keys"
 	echo -ne " /nRun keyoomerfarm.sh on a TRUSTED COMPUTER to learn how" 
 	echo -ne " then come back and rerun this script on $(hostname) at ${public_ip}"
-	echo -ne " using your own keybundle NOT \"${nebula_name}\""
+	echo -e " using your own keybundle NOT \"${nebula_name}\""
 	echo -e "/n************************************************************"
 else
 	echo -e "\n==================================================================="
