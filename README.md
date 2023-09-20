@@ -1,7 +1,5 @@
 # oomerfarm
 
-![image](./img/bootstraphub.gif )
-
 [ DO NOT USE IN PRODUCTION -- WORK IN PROGRESS ]
 [ Windows and Linux desktop not tested yet , it may work ]
 [ Bella plugins not integrated yet ]
@@ -9,6 +7,8 @@
 [ No local hub install yet ]
 [ security model under review ]
 # *oomerfarm:* an occasional renderfarm deployed using simple bash scripts and Google Drive 
+
+![image](./img/bootstraphub.gif )
 
 #### Navigate the complex render manager interdependencies between networking, database server, certificate-signing, secrets management and file sharing allowing you to:
 
