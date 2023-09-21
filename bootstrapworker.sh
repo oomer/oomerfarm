@@ -341,7 +341,7 @@ echo "${deadline_user}:${linux_password}" | chpasswd
 
 # Install Nebula
 # ==============
-if ! ( test -d /etc/nebula ); then
+if ! ( test -f /usr/local/bin/nebula ); then
 	mkdir -p /etc/nebula
 	curl -s -L -O https://github.com/slackhq/nebula/releases/download/${nebula_version}/nebula-linux-amd64.tar.gz
 	MatchFile="$(echo "${nebulasha256} nebula-linux-amd64.tar.gz" | sha256sum --check)"
