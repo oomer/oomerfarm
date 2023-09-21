@@ -21,8 +21,7 @@
 unprivileged_account="oomerfarm"
 thinkboxurl="https://thinkbox-installers.s3.us-west-2.amazonaws.com/Releases/Deadline/10.3/2_10.3.0.10/"
 thinkboxtar="Deadline-10.3.0.10-linux-installers.tar"
-keybundle_url_default="https://drive.google.com/file/d/1qV1z5IgnElRvzrNCK9eid4OGgDtA89va/view?usp=sharing"
-
+keybundle_url_default="https://drive.google.com/file/d/13xH4vNrr6DSocD9Bhi1cEKl8FU_QIi5K/view?usp=share_link"
 
 nebulasha256="4600c23344a07c9eda7da4b844730d2e5eb6c36b806eb0e54e4833971f336f70"
 

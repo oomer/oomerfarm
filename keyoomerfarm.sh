@@ -181,7 +181,7 @@ fi
 
 # Nebula sign hub
 # ===============
-./_oomerfarm_/bin/nebula-cert sign -name "${lighthouse_name}" -ip "$octet1.$octet2.$octet3.$octet4/$mask" -groups "oomerfarm oomerfarm-hub" -out-crt "./_oomerfarm_/${lighthouse_name}/${lighthouse_name}.crt" -out-key "./_oomerfarm_/${lighthouse_name}/${lighthouse_name}.key" -ca-crt "_oomerfarm_/nebula-authority/ca.crt" -ca-key "_oomerfarm_/nebula-authority/ca.key"
+./_oomerfarm_/bin/nebula-cert sign -name "${lighthouse_name}" -ip "$octet1.$octet2.$octet3.$octet4/$mask" -groups "oomerfarm,oomerfarm-hub" -out-crt "./_oomerfarm_/${lighthouse_name}/${lighthouse_name}.crt" -out-key "./_oomerfarm_/${lighthouse_name}/${lighthouse_name}.key" -ca-crt "_oomerfarm_/nebula-authority/ca.crt" -ca-key "_oomerfarm_/nebula-authority/ca.key"
 
 cp ./_oomerfarm_/nebula-authority/ca.crt ./_oomerfarm_/${lighthouse_name}
 
@@ -301,7 +301,7 @@ if ! test -d "./_oomerfarm_/${boss_name}"; then
 fi
 
 # boss Nebula sign, tar, encrypt
-./_oomerfarm_/bin/nebula-cert sign -name "${boss_name}" -ip "$octet1.$octet2.$octet3.$octet4/$mask" -groups "oomerfarm oomerfarm-hub oomerfarm-admin" -out-crt "./_oomerfarm_/${boss_name}/${boss_name}.crt" -out-key "./_oomerfarm_/${boss_name}/${boss_name}.key" -ca-crt "./_oomerfarm_/nebula-authority/ca.crt" -ca-key "./_oomerfarm_/nebula-authority/ca.key"
+./_oomerfarm_/bin/nebula-cert sign -name "${boss_name}" -ip "$octet1.$octet2.$octet3.$octet4/$mask" -groups "oomerfarm,oomerfarm-hub,oomerfarm-admin" -out-crt "./_oomerfarm_/${boss_name}/${boss_name}.crt" -out-key "./_oomerfarm_/${boss_name}/${boss_name}.key" -ca-crt "./_oomerfarm_/nebula-authority/ca.crt" -ca-key "./_oomerfarm_/nebula-authority/ca.key"
 
 # setup local nebula files
 if ! test -d "./_oomerfarm_/boss"; then
