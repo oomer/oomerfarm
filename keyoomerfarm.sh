@@ -10,21 +10,26 @@
 # Use of crunchbits.com for hub is to streamline docs
 # [tested] MacOS Ventura 13.4
 
-year=2023
 nebula_version="v1.7.2"
+echo
+echo -e "================================================================================"
+echo -e "OOMERFARM: an occasional renderfarm deployed using bash scripts and Google Drive"
+echo -e "================================================================================"
+echo
+echo -n "keyoomerfarm.sh creates a certificate-authority to make cryptographic based"
+echo -n " credentials and packages them into encrypted keybundles that you"
+echo -n " can email or post on Google Drive publicly. The certificates created are similar"
+echo -n " to the ones downloaded by web browsers from Amazon to secure the communication"
+echo -e " channel from prying eyes when passwords and credit card details are transmitted"
+echo
+echo -n "The open source nebula provides a VPN that allows oomerfarm to secure your"
+echo -e " renderfarm while using public internet infrastructure."
+echo
+echo -e "1. Your keys and certificates will be saved in a folder named _credentials_"
+echo -e "   Stolen _credentials_ can access your VPN and add more hosts to your VPN"
+echo -e "2. Before continuing, launch two cloud servers 1 hub, 1 worker"
 
-echo -e "======================================================================================"
-echo -e "oomerfarm is a personal renderfarm deployed using simple bash scripts and Google Drive"
-echo -e "======================================================================================"
-echo -e "Before continuing, launch a cloud machines, RECOMMENDED: https://crunchbits.com"
-echo -e "keyoomerfarm.sh is the first script run:"
-echo -e "\tMakes a directory called _oomerfarm_ in the current working directory"
-echo -e "\tStore the Nebula $nebula_version executables in _oomerfarm_/bin "
-echo -e "\tCreate a TOPSECRET Nebula certificate authority in _oomerfarm_/nebula-authority"
-echo -e "\tCreate a TOPSECRET MongoDB certificate authority in _oomerfarm_/mongo-authority"
-echo -e "\tCreate a TOPSECRET boos key/certificate in _oomerfarm_/boss"
-
-if ! ( test -f "_oomerfarm_/$year" ); then
+if ! ( test -d "_oomerfarm_" ); then
 	mkdir -p _oomerfarm_/nebula-authority
 	mkdir -p _oomerfarm_/bin
 fi
@@ -76,11 +81,7 @@ if ! ( test -f "./_oomerfarm_/bin/nebula-cert" ); then
 	rm ./_oomerfarm_/bin/${nebularelease}
 fi
 
-echo -e "\nGlobal challenge/Answer stage for oomerfarm"
-echo -e "==========================================="
-# Challenge/answer
-# ================
-echo -e "\nEnter TOPSECRET passphrase to encrypt files"
+echo -e "\nEnter passphrase to encrypt keybundles...( typing is ghosted )"
 #echo "By storing these files on Google Drive, \"secrets management\" is simplified"
 #echo "Without resorting to manual copy pasting secrets to each node over ssh"
 #echo "nor requiring an automation layer like Ansible playbooks"
@@ -91,8 +92,6 @@ echo -e "\nEnter TOPSECRET passphrase to encrypt files"
 #echo "secrets bundle that is decoded on each platform when the passphrase is passed to the script"
 #echo "On linux/macos the interactive passphrase is not written to the console using /dev/tty, limiting exposure"
 # [TODO] add MFA
-echo "Keystrokes hidden"
-echo "..."
 
 read -rs encryption_passphrase
 if [ -z "$encryption_passphrase" ]; then
@@ -101,15 +100,15 @@ if [ -z "$encryption_passphrase" ]; then
 fi
 
 ca_name_default="oomerfarm"
-echo -e "\nEnter Nebula certificate authority name"
-read -p "default ( $ca_name_default ): " ca_name
-if [ -z $ca_name ]; then
-	ca_name=$ca_name_default
-fi
+ca_name=$ca_name_default
+#echo -e "\nEnter Nebula certificate authority name"
+#read -p "default ( $ca_name_default ): " ca_name
+#if [ -z $ca_name ]; then
+#	ca_name=$ca_name_default
+#fi
 
 ca_duration_default="8766h0m0s"
-echo -e "\nEnter Nebula certificate authority expiry"
-echo -e "Your Nebula network connectivity will stop in one year"
+echo -e "\nHow long should certificates be valid? ( After this time the netowrk will stop )"
 read -p "default ( $ca_duration_default ): " ca_duration
 if [ -z $ca_duration ]; then
 	ca_duration=$ca_duration_default
@@ -123,17 +122,11 @@ if ! ( test -f "./_oomerfarm_/nebula-authority/ca.crt" ); then
  	./_oomerfarm_/bin/nebula-cert ca -name $ca_name -duration $ca_duration -out-crt ./_oomerfarm_/nebula-authority/ca.crt -out-key ./_oomerfarm_/nebula-authority/ca.key
 fi
 
-# hub stage
-# =========
-echo -e "\nChallenge/Answer stage for the oomerfarm hub"
-echo -e "============================================"
-
-echo -e "\nEnter cloud server internet ip address for oomerfarm hub"
-echo "A Cloud server must be started to get the IPv4 internet address"
-echo "HINT: Get IPv4 address in web control panel of cloud vm provider"
-read -p "default ( There is no default ): " lighthouse_internet_ip
+echo -e "/nSTOP: Wait until your cloud server has an internet IPv4 address..."
+echo -e "What is the internet ip address of your \"hub\" cloud server?"
+read -p " " lighthouse_internet_ip
 if [ -z  $lighthouse_internet_ip ]; then
-	echo "Cannot continue without knowing the internet ip address of Nebula Lighthouse"	
+	echo "Cannot continue without knowing the internet ip address of your cloud server"	
 	exit
 fi
 
@@ -160,13 +153,6 @@ if [ -z $lighthouse_internet_port ]; then
 fi
 
 
-hub_group_default="i_allow_ssh_smb_mongo_network_connections_from_workers_and_bosses"
-echo -e "\nEnter Nebula security group for the hub" 
-read -p "default ( $hub_group_default ): " hub_group
-if [ -z $hub_group ]; then
-	hub_group=$hub_group_default
-fi
-
 octet1=10
 octet2=10
 octet3=0
@@ -188,19 +174,20 @@ if ! test -d "_oomerkeys_" ; then
 	mkdir -p _oomerkeys_
 fi
 
-if ! test -d "_oomerfarm_/$year/${lighthouse_name}" ; then
-	mkdir -p ./_oomerfarm_/$year/${lighthouse_name}
+if ! test -d "_oomerfarm_/${lighthouse_name}" ; then
+	mkdir -p ./_oomerfarm_/${lighthouse_name}
 fi 
+
 
 # Nebula sign hub
 # ===============
-./_oomerfarm_/bin/nebula-cert sign -name "${lighthouse_name}" -ip "$octet1.$octet2.$octet3.$octet4/$mask" -groups "${hub_group}" -out-crt "./_oomerfarm_/${year}/${lighthouse_name}/${lighthouse_name}.crt" -out-key "./_oomerfarm_/${year}/${lighthouse_name}/${lighthouse_name}.key" -ca-crt "./_oomerfarm_/nebula-authority/ca.crt" -ca-key "./_oomerfarm_/nebula-authority/ca.key"
+./_oomerfarm_/bin/nebula-cert sign -name "${lighthouse_name}" -ip "$octet1.$octet2.$octet3.$octet4/$mask" -groups "oomerfarm oomerfarm-hub" -out-crt "./_oomerfarm_/${lighthouse_name}/${lighthouse_name}.crt" -out-key "./_oomerfarm_/${lighthouse_name}/${lighthouse_name}.key" -ca-crt "_oomerfarm_/nebula-authority/ca.crt" -ca-key "_oomerfarm_/nebula-authority/ca.key"
 
-cp ./_oomerfarm_/nebula-authority/ca.crt ./_oomerfarm_/${year}/${lighthouse_name}
+cp ./_oomerfarm_/nebula-authority/ca.crt ./_oomerfarm_/${lighthouse_name}
 
 # Need to cd to get proper relative paths for tar
 origdir=$(pwd)
-cd _oomerfarm_/$year
+cd _oomerfarm_
 
 find "./${lighthouse_name}" -type f -exec tar -rvf ${lighthouse_name}.keybundle {} \;
 openssl enc -aes-256-cbc -salt -pbkdf2 -in "./${lighthouse_name}.keybundle" -out $origdir/_oomerkeys_/${lighthouse_name}.keybundle.enc -pass stdin <<< "$encryption_passphrase"
@@ -209,38 +196,21 @@ cd $origdir
 
 # Worker stage
 # ============
-echo -e "\nChallenge/Answer stage for the oomerfarm worker"
-echo -e "==============================================="
 
 workernum_default=10
-echo -e "\nEnter number of workers ( aka render nodes )"
+echo -e "/nHow many workers do you want?"
 read -p "default ( $workernum_default ): " workernum
 if [ -z $workernum ]; then
 	workernum=$workernum_default
 fi
 
 worker_prefix_default="worker"
-echo -e "\nEnter prefix for worker names"
+echo -e "/nWhat would you like to call your workers?"
 echo "When requesting 10 workers the first gets id 0001 and the last 0010"
-echo "Prefixing the id with \"worker\" returns worker0001 to worker0010"
-echo "SECURITY INFO: Each worker node stores ALL worker certificate/keys"
-echo "\tIf enterprise security is required turn on  at-rest image encryption ( ie Google, AWS, et al )"
-echo -e "On startup, the hostname MUST have a matching certificate/key stored in /etc/nebula"
-echo -e "\tthat gets propagated to the /etc/hostname"
-echo -e "\tSpinning up a render node requires the creation of a canonical vm that works and"
-echo -e "\tcloning this vm manually via a web control panel or programmatically using cloud cli tools"
-echo -e "\tand altering the name of the instance"
-echo "if additional workers are required, use keyadditionalworkers.sh to create a seocndary keybundle"
+echo "The name you choose gets prefixed to the id, \"worker\" = worker0001 to worker0010"
 read -p "default ( $worker_prefix_default ): " worker_prefix
 if [ -z $worker_prefix ]; then
 	worker_prefix=$worker_prefix_default
-fi
-
-worker_group_default="i_am_allowed_to_connect_to_hubs_and_bosses_can_connect_to_me"
-echo -e "\nEnter Nebula security group for workers" 
-read -p "default ( $worker_group_default ): " worker_group
-if [ -z $worker_group ]; then
-	worker_group=$worker_group_default
 fi
 
 octet1=10
@@ -260,13 +230,13 @@ if ! [ -z $addr ]; then
 	mask="${addr[4]}"
 fi
 
-if ! test -d "_oomerfarm_/${year}/${worker_group}"; then
-	mkdir "./_oomerfarm_/${year}/${worker_prefix}"
+if ! test -d "_oomerfarm_/${worker_prefix}"; then
+	mkdir "./_oomerfarm_/${worker_prefix}"
 fi
 
 # {TODO] keep track of workercount
 for ((workercount = 1 ; workercount <= "${workernum}" ; workercount++)); do
-	./_oomerfarm_/bin/nebula-cert sign -name "${worker_prefix}$(printf %04d $workercount)" -ip "$octet1.$octet2.$octet3.$octet4/$mask" -groups "${worker_group}" -out-crt "./_oomerfarm_/${year}/${worker_prefix}/${worker_prefix}$(printf %04d $workercount).crt" -out-key "./_oomerfarm_/${year}/${worker_prefix}/${worker_prefix}$(printf %04d $workercount).key" -ca-crt "./_oomerfarm_/nebula-authority/ca.crt" -ca-key "./_oomerfarm_/nebula-authority/ca.key" 
+	./_oomerfarm_/bin/nebula-cert sign -name "${worker_prefix}$(printf %04d $workercount)" -ip "$octet1.$octet2.$octet3.$octet4/$mask" -groups "oomerfarm" -out-crt "./_oomerfarm_/${worker_prefix}/${worker_prefix}$(printf %04d $workercount).crt" -out-key "./_oomerfarm_/${worker_prefix}/${worker_prefix}$(printf %04d $workercount).key" -ca-crt "./_oomerfarm_/nebula-authority/ca.crt" -ca-key "./_oomerfarm_/nebula-authority/ca.key" 
 
 	((octet4++))
 	if [[ octet4 -eq 255 ]]; then
@@ -285,11 +255,11 @@ for ((workercount = 1 ; workercount <= "${workernum}" ; workercount++)); do
 	fi
 done
 
-cp ./_oomerfarm_/nebula-authority/ca.crt "./_oomerfarm_/${year}/${worker_prefix}"
+cp ./_oomerfarm_/nebula-authority/ca.crt "./_oomerfarm_/${worker_prefix}"
 
 
 origdir=$(pwd)
-cd ./_oomerfarm_/${year}
+cd ./_oomerfarm_
 find "${worker_prefix}" -type f -exec tar -rvf ${worker_prefix}.keybundle {} \;
 openssl enc -aes-256-cbc -salt -pbkdf2 -in "${worker_prefix}.keybundle" -out ${origdir}/_oomerkeys_/${worker_prefix}.keybundle.enc -pass stdin <<< "$encryption_passphrase" 
 rm "${worker_prefix}.keybundle"
@@ -307,13 +277,6 @@ if [ -z $boss_name ]; then
 	boss_name=$boss_name_default
 fi
 
-
-boss_group_default="i_am_the_boss_and_can_connect_everywhere"
-echo "Enter Nebula boss security group" 
-read -p "default ( $boss_group_default ): " boss_group
-if [ -z $boss_group ]; then
-	boss_group=$boss_group_default
-fi
 
 octet1=10
 octet2=10
@@ -333,18 +296,18 @@ if ! [ -z $addr ]; then
 	mask="${addr[4]}"
 fi
 
-if ! test -d "./_oomerfarm_/$year/${boss_name}"; then
-	mkdir -p "./_oomerfarm_/$year/${boss_name}"
+if ! test -d "./_oomerfarm_/${boss_name}"; then
+	mkdir -p "./_oomerfarm_/${boss_name}"
 fi
 
 # boss Nebula sign, tar, encrypt
-./_oomerfarm_/bin/nebula-cert sign -name "${boss_name}" -ip "$octet1.$octet2.$octet3.$octet4/$mask" -groups "${boss_group}" -out-crt "./_oomerfarm_/$year/${boss_name}/${boss_name}.crt" -out-key "./_oomerfarm_/$year/${boss_name}/${boss_name}.key" -ca-crt "./_oomerfarm_/nebula-authority/ca.crt" -ca-key "./_oomerfarm_/nebula-authority/ca.key"
+./_oomerfarm_/bin/nebula-cert sign -name "${boss_name}" -ip "$octet1.$octet2.$octet3.$octet4/$mask" -groups "oomerfarm oomerfarm-hub oomerfarm-admin" -out-crt "./_oomerfarm_/${boss_name}/${boss_name}.crt" -out-key "./_oomerfarm_/${boss_name}/${boss_name}.key" -ca-crt "./_oomerfarm_/nebula-authority/ca.crt" -ca-key "./_oomerfarm_/nebula-authority/ca.key"
 
 # setup local nebula files
 if ! test -d "./_oomerfarm_/boss"; then
 	mkdir -p "./_oomerfarm_/boss"
-	cp ./_oomerfarm_/$year/${boss_name}/${boss_name}.crt ./_oomerfarm_/boss
-	cp ./_oomerfarm_/$year/${boss_name}/${boss_name}.key ./_oomerfarm_/boss
+	cp ./_oomerfarm_/${boss_name}/${boss_name}.crt ./_oomerfarm_/boss
+	cp ./_oomerfarm_/${boss_name}/${boss_name}.key ./_oomerfarm_/boss
 	cp ./_oomerfarm_/nebula-authority/ca.crt ./_oomerfarm_/boss
 fi
 
@@ -410,9 +373,9 @@ EOF
 
 origdir=$(pwd)
 # copy ca certificate to security bundle staging area
-cp ./_oomerfarm_/nebula-authority/ca.crt ./_oomerfarm_/$year/${boss_name}
-cp ./_oomerfarm_/boss/config.yml ./_oomerfarm_/$year/${boss_name}
-cd ./_oomerfarm_/$year
+cp ./_oomerfarm_/nebula-authority/ca.crt ./_oomerfarm_/${boss_name}
+cp ./_oomerfarm_/boss/config.yml ./_oomerfarm_/${boss_name}
+cd ./_oomerfarm_
 
 find "${boss_name}" -type f -exec tar -rvf ${boss_name}.keybundle {} \;
 openssl enc -aes-256-cbc -salt -pbkdf2 -in "${boss_name}.keybundle" -out $origdir/_oomerkeys_/${boss_name}.keybundle.enc -pass stdin <<< "$encryption_passphrase" 

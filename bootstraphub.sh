@@ -18,7 +18,8 @@ thinkboxtar="Deadline-10.3.0.10-linux-installers.tar"
 thinkboxrun="./DeadlineRepository-10.3.0.10-linux-x64-installer.run"
 mongourl="https://fastdl.mongodb.org/linux/"
 mongotar="mongodb-linux-x86_64-rhel80-4.4.16.tgz"
-keybundle_url_default="https://drive.google.com/file/d/18XR0sJGmnYxwjuZvIuDzgu0OwBoXcrhW/view?usp=share_link"
+keybundle_url="https://drive.google.com/file/d/1LhzXSa18dDG58xzm9G6W5HZGh1nbh4ac/view?usp=share_link"
+
 nebulasha256="4600c23344a07c9eda7da4b844730d2e5eb6c36b806eb0e54e4833971f336f70"
 #nebulasha256="20d363a917f802dff3db13471b38d4f29c0bef6728f0808ce0f766f073ef3927"
 echo -e "\n==================================================================="
@@ -49,7 +50,7 @@ dnf -y install tar
 public_ip=$(curl -s https://checkip.amazonaws.com)
 echo -e "\nCalculated IPv4 address: $public_ip"
 
-nebula_name_default="i_agree_this_is_unsafe_hub"
+nebula_name_default="i_agree_this_is_unsafe"
 echo -e "\n\tTEST WAY: Using \"${nebula_name_default}\" keybundle is insecure because it is a public set of keys with a knowable passphrase in this source code, by using these keys you acknowledge that anybody else with these same keys can enter your Nebula network. It provides a modicum of security because they would also have to know that your server is at ${public_ip}"
 echo -e "This methods allows rapid deployment to kick the tires and use 100% defaults and 98% fewer challenge questions compared to the \"CORRECT WAY\""
 echo -e "\n\tCORRECT WAY: Generate keys on a trusted computer using keyfarmfarm.sh where you personally authorize each and every machine on your network and you control the certificate-authority. Store the encrypted files on Google Drive, shared with \"Anyone with the Link\", hit \"copy link\" button, type \"hub\" below unless you didn't use the keyoomerfarm.sh defaults"
@@ -77,14 +78,14 @@ nebula_public_port="42042"
 nebula_public_port_default="42042"
 nebula_version="v1.7.2"
 nebula_version_default="v1.7.2"
-groupname_nottrusted="i_am_allowed_to_connect_to_hubs_and_bosses_can_connect_to_me"
-groupname_nottrusted_default="i_am_allowed_to_connect_to_hubs_and_bosses_can_connect_to_me"
-groupname_trusted="i_am_the_boss_and_can_connect_everywhere"
-groupname_trusted_default="i_am_the_boss_and_can_connect_everywhere"
-deadline_user="deadline"
-deadline_user_default="deadline"
+groupname_nottrusted="oomerfarm"
+groupname_nottrusted_default="oomerfarm"
+groupname_trusted="oomerfarm-admin"
+groupname_trusted_default="oomerfarm-admin"
+smb_user="oomerfarm"
+smb_user_default="oomerfarm"
 
-if ! [ "$nebula_name" = "i_agree_this_is_unsafe_hub" ]; then
+if ! [ "$nebula_name" = "i_agree_this_is_unsafe" ]; then
 	echo -e "\nENTER Nebula encryption passphrase to decrypt keys"
 	echo "Keystrokes hidden, then hit return"
 	echo "..."
@@ -113,22 +114,22 @@ if ! [ "$nebula_name" = "i_agree_this_is_unsafe_hub" ]; then
 	    nebula_version=$nebula_version_default
 	fi
 
-	echo -e "\nENTER Nebula firewall group name for render workers..."
-	read -p "    (default: $groupname_nottrusted_default): " groupname_nottrusted
-	if [ -z "$groupname_nottrusted" ]; then
-	    groupname_nottrusted=$groupname_nottrusted_default
-	fi
+	#echo -e "\nENTER Nebula firewall group name for render workers..."
+	#read -p "    (default: $groupname_nottrusted_default): " groupname_nottrusted
+	#if [ -z "$groupname_nottrusted" ]; then
+	#    groupname_nottrusted=$groupname_nottrusted_default
+	#fi
 
-	echo -e "\nENTER Nebula firewall group name for trusted computers like laptops and desktops"
-	read -p "    (default: $groupname_trusted_default): " groupname_trusted
-	if [ -z "$groupname_trusted" ]; then
-	    groupname_trusted=$groupname_trusted_default
-	fi
+	#echo -e "\nENTER Nebula firewall group name for trusted computers like laptops and desktops"
+	#read -p "    (default: $groupname_trusted_default): " groupname_trusted
+	#if [ -z "$groupname_trusted" ]; then
+	#    groupname_trusted=$groupname_trusted_default
+	#fi
 
-	echo -e "\nENTER Linux deadline user"
-	read -p "    (default: $deadline_user_default): " deadline_user
-	if [ -z "$deadline_user" ]; then
-	    deadline_user=$deadline_user_default
+	echo -e "\nWhat username would you like to connect to the fil server?"
+	read -p "    (default: $smb_user_default): " deadline_user
+	if [ -z "$smb_user" ]; then
+	    smb_user=$deadline_user_default
 	fi
 
 	echo -e "\nENTER Google Drive URL to your keybundle"
@@ -198,13 +199,13 @@ do
 done
 firewall-cmd -q --reload
 
-test_user=$( id "${deadline_user}" )
+test_user=$( id "${smb_user}" )
 # id will return blank if no user is found
 if [ -z "$test_user" ]; then
-	echo "CREATE USER:${deadeline_user}"
-        useradd -m ${deadline_user}
+	echo "CREATE USER:${smb_user}"
+        useradd -m ${smb_user}
 fi
-echo "${deadline_user}:${linux_password}" | chpasswd
+echo "${smb_user}:${linux_password}" | chpasswd
 
 # Install Nebula
 # ==============
@@ -366,29 +367,18 @@ firewall:
     - port: 22 
       proto: tcp
       groups:
-        - ${groupname_trusted}
+        - oomerfarm
+        - oomerfarm-admin
 
     - port: 445
       proto: tcp
       groups:
-        - ${groupname_trusted}
-
-    - port: 445
-      proto: tcp
-      groups:
-        - ${groupname_nottrusted}
+        - oomerfarm
 
     - port: 27100
       proto: tcp
       groups:
-        - ${groupname_trusted}
-
-    - port: 27100
-      proto: tcp
-      groups:
-        - ${groupname_nottrusted}
-
-
+        - oomerfarm
 EOF
 
 cat <<EOF > /etc/systemd/system/nebula.service
@@ -576,7 +566,7 @@ else
 	echo "Deadline Repository exists...skipping installation"
 fi
 
-if [ "$nebula_name" == "i_agree_this_is_unsafe_hub" ]; then
+if [ "$nebula_name" == "i_agree_this_is_unsafe" ]; then
 	echo -e "\n==================================================================="
 	echo -e "The Nebula Lighthouse and Deadline Repository succesfully installed"
 	echo -e "The oomerfarm hub is ready to accept job submissions"

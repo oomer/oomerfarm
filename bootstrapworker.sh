@@ -18,7 +18,7 @@
 # authorized_keys  = ssh public keys for access to worker, optional 
 # nebula = vpn software from https://github.com/slackhq/nebula/releases/download/v1.6.1/nebula-linux-amd64.tar.gz          
 
-unprivileged_account="worker"
+unprivileged_account="oomerfarm"
 thinkboxurl="https://thinkbox-installers.s3.us-west-2.amazonaws.com/Releases/Deadline/10.3/2_10.3.0.10/"
 thinkboxtar="Deadline-10.3.0.10-linux-installers.tar"
 keybundle_url_default="https://drive.google.com/file/d/1qV1z5IgnElRvzrNCK9eid4OGgDtA89va/view?usp=sharing"
@@ -111,48 +111,45 @@ if [ -z "$hub_name" ]; then
 	hub_name=$hub_name_default
 fi
 
-if ! [ "$hub_name" = "i_agree_this_is_unsafe_hub" ]; then
-	echo -e "\nENTER Nebula encryption passphrase to decrypt keys"
-	echo "Keystrokes hidden, then hit return"
-	echo "..."
+if ! [ "$hub_name" = "i_agree_this_is_unsafe" ]; then
+	echo -e "\nWhat is your keybundle encryption passphrase? { typing is ghosted )"
 	IFS= read -rs encryption_passphrase < /dev/tty
 	if [ -z "$encryption_passphrase" ]; then
 		echo -e "\nFAIL: Invalid empty passphrase"
 		exit
 	fi
 
-	echo -e "\nENTER Lighthouse (aka oomerfarm hub) Nebula IP address IPV4"
-	echo -e "Customize Nebula network addresses using keyoomerfarm.sh"
+	echo -e "\nWhat is the Nebula VPN ip you choose for the hub?"
 	read -p "    (default: $lighthouse_nebula_ip_default): " lighthouse_nebula_ip
 	if [ -z "$lighthouse_nebula_ip" ]; then
 	    lighthouse_nebula_ip=$lighthouse_nebula_ip_default
 	fi
 
-	echo -e "\nEnter Lighthouse (aka oomerfarm hub ) public internet port"
+	echo -e "\nWhat public internet port did you set in the hub?"
 	read -p "    (default: $lighthouse_internet_port_default): " lighthouse_internet_port
 	if [ -z "$lighthouse_internet_port" ]; then
 	    lighthouse_internet_port=$lighthouse_internet_port_default
 	fi
 
-	echo -e "\nENTER Nebula version"
+	echo -e "\nWould yoy like to chnage the Nebula version?"
 	read -p "    (default: $nebula_version_default): " nebula_version
 	if [ -z "$nebula_version" ]; then
 	    nebula_version=$nebula_version_default
 	fi
 
-	echo -e "\nENTER Nebula firewall group name for render workers..."
-	read -p "    (default: $groupname_nottrusted_default): " groupname_nottrusted
-	if [ -z "$groupname_nottrusted" ]; then
-	    groupname_nottrusted=$groupname_nottrusted_default
-	fi
+	#echo -e "\nENTER Nebula firewall group name for render workers..."
+	#read -p "    (default: $groupname_nottrusted_default): " groupname_nottrusted
+	#if [ -z "$groupname_nottrusted" ]; then
+	#    groupname_nottrusted=$groupname_nottrusted_default
+	#fi
 
-	echo -e "\nENTER Nebula firewall group name for trusted computers like laptops and desktops"
-	read -p "    (default: $groupname_trusted_default): " groupname_trusted
-	if [ -z "$groupname_trusted" ]; then
-	    groupname_trusted=$groupname_trusted_default
-	fi
+	#echo -e "\nENTER Nebula firewall group name for trusted computers like laptops and desktops"
+	#read -p "    (default: $groupname_trusted_default): " groupname_trusted
+	#if [ -z "$groupname_trusted" ]; then
+	#    groupname_trusted=$groupname_trusted_default
+	#fi
 
-	echo -e "\nENTER Linux deadline user"
+	echo -e "\nWhat username did you use fro file server connections?"
 	read -p "    (default: $deadline_user_default): " deadline_user
 	if [ -z "$deadline_user" ]; then
 	    deadline_user=$deadline_user_default
@@ -203,7 +200,7 @@ fi
 # [ ] never embed passwords inside scripts
 # [ ] input via ( hopefully ) invisible ephemeral /dev/tty
 # [ ] avoid passing password in command line args which are viewable inside /proc
-# [TODO] add a force option to overwrite existing credential, otherwise delete /usr/local/etc/.smb_credentials to reset
+# [TODO] add a force option to overwrite existing credential, otherwise delete /etc/nebula/smb_credentials to reset
 # ====
 while :
 do
@@ -225,8 +222,8 @@ password=$smb_credentials
 domain=WORKGROUP
 EOF
 
-chmod go-rwx /etc/nebula/smb_credentials
-echo "Saved smb password to /etc/nebula/smb_credentials, readable only by root" 
+#chmod go-rwx /usr/local/etc/.smb_credentials
+#echo ">> Saved smb password to /usr/local/etc/.smb_credentials, readable only by root" 
 
 
 # Get Nebula credentials
@@ -464,7 +461,8 @@ firewall:
     - port: 22
       proto: tcp
       groups:
-        - ${groupname_trusted}
+        - oomerfarm
+        - oomerfarm-admin
 
 EOF
 
@@ -520,10 +518,9 @@ mkdir -p /mnt/DeadlineRepository10
 mkdir -p /mnt/oomerfarm
 grep -qxF "//$lighthouse_nebula_ip/DeadlineRepository10 /mnt/DeadlineRepository10 cifs rw,noauto,x-systemd.automount,x-systemd.device-timeout=45,nobrl,uid=3000,gid=3000,file_mode=0664,credentials=/etc/nebula/smb_credentials 0 0" /etc/fstab || echo "//$lighthouse_nebula_ip/DeadlineRepository10 /mnt/DeadlineRepository10 cifs rw,noauto,x-systemd.automount,x-systemd.device-timeout=45,nobrl,uid=3000,gid=3000,file_mode=0664,credentials=/etc/nebula/smb_credentials 0 0" >> /etc/fstab
 
-grep -qxF "//$lighthouse_nebula_ip/oomerfarm /mnt/oomerfarm cifs rw,noauto,x-systemd.automount,x-systemd.device-timeout=45,nobrl,uid=3000,gid=3000,file_mode=0664,credentials=/etc/nebula/smb_credentials 0 0" /etc/fstab || echo "//$lighthouse_nebula_ip/oomerfarm /mnt/oomerfarm cifs rw,noauto,x-systemd.automount,x-systemd.device-timeout=45,nobrl,uid=3000,gid=3000,file_mode=0664,credentials=/etc/nebula/smb_credentials 0 0" >> /etc/fstab
+grep -qxF "//$lighthouse_nebula_ip/oomerfarm /mnt/oomerfarm cifs rw,noauto,x-systemd.automount,x-systemd.device-timeout=45,nobrl,uid=3000,gid=3000,file_mode=0664,credentials=/etc/nebula/.smb_credentials 0 0" /etc/fstab || echo "//$lighthouse_nebula_ip/oomerfarm /mnt/oomerfarm cifs rw,noauto,x-systemd.automount,x-systemd.device-timeout=45,nobrl,uid=3000,gid=3000,file_mode=0664,credentials=/etc/nebula/smb_credentials 0 0" >> /etc/fstab
 
 mount /mnt/DeadlineRepository10
-mount /mnt/oomerfarm
 
 #curl -O http://$nebula_private_ip/DeadlineClient-10.2.0.10-linux-x64-installer.run
 chmod +x DeadlineClient-10.2.0.10-linux-x64-installer.run
