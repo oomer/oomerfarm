@@ -61,25 +61,25 @@ if ! test -d _oomerfarm_/testboss; then
 
 cat <<EOF > ./_oomerfarm_/testboss/ca.crt
 -----BEGIN NEBULA CERTIFICATE-----
-CjsKCW9vbWVyZmFybSjwkKSoBjDQoKq3BjogGenqWmuQQbB/qoyc21fcODW6COG3
-YMRE6gtQOAEsY7dAARJAgEt3iNluWPpkX8nQZGSmMbkVMWAHD0sdRH+SOh+dKQx5
-NTyb6yyyAcmlAA4Ua8e9d3ldyy8y9yOvorssHpnpDg==
+CjsKCW9vbWVyZmFybSiWia6oBjD2mLS3Bjog1LIqlVBo3QcwpLBlJnOAWKjAZfIz
+wmYfjFjADj7dzEdAARJAQbIKaplsyrzp30kUZeQHfbgpL4Ogv5bAeDrH0yRKahZO
+KSyADgRQswz3JZmSyCnhTGxRwb1bTHxoiRt7UBTiCA==
 -----END NEBULA CERTIFICATE-----
 EOF
 
 cat <<EOF > ./_oomerfarm_/testboss/testboss.crt
 -----BEGIN NEBULA CERTIFICATE-----
 CosBCgRib3NzEgnkgKhQgID8/w8iKGlfYW1fdGhlX2Jvc3NfYW5kX2Nhbl9jb25u
-ZWN0X2V2ZXJ5d2hlcmUoiZGkqAYwz6CqtwY6IBikA8udh9sFzCbzCC+NOsqBCixp
-0hyFYYca2aArMdQMSiC58qU18KcfOyaFnuGIKU1ZQBesGUhBbuAMrdxsE2zHzBJA
-usn0PdOW+ZqlJYaeMVQAUUqWc/eKfkbFqoGw0MYmyGM4NGCh4mN877Y+uIbHGNxI
-ZbyAcTWfxer2LJsCJCDKDQ==
+ZWN0X2V2ZXJ5d2hlcmUoxYmuqAYw9Zi0twY6ILPZtaXg0VOCm2+o2PRTz4JCN62F
+ADb6ocvJC34lvk8vSiB9IgDB+uCkbKxrEjENHz7cWfYTEyRcpTbCeA4x/QtUWxJA
+uNjeJRG2g8btjmzfJYcKh9JJttW+mQjybldNcznDRg34NDjRxftA9A4nkwwj6oM7
+DulJEbjEDjJLbxgwe6UqAg==
 -----END NEBULA CERTIFICATE-----
 EOF
 
 cat <<EOF > ./_oomerfarm_/testboss/testboss.key
 -----BEGIN NEBULA X25519 PRIVATE KEY-----
-NQd6x1+oFCCRdOuS/cuqdicYzD36Uj4K1z3GfEEI1ts=
++4reprg0NO94qmam8rubfdnO2UawA1g9fS8Dmgp4+8g=
 -----END NEBULA X25519 PRIVATE KEY-----
 EOF
 
