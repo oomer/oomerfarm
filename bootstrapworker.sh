@@ -44,7 +44,7 @@ deadline_user="oomerfarm"
 deadline_user_default="oomerfarm"
 worker_auto_shutdow=0
 worker_name_default=worker0001
-hub_name_default="i_agree_this_is_unsafe_hub"
+hub_name_default="i_agree_this_is_unsafe"
 
 # Security best practice #1: add non-privileged/no-shell user to run daemons/systemd units/etc
 # Runs deadline10launcher systemd unit
@@ -201,28 +201,27 @@ fi
 # [ ] avoid passing password in command line args which are viewable inside /proc
 # [TODO] add a force option to overwrite existing credential, otherwise delete /etc/nebula/smb_credentials to reset
 # ====
-while :
-do
-    echo "Enter smb password for DeadlineRepository file sharing, hit return when done"
-    echo "===="
-    IFS= read -rs smb_credentials < /dev/tty
-    echo "Verifying: re-enter password"
-    echo "===="
-    IFS= read -rs smb_check_credentials < /dev/tty
-    if [[ "$smb_credentials" == "$smb_check_credentials" ]]; then
-        break
-    fi
-    echo "Passwords do not match! Try again."
-done
+#while :
+#do
+#    echo "Enter smb password for DeadlineRepository file sharing, hit return when done"
+#    echo "===="
+#    IFS= read -rs smb_credentials < /dev/tty
+#    echo "Verifying: re-enter password"
+#    echo "===="
+#    IFS= read -rs smb_check_credentials < /dev/tty
+#    if [[ "$smb_credentials" == "$smb_check_credentials" ]]; then
+#        break
+#    fi
+#    echo "Passwords do not match! Try again."
+#done
 
 cat <<EOF > /etc/nebula/smb_credentials
-username=$unprivileged_account
-password=$smb_credentials
+username=oomerfarm
+password=oomerfarm
 domain=WORKGROUP
 EOF
 
-#chmod go-rwx /usr/local/etc/.smb_credentials
-#echo ">> Saved smb password to /usr/local/etc/.smb_credentials, readable only by root" 
+chmod go-rwx /etc/nebula/smb_credentials
 
 
 # Get Nebula credentials
@@ -310,19 +309,19 @@ if [[ "$chronyd_status" == *"Active: active (running)"* ]]; then
 fi
 
 # Wipe all services and ports except ssh and 22/tcp, may break your system
-#for systemdservice in $(firewall-cmd --list-services);
-#do 
-#	if ! [[ "$systemdservice" == "ssh" ]]; then
-#		firewall-cmd -q --remove-service ${systemdservice} --permanent
-#	fi
-#done
-#for systemdport in $(firewall-cmd --list-ports);
-#do 
-#	if ! [[ "$systemdport" == "22/tcp" ]]; then
-#		firewall-cmd -q --remove-port ${systemdport} --permanent
-#	fi
-#done
-#firewall-cmd -q --reload
+for systemdservice in $(firewall-cmd --list-services);
+do 
+	if ! [[ "$systemdservice" == "ssh" ]]; then
+		firewall-cmd -q --remove-service ${systemdservice} --permanent
+	fi
+done
+for systemdport in $(firewall-cmd --list-ports);
+do 
+	if ! [[ "$systemdport" == "22/tcp" ]]; then
+		firewall-cmd -q --remove-port ${systemdport} --permanent
+	fi
+done
+firewall-cmd -q --reload
 
 # Create user
 # ===========
@@ -508,8 +507,16 @@ EOF
 
 echo " >>> Firewall updated to allow 42042/udp for Nebula"
 firewall-cmd --quiet --zone=public --add-port=42042/udp --permanent
+firewall-cmd -q --new-zone nebula --permanent
+firewall-cmd -q --zone nebula --add-interface nebula_tun --permanent
+firewall-cmd -q --zone nebula --add-service ssh --permanent
 firewall-cmd --quiet --reload
 systemctl enable --now nebula.service
+
+
+
+
+
 
 # Setup Deadline cifs/smb mount point in /etc/fstab ONLY if it isn't there already
 # ====
@@ -520,10 +527,13 @@ grep -qxF "//$lighthouse_nebula_ip/DeadlineRepository10 /mnt/DeadlineRepository1
 grep -qxF "//$lighthouse_nebula_ip/oomerfarm /mnt/oomerfarm cifs rw,noauto,x-systemd.automount,x-systemd.device-timeout=45,nobrl,uid=3000,gid=3000,file_mode=0664,credentials=/etc/nebula/.smb_credentials 0 0" /etc/fstab || echo "//$lighthouse_nebula_ip/oomerfarm /mnt/oomerfarm cifs rw,noauto,x-systemd.automount,x-systemd.device-timeout=45,nobrl,uid=3000,gid=3000,file_mode=0664,credentials=/etc/nebula/smb_credentials 0 0" >> /etc/fstab
 
 mount /mnt/DeadlineRepository10
+mount /mnt/oomerfarm
 
 #curl -O http://$nebula_private_ip/DeadlineClient-10.2.0.10-linux-x64-installer.run
-chmod +x DeadlineClient-10.2.0.10-linux-x64-installer.run
-./DeadlineClient-10.2.0.10-linux-x64-installer.run --mode unattended --unattendedmodeui minimal --repositorydir /mnt$optional_subfolder/DeadlineRepository10  --connectiontype Direct --noguimode true
+
+cp /mnt/oomerfarm/installers/DeadlineClient-10.3.0.10-linux-x64-installer.run .
+chmod +x DeadlineClient-10.3.0.10-linux-x64-installer.run 
+./DeadlineClient-10.3.0.10-linux-x64-installer.run --mode unattended --unattendedmodeui minimal --repositorydir /mnt$optional_subfolder/DeadlineRepository10  --connectiontype Direct --noguimode true
 
 cat <<EOF > /etc/systemd/system/deadline10launcher.service 
 [Unit]

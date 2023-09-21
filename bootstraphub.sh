@@ -420,7 +420,16 @@ smb ports = 445
    guest ok = no
    create mask = 0777
    directory mask = 0777
+
+[oomerfarm]
+   path = /mnt/oomerfarm
+   browseable = yes
+   read only = no
+   guest ok = no
+   create mask = 0777
+   directory mask = 0777
 EOF
+
 
 systemctl enable --now smb
 
@@ -433,11 +442,13 @@ firewall-cmd -q --zone nebula --add-port 27100/tcp --permanent
 firewall-cmd -q --reload
 if ! ( test -d /mnt/DeadlineRepository10 ); then
 	mkdir -p /mnt/DeadlineRepository10
+	mkdir -p /mnt/oomerfarm
 	chcon -R -t samba_share_t /mnt/DeadlineRepository10/
+	chcon -R -t samba_share_t /mnt/oomerfarm/
 fi
 
 # Set password, confirm password
-(echo ${linux_password}; echo ${linux_password}) | smbpasswd -a deadline -s
+(echo ${linux_password}; echo ${linux_password}) | smbpasswd -a oomerfarm -s
 
 # Install MongoDB
 # ===============
