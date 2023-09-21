@@ -30,9 +30,9 @@ nebulasha256="4600c23344a07c9eda7da4b844730d2e5eb6c36b806eb0e54e4833971f336f70"
 worker_prefix=worker
 encryption_passphrase="oomerfarm"
 linux_password="oomerfarm"
-ligthouse_public_port="42042"
-lighthouse_public_port_default="42042"
-ligthouse_nebula_ip="10.10.0.1"
+lighthouse_internet_port="42042"
+lighthouse_internet_port_default="42042"
+lighthouse_nebula_ip="10.10.0.1"
 lighthouse_nebula_ip_default="10.10.0.1"
 
 nebula_version="v1.7.2"
@@ -74,8 +74,8 @@ fi
 dnf -y install tar
 
 # needed for /usr/local/bin/oomerfarm_shutdown.sh
-dnf -y install sysstat
-systemctl enable --now sysstat
+#dnf -y install sysstat
+#systemctl enable --now sysstat
 
 # probe to see if downloadables exist
 echo "thinkbox"
@@ -99,7 +99,8 @@ if [ -z $worker_name ]; then
 else
     hostnamectl set-hostname "$worker_name"
 fi
-echo -e "/nChanging hostname to $worker_name/n"
+
+echo -e "Changing hostname to $worker_name"
 
 echo -e "\n\tTEST WAY: Using \"${hub_name_default}\" keybundle is insecure because it is a public set of keys with a knowable passphrase in this source code, by using these keys you acknowledge that anybody else with these same keys can enter your Nebula network. It provides a modicum of security because they would also have to know your server's public internet address"
 echo -e "This methods allows rapid deployment to kick the tires and use 100% defaults and 98% fewer challenge questions compared to the \"CORRECT WAY\""
@@ -128,9 +129,9 @@ if ! [ "$hub_name" = "i_agree_this_is_unsafe_hub" ]; then
 	fi
 
 	echo -e "\nEnter Lighthouse (aka oomerfarm hub ) public internet port"
-	read -p "    (default: $lighthouse_public_port_default): " lighthouse_public_port
-	if [ -z "$lighthouse_public_port" ]; then
-	    lighthouse_public_port=$lighthouse_public_port_default
+	read -p "    (default: $lighthouse_internet_port_default): " lighthouse_internet_port
+	if [ -z "$lighthouse_internet_port" ]; then
+	    lighthouse_internet_port=$lighthouse_internet_port_default
 	fi
 
 	echo -e "\nENTER Nebula version"
@@ -283,15 +284,15 @@ dnf install tar wget -y
 
 # Ensure max security
 # ===================
-test_selinux=$( getenforce )
-if [[ "$test_selinux" == "Disabled" ]]; then
-	echo -e "/nFAIL: Selinux is disabled, edit /etc/selinux/config"
-	echo "==================================================="
-	echo "Change SELINUX=disabled to SELINUX=enforcing"
-	echo "Reboot ( SELinux chcon on boot drive takes awhile)"
-	echo "=================================================="
-	exit
-fi
+#test_selinux=$( getenforce )
+#if [[ "$test_selinux" == "Disabled" ]]; then
+#	echo -e "/nFAIL: Selinux is disabled, edit /etc/selinux/config"
+#	echo "==================================================="
+#	echo "Change SELINUX=disabled to SELINUX=enforcing"
+#	echo "Reboot ( SELinux chcon on boot drive takes awhile)"
+#	echo "=================================================="
+#	exit
+#fi
 
 firewalld_status=$(systemctl status firewalld)
 
@@ -313,19 +314,19 @@ if [[ "$chronyd_status" == *"Active: active (running)"* ]]; then
 fi
 
 # Wipe all services and ports except ssh and 22/tcp, may break your system
-for systemdservice in $(firewall-cmd --list-services);
-do 
-	if ! [[ "$systemdservice" == "ssh" ]]; then
-		firewall-cmd -q --remove-service ${systemdservice} --permanent
-	fi
-done
-for systemdport in $(firewall-cmd --list-ports);
-do 
-	if ! [[ "$systemdport" == "22/tcp" ]]; then
-		firewall-cmd -q --remove-port ${systemdport} --permanent
-	fi
-done
-firewall-cmd -q --reload
+#for systemdservice in $(firewall-cmd --list-services);
+#do 
+#	if ! [[ "$systemdservice" == "ssh" ]]; then
+#		firewall-cmd -q --remove-service ${systemdservice} --permanent
+#	fi
+#done
+#for systemdport in $(firewall-cmd --list-ports);
+#do 
+#	if ! [[ "$systemdport" == "22/tcp" ]]; then
+#		firewall-cmd -q --remove-port ${systemdport} --permanent
+#	fi
+#done
+#firewall-cmd -q --reload
 
 # Create user
 # ===========
@@ -342,22 +343,24 @@ echo "${deadline_user}:${linux_password}" | chpasswd
 # ==============
 if ! ( test -d /etc/nebula ); then
 	mkdir -p /etc/nebula
+	curl -s -L -O https://github.com/slackhq/nebula/releases/download/${nebula_version}/nebula-linux-amd64.tar.gz
+	MatchFile="$(echo "${nebulasha256} nebula-linux-amd64.tar.gz" | sha256sum --check)"
+	if [ "$MatchFile" = "nebula-linux-amd64.tar.gz: OK" ] ; then
+	    echo -e "Extracting https://github.com/slackhq/nebula/releases/download/${nebula_version}/nebula-linux-amd64.tar.gz\n===="
+	    tar --skip-old-files -xzf nebula-linux-amd64.tar.gz
+	else
+	    echo "FAIL: nebula-linux-amd64.tar.gz checksum failed, file possibly maliciously altered on github"
+	    exit
+	fi
+	mv nebula /usr/local/bin/nebula
+	chmod +x /usr/local/bin/
+	mv nebula-cert /usr/local/bin/
+	chmod +x /usr/local/bin/nebula-cert
+	chcon -t bin_t /usr/local/bin/nebula # SELinux security clearance
+	rm -f nebula-linux-amd64.tar.gz
 fi 
-curl -s -L -O https://github.com/slackhq/nebula/releases/download/${nebula_version}/nebula-linux-amd64.tar.gz
-MatchFile="$(echo "${nebulasha256} nebula-linux-amd64.tar.gz" | sha256sum --check)"
-if [ "$MatchFile" = "nebula-linux-amd64.tar.gz: OK" ] ; then
-    echo -e "Extracting https://github.com/slackhq/nebula/releases/download/${nebula_version}/nebula-linux-amd64.tar.gz\n===="
-    tar --skip-old-files -xzf nebula-linux-amd64.tar.gz
-else
-    echo "FAIL: nebula-linux-amd64.tar.gz checksum failed, file possibly maliciously altered on github"
-    exit
-fi
-mv nebula /usr/local/bin/nebula
-chmod +x /usr/local/bin/
-mv nebula-cert /usr/local/bin/
-chmod +x /usr/local/bin/nebula-cert
-chcon -t bin_t /usr/local/bin/nebula # SELinux security clearance
-rm -f nebula-linux-amd64.tar.gz
+
+
 
 # [Alma/Rocky] linux update
 # ====
@@ -380,11 +383,13 @@ modprobe cifs
 # Install Bella 
 # ====
 echo -e "/nInstalling Bella and dependencies"
-dnf install -y --quiet mesa-vulkan-drivers mesa-libGL
-curl -O  https://downloads.bellarender.com/bella_cli-23.1.0.tar.gz
-tar -xvf bella_cli-23.1.0.tar.gz 
-chmod +x bella_cli
-mv bella_cli /usr/local/bin
+if ! test -f bella_cli-23.1.0.tar.gz; then
+	dnf install -y --quiet mesa-vulkan-drivers mesa-libGL
+	curl -O  https://downloads.bellarender.com/bella_cli-23.1.0.tar.gz
+	tar -xvf bella_cli-23.1.0.tar.gz 
+	chmod +x bella_cli
+	mv bella_cli /usr/local/bin
+fi
 
 # Create Nebula systemd unit 
 # ====
@@ -397,7 +402,8 @@ After=network.target
 Type=simple
 Restart=always
 RestartSec=35
-ExecStartPre=/bin/bash -c 'sed "s/cert.*/cert: \/etc\/nebula\/$HOSTNAME.crt/g" /etc/nebula/config.yml; /bin/bash -c 'sed "s/key.*/key: \/etc\/nebula\/$HOSTNAME.key/g" /etc/nebula/config.yml
+ExecStartPre=/bin/bash -c 'sed -i "s/cert.*/cert: \/etc\/nebula\/\$HOSTNAME.crt/g" /etc/nebula/config.yml'
+ExecStartPre=/bin/bash -c 'sed -i "s/key.*/key: \/etc\/nebula\/\$HOSTNAME.key/g" /etc/nebula/config.yml'
 ExecStart=/usr/local/bin/nebula -config /etc/nebula/config.yml
 ExecStartPost=/bin/sleep 2
 
@@ -414,15 +420,15 @@ EOF
 cat <<EOF > /etc/nebula/config.yml
 pki:
   ca: /etc/nebula/ca.crt
-  cert: /etc/nebula/DYNAMIC_REPLACE.crt
-  key: /etc/nebula/DYNAMIC_REPLACE.key
+  cert: /etc/nebula/REPLACE.crt
+  key: /etc/nebula/REPLACE.key
 static_host_map:
   "$lighthouse_nebula_ip": ["$lighthouse_internet_ip:${lighthouse_internet_port}"]
 lighthouse:
   am_lighthouse: false
   interval: 60
 host:
-    - "${nebula_private_ip}"
+    - "${lighthouse_nebula_ip}"
 listen:
   host: 0.0.0.0
   port: 4242
@@ -454,10 +460,12 @@ firewall:
     - port: any
       proto: icmp
       host: any
-    - port: 22 
+
+    - port: 22
       proto: tcp
-      groups: 
-	- ${groupname_trusted}
+      groups:
+        - ${groupname_trusted}
+
 EOF
 
 #cat <<EOF > /etc/systemd/system/oomerfarm-idle-check.timer
@@ -516,7 +524,7 @@ grep -qxF "//$nebula_private_ip/oomerfarm /mnt/oomerfarm cifs rw,noauto,x-system
 
 mount /mnt/DeadlineRepository10
 
-curl -O http://$nebula_private_ip/DeadlineClient-10.2.0.10-linux-x64-installer.run
+#curl -O http://$nebula_private_ip/DeadlineClient-10.2.0.10-linux-x64-installer.run
 chmod +x DeadlineClient-10.2.0.10-linux-x64-installer.run
 ./DeadlineClient-10.2.0.10-linux-x64-installer.run --mode unattended --unattendedmodeui minimal --repositorydir /mnt$optional_subfolder/DeadlineRepository10  --connectiontype Direct --noguimode true
 
