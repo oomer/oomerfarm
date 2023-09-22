@@ -1,5 +1,8 @@
 #!/bin/sh
-if ! test -d _oomerfarm_/testboss; then
+if test -d ./_oomerfarm_/boss; then
+	sudo ./_oomerfarm_/bin/nebula -config ./_oomerfarm_/boss/config.yml
+	exit
+elif ! test -d _oomerfarm_/testboss; then
 
 	if ! ( test -f "_oomerfarm_/$year" ); then
 		mkdir -p _oomerfarm_/bin
@@ -52,12 +55,14 @@ if ! test -d _oomerfarm_/testboss; then
 		chmod +x ./_oomerfarm_/bin/nebula
 		rm ./_oomerfarm_/bin/${nebularelease}
 	fi
-	echo -e "\nEnter cloud server internet ip address where you ran bootstraphub.sh"
-	read -p ":" lighthouse_internet_ip
-	if [ -z  $lighthouse_internet_ip ]; then
-		echo "Cannot continue without knowing the internet ip address of oomerfarm hub"	
-		exit
-	fi
+fi
+
+echo -e "\nEnter cloud server internet ip address where you ran bootstraphub.sh"
+read -p ":" lighthouse_internet_ip
+if [ -z  $lighthouse_internet_ip ]; then
+	echo "Cannot continue without knowing the internet ip address of oomerfarm hub"	
+	exit
+fi
 
 cat <<EOF > ./_oomerfarm_/testboss/ca.crt
 -----BEGIN NEBULA CERTIFICATE-----
@@ -143,14 +148,6 @@ firewall:
       host: any
 EOF
 
-	echo -e "\nNote: running sudo ./_oomerfarm_/bin/nebula because to create VPN"
-	echo "This requires your user to be an administrator not a standard user"
-	sudo ./_oomerfarm_/bin/nebula -config ./_oomerfarm_/testboss/config.yml
-else
-	if test -d ./_oomerfarm_/boss; then
-		sudo ./_oomerfarm_/bin/nebula -config ./_oomerfarm_/boss/config.yml
-	else
-		sudo ./_oomerfarm_/bin/nebula -config ./_oomerfarm_/testboss/config.yml
-	fi
-fi
-
+echo -e "\nNote: running sudo ./_oomerfarm_/bin/nebula because to create VPN"
+echo "This requires your user to be an administrator not a standard user"
+sudo ./_oomerfarm_/bin/nebula -config ./_oomerfarm_/testboss/config.yml

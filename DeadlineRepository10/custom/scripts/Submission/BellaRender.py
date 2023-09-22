@@ -318,7 +318,7 @@ def submitButtonPressed(*args):
         # [ ] This is boilerplate, should create common method to avoid code duplication
         jobInfoFilename = Path.Combine( ClientUtils.GetDeadlineTempPath(), "bella_job_info.job" )
         writer = StreamWriter( jobInfoFilename, False, Encoding.Unicode )
-        writer.WriteLine( "Plugin=BellaInstance" )
+        writer.WriteLine( "Plugin=BellaRender" )
         writer.WriteLine( "Name=%s" % jobName )
         writer.WriteLine( "Comment=%s" % scriptDialog.GetValue( "commentBox" ) )
         writer.WriteLine( "Department=%s" % scriptDialog.GetValue( "departmentBox" ) )
