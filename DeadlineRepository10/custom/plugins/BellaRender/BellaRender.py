@@ -105,7 +105,7 @@ class BellaRenderPlugin(DeadlinePlugin):
         sceneFile = RepositoryUtils.CheckPathMapping( sceneFile )   # remap path for worker's OS
 
         # TODO
-        sceneFile = sceneFile.replace("/Volumes/oomerfarm/","/mnt/oomerfarm")
+        sceneFile = sceneFile.replace("/Volumes/oomerfarm/","/mnt/oomerfarm/")
 
         outputDirectory = self.GetPluginInfoEntry( "outputDirectory" ).strip()  
         outputDirectory = RepositoryUtils.CheckPathMapping( outputDirectory )   
