@@ -536,7 +536,7 @@ cp /mnt/oomerfarm/installers/DeadlineClient-10.3.0.10-linux-x64-installer.run .
 chmod +x DeadlineClient-10.3.0.10-linux-x64-installer.run 
 ./DeadlineClient-10.3.0.10-linux-x64-installer.run --mode unattended --unattendedmodeui minimal --repositorydir /mnt$optional_subfolder/DeadlineRepository10  --connectiontype Direct --noguimode true
 
-cat <<EOF > /etc/systemd/system/deadline10launcher.service 
+cat <<EOF > /etc/systemd/system/deadlinelauncher.service 
 [Unit]
 Description=Deadline 10 Launcher Service
 After= nebula.service
@@ -545,7 +545,7 @@ After= nebula.service
 Type=simple
 Restart=always
 RestartSec=5
-User=oomerfarmer
+User=oomerfarm
 LimitNOFILE=200000
 ExecStart=/usr/bin/bash -l -c "/opt/Thinkbox/Deadline10/bin/deadlinelauncher -daemon -nogui"
 ExecStop=/opt/Thinkbox/Deadline10/bin/deadlinelauncher -shutdownall
@@ -554,4 +554,4 @@ SuccessExitStatus=143
 [Install]
 WantedBy=multi-user.target
 EOF
-systemctl enable --now deadline10launcher
+systemctl enable --now deadlinelauncher

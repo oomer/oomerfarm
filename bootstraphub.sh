@@ -569,7 +569,9 @@ if ! test -f /mnt/DeadlineRepository10/ThinkboxEULA.txt ; then
 	    echo "FAIL: ${thinkboxtar} checksum failed, file possibly maliciously altered on AWS"
 	    exit
 	fi
-	rm DeadlineClient-10.3.0.10-linux-x64-installer.run
+	mkdir /mnt/oomerfarm/installers
+	cp DeadlineClient-10.3.0.10-linux-x64-installer.run /mnt/oomerfarm/installers
+	#rm DeadlineClient-10.3.0.10-linux-x64-installer.run
 	rm DeadlineClient-10.3.0.10-linux-x64-installer.run.sig
 	rm DeadlineRepository-10.3.0.10-linux-x64-installer.run.sig
 	rm AWSPortalLink-1.3.0.3-linux-x64-installer.run
@@ -588,7 +590,7 @@ mkdir /mnt/DeadlineRepository10/custom/plugins/BellaRender
 mkdir /mnt/DeadlineRepository10/custom/scripts/Submission
 cp DeadlineRepository10/custom/plugins/BellaRender/BellaRender.param /mnt/DeadlineRepository10/custom/plugins/BellaRender/BellaRender.param
 cp DeadlineRepository10/custom/plugins/BellaRender/BellaRender.py /mnt/DeadlineRepository10/custom/plugins/BellaRender/BellaRender.py
-cp cp DeadlineRepository10/custom/plugins/BellaRender/bella.ico /mnt/cp DeadlineRepository10/custom/plugins/BellaRender/bella.ico
+cp cp DeadlineRepository10/custom/plugins/BellaRender/bella.ico /mnt/DeadlineRepository10/custom/plugins/BellaRender/bella.ico
 cp DeadlineRepository10/custom/scripts/Submission/BellaRender.py /mnt/DeadlineRepository10/custom/scripts/Submission/BellaRender.py
 
 
@@ -599,6 +601,7 @@ sed -i "s/Authenticate=.*/Authenticate=False/g" /mnt/DeadlineRepository10/settin
 
 curl -O https://downloads.bellarender.com/bella_cli-23.4.0.tar.gz
 MatchFile="$(echo "afb15d150fc086709cc726c052dd40cd115eb8b32060c7a82bdba4f6d9cebd3d bella_cli-23.4.0.tar.gz" | sha256sum --check)"
+mkdir /mnt/oomerfarm/installers
 if [ "$MatchFile" = "bella_cli-23.4.0.tar.gz: OK" ] ; then
 	mv bella_cli-23.4.0.tar.gz /mnt/oomerfarm/installers/bella_cli-23.4.0.tar.gz
 else
