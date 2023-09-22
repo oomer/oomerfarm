@@ -43,7 +43,7 @@ groupname_trusted_default="i_am_the_boss_and_can_connect_everywhere"
 deadline_user="oomerfarm"
 deadline_user_default="oomerfarm"
 worker_auto_shutdow=0
-worker_name_default=worker0001
+worker_name_default=$(hostname)
 hub_name_default="i_agree_this_is_unsafe"
 
 # Security best practice #1: add non-privileged/no-shell user to run daemons/systemd units/etc
