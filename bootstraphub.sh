@@ -443,9 +443,16 @@ firewall-cmd -q --reload
 if ! ( test -d /mnt/DeadlineRepository10 ); then
 	mkdir -p /mnt/DeadlineRepository10
 	mkdir -p /mnt/oomerfarm
+	mkdir -p /mnt/oomerfarm/bella
+	mkdir -p /mnt/oomerfarm/bella/renders
+	chown oomerfarm.oomerfarm /mnt/oomerfarm
+	chown oomerfarm.oomerfarm /mnt/oomerfarm/bella
+	chown oomerfarm.oomerfarm /mnt/oomerfarm/bella/renders
 	chcon -R -t samba_share_t /mnt/DeadlineRepository10/
 	chcon -R -t samba_share_t /mnt/oomerfarm/
 fi
+
+
 
 # Set password, confirm password
 (echo ${linux_password}; echo ${linux_password}) | smbpasswd -a oomerfarm -s
@@ -576,6 +583,33 @@ if ! test -f /mnt/DeadlineRepository10/ThinkboxEULA.txt ; then
 else
 	echo "Deadline Repository exists...skipping installation"
 fi
+
+mkdir /mnt/DeadlineRepository10/custom/plugins/BellaRender
+mkdir /mnt/DeadlineRepository10/custom/scripts/Submission
+cp DeadlineRepository10/custom/plugins/BellaRender/BellaRender.param /mnt/DeadlineRepository10/custom/plugins/BellaRender/BellaRender.param
+cp DeadlineRepository10/custom/plugins/BellaRender/BellaRender.py /mnt/DeadlineRepository10/custom/plugins/BellaRender/BellaRender.py
+cp cp DeadlineRepository10/custom/plugins/BellaRender/bella.ico /mnt/cp DeadlineRepository10/custom/plugins/BellaRender/bella.ico
+cp DeadlineRepository10/custom/scripts/Submission/BellaRender.py /mnt/DeadlineRepository10/custom/scripts/Submission/BellaRender.py
+
+
+
+
+# [TODO] switch to ssl for better security
+sed -i "s/Authenticate=.*/Authenticate=False/g" /mnt/DeadlineRepository10/settings/connection.ini
+
+curl -O https://downloads.bellarender.com/bella_cli-23.4.0.tar.gz
+MatchFile="$(echo "afb15d150fc086709cc726c052dd40cd115eb8b32060c7a82bdba4f6d9cebd3d bella_cli-23.4.0.tar.gz" | sha256sum --check)"
+if [ "$MatchFile" = "bella_cli-23.4.0.tar.gz: OK" ] ; then
+	mv bella_cli-23.4.0.tar.gz /mnt/oomerfarm/installers/bella_cli-23.4.0.tar.gz
+else
+	rm bella_cli-23.4.0.tar.gz 
+	echo "FAIL: bella checksum failed, may be corrupted or malware"
+fi
+curl -L https://bellarender.com/doc/scenes/orange-juice/orange-juice.bsz -o /mnt/oomerfarm/bella/orange-juice.bsz
+chown oomerfarm.oomerfarm /mnt/oomerfarm/bella/orange-juice.bsz
+
+afb15d150fc086709cc726c052dd40cd115eb8b32060c7a82bdba4f6d9cebd3d  /mnt/oomerfarm/installers/bella_cli-23.4.0.tar.gz
+
 
 if [ "$nebula_name" == "i_agree_this_is_unsafe" ]; then
 	echo -e "\n==================================================================="

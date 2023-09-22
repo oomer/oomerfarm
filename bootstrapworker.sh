@@ -215,14 +215,6 @@ fi
 #    echo "Passwords do not match! Try again."
 #done
 
-cat <<EOF > /etc/nebula/smb_credentials
-username=oomerfarm
-password=oomerfarm
-domain=WORKGROUP
-EOF
-
-chmod go-rwx /etc/nebula/smb_credentials
-
 
 # Get Nebula credentials
 # ======================
@@ -268,6 +260,15 @@ if ! test -d /etc/nebula; then
 	mkdir /etc/nebula
 fi
 tar --strip-components 1 -xvf ${worker_prefix}.keybundle -C /etc/nebula
+
+cat <<EOF > /etc/nebula/smb_credentials
+username=oomerfarm
+password=oomerfarm
+domain=WORKGROUP
+EOF
+
+chmod go-rwx /etc/nebula/smb_credentials
+
 
 
 # Alma/Rocky/Oracle Linux update
@@ -522,9 +523,9 @@ systemctl enable --now nebula.service
 # ====
 mkdir -p /mnt/DeadlineRepository10
 mkdir -p /mnt/oomerfarm
-grep -qxF "//$lighthouse_nebula_ip/DeadlineRepository10 /mnt/DeadlineRepository10 cifs rw,noauto,x-systemd.automount,x-systemd.device-timeout=45,nobrl,uid=3000,gid=3000,file_mode=0664,credentials=/etc/nebula/smb_credentials 0 0" /etc/fstab || echo "//$lighthouse_nebula_ip/DeadlineRepository10 /mnt/DeadlineRepository10 cifs rw,noauto,x-systemd.automount,x-systemd.device-timeout=45,nobrl,uid=3000,gid=3000,file_mode=0664,credentials=/etc/nebula/smb_credentials 0 0" >> /etc/fstab
+grep -qxF "//$lighthouse_nebula_ip/DeadlineRepository10 /mnt/DeadlineRepository10 cifs rw,noauto,x-systemd.automount,x-systemd.device-timeout=45,nobrl,uid=1000,gid=1000,file_mode=0664,credentials=/etc/nebula/smb_credentials 0 0" /etc/fstab || echo "//$lighthouse_nebula_ip/DeadlineRepository10 /mnt/DeadlineRepository10 cifs rw,noauto,x-systemd.automount,x-systemd.device-timeout=45,nobrl,uid=1000,gid=1000,file_mode=0664,credentials=/etc/nebula/smb_credentials 0 0" >> /etc/fstab
 
-grep -qxF "//$lighthouse_nebula_ip/oomerfarm /mnt/oomerfarm cifs rw,noauto,x-systemd.automount,x-systemd.device-timeout=45,nobrl,uid=3000,gid=3000,file_mode=0664,credentials=/etc/nebula/.smb_credentials 0 0" /etc/fstab || echo "//$lighthouse_nebula_ip/oomerfarm /mnt/oomerfarm cifs rw,noauto,x-systemd.automount,x-systemd.device-timeout=45,nobrl,uid=3000,gid=3000,file_mode=0664,credentials=/etc/nebula/smb_credentials 0 0" >> /etc/fstab
+grep -qxF "//$lighthouse_nebula_ip/oomerfarm /mnt/oomerfarm cifs rw,noauto,x-systemd.automount,x-systemd.device-timeout=45,nobrl,uid=1000,gid=1000,file_mode=0664,credentials=/etc/nebula/smb_credentials 0 0" /etc/fstab || echo "//$lighthouse_nebula_ip/oomerfarm /mnt/oomerfarm cifs rw,noauto,x-systemd.automount,x-systemd.device-timeout=45,nobrl,uid=1000,gid=1000,file_mode=0664,credentials=/etc/nebula/smb_credentials 0 0" >> /etc/fstab
 
 mount /mnt/DeadlineRepository10
 mount /mnt/oomerfarm

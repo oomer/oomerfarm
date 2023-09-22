@@ -1,0 +1,24 @@
+[About]
+Type=label
+Label=About
+Category=About Plugin
+CategoryOrder=-1
+Default=Bella Render Plugin
+Description=Not configurable
+
+[ConcurrentTasks]
+Type=label
+Label=ConcurrentTasks
+Category=About Plugin
+CategoryOrder=-1
+Default=True
+Description=Not configurable
+
+[BellaRenderPluginRenderExecutable]
+Type=multilinemultifilename
+Category=Render Executables
+CategoryOrder=0
+Index=0
+Label=Bella CLI path
+Default=C:\Program Files\Diffuse Logic\Bella CLI\bella_cli.exe;/Applications/bella_cli.app/Contents/MacOS/bella_cli;/usr/local/bin/bella_cli
+Description=Path to the Bella CLI 
