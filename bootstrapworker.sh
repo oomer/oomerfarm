@@ -361,12 +361,12 @@ fi
 # [Alma/Rocky] linux update
 # ====
 echo "/nUpdating Linux"
-dnf update -y 
+#dnf update -y 
 
 # Add RedHat epel repository for htop
 # ====
 #echo "/nAdding epel repository"
-dnf install -y epel-release htop
+#dnf install -y epel-release htop
 
 # Install cifs dependencies
 # [TODO] fix kernel mismatch errors with Alma, works fine in Rocky
@@ -554,4 +554,17 @@ SuccessExitStatus=143
 [Install]
 WantedBy=multi-user.target
 EOF
+# Install Bella 
+# ====
+dnf install -y --quiet mesa-vulkan-drivers mesa-libGL
+#curl -O  https://downloads.bellarender.com/bella_cli-23.1.0.tar.gz
+cp /mnt/oomerfarm/installers/bella_cli-23.4.0.tar.gz .
+	tar -xvf bella_cli-23.4.0.tar.gz 
+	chmod +x bella_cli
+	mv bella_cli /usr/local/bin
+	rm bella_cli-23.4.0.tar.gz
+fi
+
+
+
 systemctl enable --now deadlinelauncher
