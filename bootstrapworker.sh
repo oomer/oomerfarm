@@ -275,7 +275,7 @@ chmod go-rwx /etc/nebula/smb_credentials
 # ====
 echo ""
 echo " Updating [Alma/Rocky]Linux..."
-dnf update -y
+#dnf update -y
 dnf install tar wget -y
 
 # Ensure max security
