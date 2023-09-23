@@ -376,17 +376,6 @@ echo -e "/nInstalling cifs (smb) client dependencies"
 dnf install -y cifs-utils
 modprobe cifs
 
-# Install Bella 
-# ====
-echo -e "/nInstalling Bella and dependencies"
-if ! test -f bella_cli-23.1.0.tar.gz; then
-	dnf install -y --quiet mesa-vulkan-drivers mesa-libGL
-	curl -O  https://downloads.bellarender.com/bella_cli-23.1.0.tar.gz
-	tar -xvf bella_cli-23.1.0.tar.gz 
-	chmod +x bella_cli
-	mv bella_cli /usr/local/bin
-fi
-
 # Create Nebula systemd unit 
 # ====
 cat <<EOF > /etc/systemd/system/nebula.service
@@ -559,11 +548,10 @@ EOF
 dnf install -y --quiet mesa-vulkan-drivers mesa-libGL
 #curl -O  https://downloads.bellarender.com/bella_cli-23.1.0.tar.gz
 cp /mnt/oomerfarm/installers/bella_cli-23.4.0.tar.gz .
-	tar -xvf bella_cli-23.4.0.tar.gz 
-	chmod +x bella_cli
-	mv bella_cli /usr/local/bin
-	rm bella_cli-23.4.0.tar.gz
-fi
+tar -xvf bella_cli-23.4.0.tar.gz 
+chmod +x bella_cli
+mv bella_cli /usr/local/bin
+rm bella_cli-23.4.0.tar.gz
 
 
 
