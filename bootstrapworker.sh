@@ -9,22 +9,12 @@
 # Provisions single machine or small scale renderfarms by hand
 # Tested on AWS, Azure, Google, Oracle, Vultr, Digital Ocaan, Linode, Heztner, Server-Factory, Crunchbits
 
-# Secrets management is NOT automated requiring pre-staging files on a third party cloud "drive" 
-# Uses Blackblaze B2 ( S3 compatible storage ), no credit card needed, first 10 GB free
-# feel free to swap in your own storage location from Wasabi, Google, Cloudflare, etc
-# The following files are pre-requisites,
-# worker.sh = this file
-# deadline.secrets = openssl encrypted cpio file with ca.crt and ALL worker certs and keys 
-# authorized_keys  = ssh public keys for access to worker, optional 
-# nebula = vpn software from https://github.com/slackhq/nebula/releases/download/v1.6.1/nebula-linux-amd64.tar.gz          
-
 unprivileged_account="oomerfarm"
 thinkboxurl="https://thinkbox-installers.s3.us-west-2.amazonaws.com/Releases/Deadline/10.3/2_10.3.0.10/"
 thinkboxtar="Deadline-10.3.0.10-linux-installers.tar"
 keybundle_url_default="https://drive.google.com/file/d/13xH4vNrr6DSocD9Bhi1cEKl8FU_QIi5K/view?usp=share_link"
 
 nebulasha256="4600c23344a07c9eda7da4b844730d2e5eb6c36b806eb0e54e4833971f336f70"
-
 
 worker_prefix=worker
 encryption_passphrase="oomerfarm"
@@ -36,10 +26,6 @@ lighthouse_nebula_ip_default="10.10.0.1"
 
 nebula_version="v1.7.2"
 nebula_version_default="v1.7.2"
-groupname_nottrusted="i_am_allowed_to_connect_to_hubs_and_bosses_can_connect_to_me"
-groupname_nottrusted_default="i_am_allowed_to_connect_to_hubs_and_bosses_can_connect_to_me"
-groupname_trusted="i_am_the_boss_and_can_connect_everywhere"
-groupname_trusted_default="i_am_the_boss_and_can_connect_everywhere"
 deadline_user="oomerfarm"
 deadline_user_default="oomerfarm"
 worker_auto_shutdow=0
@@ -51,16 +37,9 @@ hub_name_default="i_agree_this_is_unsafe"
 # Matches uid/gid on remote file server to read/write permissions
 
 echo -e "\n==================================================================="
-echo -e "Bootstrap Linux machine into Deadline Worker + Nebula host"
-echo -e "Warning: Major changes are forthcoming"
-echo -e "DO NOT run this machine on a production machine"
-echo -e " - Run Deadline Client installer"
-echo -e " - create worker user"
-echo -e " - establish Nebula overlay 10.10.0.0/16 private network aka VPN"
-echo -e " - install/enable firewalld, create nebula zone, remove services"
-echo -e " - enable Selinux, change context Nebula"
-echo -e " - Only runs on Alma/Rocky 8.x Linux"
-echo -e " - You agree to the AWS Thinkbox EULA by installing Deadline"
+echo -e "Bootstrap this Alma/Rocky Linux machine into an oomerfarm worker"
+echo -e "Major changes WILL occur"
+echo -e "You agree to the AWS Thinkbox EULA by installing Deadline"
 echo -e "==================================================================="
 echo -e "Continue on $(hostname)?"
 read -p "    (Enter Yes) " accept
@@ -69,28 +48,7 @@ if [ "$accept" != "Yes" ]; then
         exit
 fi
 
-
-dnf -y install tar
-
-# needed for /usr/local/bin/oomerfarm_shutdown.sh
-#dnf -y install sysstat
-#systemctl enable --now sysstat
-
-# probe to see if downloadables exist
-echo "thinkbox"
-if ! ( curl -s --head --fail -o /dev/null ${thinkboxurl}${thinkboxtar} ); then
-        echo -e "FAIL: No file found at ${mongourl}${mongotar}"
-        exit
-fi
-
-
-#if [ ! $(getent group $unprivileged_account ) ]; then
-#    groupadd -g 3000 $unprivileged_account
-#    useradd -g 3000 -u 3000 -s /sbin/nologin -m $unprivileged_account
-#fi
-
-echo -e "\nEnter Deadline worker name..."
-echo -e "\tAscii, no spaces, has key-pair in worker.keybundle.enc"
+echo -e "\nEnter worker name ( or return for default )"
 read -p "( default: $worker_name_default ): " worker_name
 if [ -z $worker_name ]; then
     hostnamectl set-hostname "$worker_name_default"
@@ -99,19 +57,18 @@ else
     hostnamectl set-hostname "$worker_name"
 fi
 
-echo -e "Changing hostname to $worker_name"
 
 echo -e "\n\tTEST WAY: Using \"${hub_name_default}\" keybundle is insecure because it is a public set of keys with a knowable passphrase in this source code, by using these keys you acknowledge that anybody else with these same keys can enter your Nebula network. It provides a modicum of security because they would also have to know your server's public internet address"
 echo -e "This methods allows rapid deployment to kick the tires and use 100% defaults and 98% fewer challenge questions compared to the \"CORRECT WAY\""
 echo -e "\n\tCORRECT WAY: Generate keys on a trusted computer using keyoomerfarm.sh where you personally authorize each and every machine on your network and you control the certificate-authority. Store the encrypted files on Google Drive, shared with \"Anyone with the Link\", hit \"copy link\" button, type \"hub\" below unless you didn't use the keyoomerfarm.sh defaults"
-echo -e "\nENTER Nebula Lighthouse hub name"
+echo -e "\nENTER hub name ( or return for default )"
 read -p "    (default: $hub_name_default:) " hub_name
 if [ -z "$hub_name" ]; then
 	hub_name=$hub_name_default
 fi
 
 if ! [ "$hub_name" = "i_agree_this_is_unsafe" ]; then
-	echo -e "\nWhat is your keybundle encryption passphrase? { typing is ghosted )"
+	echo -e "\nWhat is your keybundle encryption passphrase? ( typing is ghosted )"
 	IFS= read -rs encryption_passphrase < /dev/tty
 	if [ -z "$encryption_passphrase" ]; then
 		echo -e "\nFAIL: Invalid empty passphrase"
@@ -174,23 +131,10 @@ else
 	keybundle_url=$keybundle_url_default
 fi
 
-
-
-
-
-
-
-
-
-echo -e "\nChallenge/Answer stage for the oomerfarm hub"
-echo -e "============================================"
-
-echo -e "\nEnter cloud server internet ip address for oomerfarm hub"
-echo "A Cloud server must be started to get the IPv4 internet address"
-echo "HINT: Get IPv4 address in web control panel of cloud vm provider"
-read -p "default ( There is no default ): " lighthouse_internet_ip
+echo -e "\nEnter public ip address of hub"
+read -p "x.x.x.x:" lighthouse_internet_ip
 if [ -z  $lighthouse_internet_ip ]; then
-        echo "Cannot continue without knowing the internet ip address of Nebula Lighthouse"
+        echo "Cannot continue without public ip address of hub"
         exit
 fi
 
@@ -215,6 +159,18 @@ fi
 #    echo "Passwords do not match! Try again."
 #done
 
+dnf -y install tar
+
+# needed for /usr/local/bin/oomerfarm_shutdown.sh
+#dnf -y install sysstat
+#systemctl enable --now sysstat
+
+# probe to see if downloadables exist
+echo "thinkbox"
+if ! ( curl -s --head --fail -o /dev/null ${thinkboxurl}${thinkboxtar} ); then
+        echo -e "FAIL: No file found at ${mongourl}${mongotar}"
+        exit
+fi
 
 # Get Nebula credentials
 # ======================
@@ -240,7 +196,6 @@ if [[ "$keybundle_url" == *"https://drive.google.com/file/d"* ]]; then
 		exit
 	fi
 else
-	echo "foo"
 	curl -s -L -O "${keybundle_url}${worker_prefix}.keybundle.enc" 
 fi
 
@@ -266,29 +221,22 @@ username=oomerfarm
 password=oomerfarm
 domain=WORKGROUP
 EOF
-
 chmod go-rwx /etc/nebula/smb_credentials
 
-
-
-# Alma/Rocky/Oracle Linux update
-# ====
-echo ""
-echo " Updating [Alma/Rocky]Linux..."
 #dnf update -y
-dnf install tar wget -y
+dnf install tar -y
 
 # Ensure max security
 # ===================
-#test_selinux=$( getenforce )
-#if [[ "$test_selinux" == "Disabled" ]]; then
-#	echo -e "/nFAIL: Selinux is disabled, edit /etc/selinux/config"
-#	echo "==================================================="
-#	echo "Change SELINUX=disabled to SELINUX=enforcing"
-#	echo "Reboot ( SELinux chcon on boot drive takes awhile)"
-#	echo "=================================================="
-#	exit
-#fi
+test_selinux=$( getenforce )
+if [[ "$test_selinux" == "Disabled" ]]; then
+	echo -e "/nFAIL: Selinux is disabled, edit /etc/selinux/config"
+	echo "==================================================="
+	echo "Change SELINUX=disabled to SELINUX=enforcing"
+	echo "Reboot ( SELinux chcon on boot drive takes awhile)"
+	echo "=================================================="
+	exit
+fi
 
 firewalld_status=$(systemctl status firewalld)
 
@@ -300,13 +248,6 @@ fi
 
 if ! [[ "$firewalld_status" == *"running"* ]]; then
 	systemctl enable --now firewalld
-fi
-
-# May be bad for ntp
-chronyd_status=$( systemctl status chronyd )
-if [[ "$chronyd_status" == *"Active: active (running)"* ]]; then
-	systemctl stop chronyd
-	systemctl disable chronyd
 fi
 
 # Wipe all services and ports except ssh and 22/tcp, may break your system
@@ -356,16 +297,7 @@ if ! ( test -f /usr/local/bin/nebula ); then
 	rm -f nebula-linux-amd64.tar.gz
 fi 
 
-
-
-# [Alma/Rocky] linux update
-# ====
-echo "/nUpdating Linux"
-#dnf update -y 
-
-# Add RedHat epel repository for htop
-# ====
-#echo "/nAdding epel repository"
+#dnf install -y epel-release htop
 #dnf install -y epel-release htop
 
 # Install cifs dependencies
@@ -494,19 +426,12 @@ EOF
 #
 #chmod +x /usr/local/bin/oomerfarm_shutdown.sh
 
-
-echo " >>> Firewall updated to allow 42042/udp for Nebula"
 firewall-cmd --quiet --zone=public --add-port=42042/udp --permanent
 firewall-cmd -q --new-zone nebula --permanent
 firewall-cmd -q --zone nebula --add-interface nebula_tun --permanent
 firewall-cmd -q --zone nebula --add-service ssh --permanent
 firewall-cmd --quiet --reload
 systemctl enable --now nebula.service
-
-
-
-
-
 
 # Setup Deadline cifs/smb mount point in /etc/fstab ONLY if it isn't there already
 # ====
@@ -518,9 +443,6 @@ grep -qxF "//$lighthouse_nebula_ip/oomerfarm /mnt/oomerfarm cifs rw,noauto,x-sys
 
 mount /mnt/DeadlineRepository10
 mount /mnt/oomerfarm
-
-#curl -O http://$nebula_private_ip/DeadlineClient-10.2.0.10-linux-x64-installer.run
-
 cp /mnt/oomerfarm/installers/DeadlineClient-10.3.0.10-linux-x64-installer.run .
 chmod +x DeadlineClient-10.3.0.10-linux-x64-installer.run 
 ./DeadlineClient-10.3.0.10-linux-x64-installer.run --mode unattended --unattendedmodeui minimal --repositorydir /mnt$optional_subfolder/DeadlineRepository10  --connectiontype Direct --noguimode true
@@ -543,6 +465,8 @@ SuccessExitStatus=143
 [Install]
 WantedBy=multi-user.target
 EOF
+
+
 # Install Bella 
 # ====
 dnf install -y --quiet mesa-vulkan-drivers mesa-libGL
@@ -552,7 +476,4 @@ tar -xvf bella_cli-23.4.0.tar.gz
 chmod +x bella_cli
 mv bella_cli /usr/local/bin
 rm bella_cli-23.4.0.tar.gz
-
-
-
 systemctl enable --now deadlinelauncher
