@@ -234,13 +234,15 @@ class BellaRenderPlugin(DeadlinePlugin):
         if outputExt == ".png" or outputExt == "default":
             outputExt = "" # [ ] HACK, parseFragment has no method to unset .outputExt properly ( like null )  
         arguments += " -pf:\"beautyPass.outputExt=\\\"%s\\\";\"" % outputExt
+        
+        arguments += " -pf:\"beautyPass.outputName=\\\"%s\\\";\"" % sceneFileStem
 
-        if floatAttributeName == "":
-            arguments += " -pf:\"beautyPass.outputName=\\\"%s\\\";\"" % sceneFileStem
-        else:
-            renderFramePadded = StringUtils.ToZeroPaddedString( self.GetStartFrame(), 5, False )
-            print(str(sceneFileStem)+renderFramePadded)
-            arguments += " -pf:\"beautyPass.outputName=\\\"%s\\\";\"" % (str(sceneFileStem)+renderFramePadded)
+        #if floatAttributeName == "":
+        #   arguments += " -pf:\"beautyPass.outputName=\\\"%s\\\";\"" % sceneFileStem
+        #lse:
+        #   renderFramePadded = StringUtils.ToZeroPaddedString( self.GetStartFrame(), 5, False )
+        #   print(str(sceneFileStem)+renderFramePadded)
+        #   arguments += " -pf:\"beautyPass.outputName=\\\"%s\\\";\"" % (str(sceneFileStem)+renderFramePadded)
 
 
 
