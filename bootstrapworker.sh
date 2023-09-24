@@ -271,7 +271,8 @@ test_user=$( id "${deadline_user}" )
 # id will return blank if no user is found
 if [ -z "$test_user" ]; then
 	echo "CREATE USER:${deadeline_user}"
-        useradd -m ${deadline_user}
+        groupadd -g 3000 ${deadline_user}
+        useradd -g 3000 -u 3000 -m ${deadline_user}
 fi
 echo "${deadline_user}:${linux_password}" | chpasswd
 

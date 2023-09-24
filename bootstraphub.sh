@@ -211,7 +211,8 @@ test_user=$( id "${smb_user}" )
 # id will return blank if no user is found
 if [ -z "$test_user" ]; then
 	echo "CREATE USER:${smb_user}"
-        useradd -m ${smb_user}
+	groupadd -g 3000 ${smb_user}
+        useradd -g 3000 -u 3000 -m ${smb_user}
 fi
 echo "${smb_user}:${linux_password}" | chpasswd
 
