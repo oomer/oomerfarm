@@ -37,7 +37,7 @@
 
 ```sh
 dnf -y install git
-git clone https://github.com/oomer/oomerfarm.git
+git clone -b "v0.1" https://github.com/oomer/oomerfarm.git
 cd oomerfarm 
 bash bootstraphub.sh
 ```
@@ -45,14 +45,14 @@ bash bootstraphub.sh
 
 ```sh
 dnf -y install git
-git clone https://github.com/oomer/oomerfarm.git
+git clone -b "v0.1" https://github.com/oomer/oomerfarm.git
 cd oomerfarm 
 bash bootstrapworker.sh
 ```
 
 4. <sup>[aka boss]</sup> on Desktop Linux/MacOS shell or [ git-bash ]( https://git-scm.com )
 ```sh
-git clone https://github.com/oomer/oomerfarm.git
+git clone "v0.1" https://github.com/oomer/oomerfarm.git
 cd oomerfarm 
 bash joinoomerfarm.sh
 * On Windows run joinoomerfarm.bat as administrator
@@ -78,7 +78,7 @@ bash joinoomerfarm.sh
 
 ```sh
 dnf -y install git
-git clone https://github.com/oomer/oomerfarm.git
+git clone -b "v0.1" https://github.com/oomer/oomerfarm.git
 cd oomerfarm 
 bash keyoomerfarm.sh
 ```
@@ -89,7 +89,7 @@ bash keyoomerfarm.sh
 
 ```sh
 dnf -y install git
-git clone https://github.com/oomer/oomerfarm.git
+git clone -b "v0.1" https://github.com/oomer/oomerfarm.git
 cd oomerfarm 
 bash bootstraphub.sh
 * instead of "i_agree_this_is_unsafe" use "hub"
@@ -99,7 +99,7 @@ bash bootstraphub.sh
 
 ```sh
 dnf -y install git
-git clone https://github.com/oomer/oomerfarm.git
+git clone -b "v0.1" https://github.com/oomer/oomerfarm.git
 cd oomerfarm 
 bash bootstrapworker.sh
 * Use your google drive url to worker.keybundle.enc
