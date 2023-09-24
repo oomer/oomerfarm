@@ -1,7 +1,7 @@
 # oomerfarm
 
 [ DO NOT USE IN PRODUCTION -- WORK IN PROGRESS ]
-[ ALPHA release ]
+[ ALPHA release v0.1]
 [ BellaRender plugin is especially janky ]
 [ Linux desktop not tested yet , it may work ]
 [ security model under review ]
