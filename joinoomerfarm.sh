@@ -1,16 +1,29 @@
-#!/bin/sh
+#!/bin/bash
+
+# joinoomerfarm.sh
+# Using "boss" credentials created with keyoomerfarm.sh or the unsafe TestDrive credentials embedded below, this script joins a Nebula Virtual Private Network. NOT for hub or worker machines.
+# Tested on MacoOS Ventura
+
+# Check for existing boss credentials
+# ===================================
 if test -d ./_oomerfarm_/boss; then
+	echo -e "\n================================================================="
+	echo -e "The authenticity of this script cannot be guaranteed unless it comes from https://github.com/oomer/oomerfarm"
+	echo -e "Read the code if you can, or check the md5 hash posted on https://github.com/oomer/oomerfarm"
+	echo -e "sudo ./_oomerfarm_/bin/nebula is required run a VPN"
+	echo "Enter password to elevate the permissions of this scripts"
 	sudo ./_oomerfarm_/bin/nebula -config ./_oomerfarm_/boss/config.yml
 	exit
+# Create unsafe TestDrive credentials when they don't exist
 elif ! test -d _oomerfarm_/testboss; then
 
-	if ! ( test -f "_oomerfarm_/$year" ); then
-		mkdir -p _oomerfarm_/bin
-		mkdir -p _oomerfarm_/testboss
-	fi
+	mkdir -p _oomerfarm_/bin
+	mkdir -p _oomerfarm_/testboss
 	nebula_version="v1.7.2"
+
 	# Download Nebula from github once
-	# ================================
+	# Ensure integrity of executables that will run as administrator 
+	# ==============================================================
 	if ! ( test -f "./_oomerfarm_/bin/nebula-cert" ); then
 		echo -e "\nDownloading Nebula ${nebula_version} ..."
 		if [[ "$OSTYPE" == "linux-gnu"* ]]; then
@@ -57,12 +70,19 @@ elif ! test -d _oomerfarm_/testboss; then
 	fi
 fi
 
-echo -e "\nEnter cloud server internet ip address where you ran bootstraphub.sh"
-read -p ":" lighthouse_internet_ip
+echo -e "\nWhat is the public ip address of the hub machine"
+read -p "x.x.x.x::" lighthouse_internet_ip
 if [ -z  $lighthouse_internet_ip ]; then
-	echo "Cannot continue without knowing the internet ip address of oomerfarm hub"	
+	echo "Cannot continue without public ip address of hub"	
 	exit
 fi
+
+# TestDrive unsage credentials
+# Your Nebula Virtual Private Network can be accessed by these keys
+# The "boss" credentials have membership in BOTH oomerfarm and oomerfarm_admin groups
+# Nebula built-in firewall allows port 22/tcp ssh access to the hub and worker hosts
+# hub and workers are only in the oomerfarm group which does not permit ssh access to the "boss"
+# all Nebula hosts can ping each other
 
 cat <<EOF > ./_oomerfarm_/testboss/ca.crt
 -----BEGIN NEBULA CERTIFICATE-----
@@ -89,8 +109,6 @@ HHBWyFUcD79p+tMCWLeH5ergQ2N92KAItqihloLGoTI=
 EOF
 
 cat <<EOF > ./_oomerfarm_/testboss/config.yml
-# boss config.yml no incoming except ping
-
 pki:
   ca: ./_oomerfarm_/testboss/ca.crt
   cert: ./_oomerfarm_/testboss/testboss.crt
@@ -107,7 +125,7 @@ lighthouse:
 
 listen:
   host: 0.0.0.0
-  port: 4242
+  port: 0
 
 host:
   - "10.10.0.1"
@@ -148,6 +166,41 @@ firewall:
       host: any
 EOF
 
-echo -e "\nNote: running sudo ./_oomerfarm_/bin/nebula because to create VPN"
-echo "This requires your user to be an administrator not a standard user"
+if [[ "$OSTYPE" == "linux-gnu"* ]]; then
+	executable="nebula"
+	nebulasha256="a12789f4f1e803e39a446aa31c66b07e681d6567042928c5250fda9cd2096ca7"
+elif [[ "$OSTYPE" == "darwin"* ]]; then
+	executable="nebula"
+	nebulasha256="a973d80a4af76a2d40f7e5fd217503e7738ba0753f690d602781c29cf4a38eb8"
+elif [[ "$OSTYPE" == "msys"* ]]; then
+	executable="nebula.exe"
+	nebulasha256="39a78919d817ee3a45a3dc0ff9ec473ae1d4ae2dbd82fbacd396ffc604d6d808"
+else 
+	echo -e "FAIL: Operating system should either be Linux, MacOS or Windows with msys"
+	exit
+fi
+
+if [[ "$OSTYPE" == "linux-gnu"* ]]; then
+	MatchFile="$(echo "${nebulasha256}  ./_oomerfarm_/bin/${executable}" | sha256sum --check)"
+	if ! $[ "$MatchFile" == "./_oomerfarm_/bin/${executable}: OK" ] ; then
+		echo -e "\n./_oomerfarm_/bin/${executable} has been tampered with"a
+		echo "Aborting"
+		exit
+	fi
+elif [[ "$OSTYPE" == "darwin"* ]] || [[ "$OSTYPE" == "msys"* ]]; then
+	MatchFile="$(echo "${nebulasha256}  ./_oomerfarm_/bin/${executable}" | shasum -a 256 --check)"
+	if ! [ "$MatchFile" == "./_oomerfarm_/bin/${executable}: OK" ] ; then
+		echo -e "\n./_oomerfarm_/bin/${executable} has been tampered with"
+		echo "Aborting"
+		exit
+	fi	
+else
+	exit
+fi
+
+echo -e "\n================================================================="
+echo -e "The authenticity of this script cannot be guaranteed unless it comes from github.com/oomer/oomerfarm"
+echo -e "sudo ./_oomerfarm_/bin/nebula is required run a VPN"
+echo "Enter password to elevate the permissions of this scripts"
 sudo ./_oomerfarm_/bin/nebula -config ./_oomerfarm_/testboss/config.yml
+

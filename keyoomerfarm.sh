@@ -12,9 +12,9 @@
 
 nebula_version="v1.7.2"
 echo
-echo -e "================================================================================"
-echo -e "OOMERFARM: an occasional renderfarm deployed using bash scripts and Google Drive"
-echo -e "================================================================================"
+echo -e "============================================================================"
+echo -e "OOMERFARM: an occasional renderfarm using ssh, bash scripts and Google Drive"
+echo -e "============================================================================"
 echo
 echo -n "keyoomerfarm.sh creates a certificate-authority to make cryptographic based"
 echo -n " credentials and packages them into encrypted keybundles that you"
@@ -22,12 +22,11 @@ echo -n " can email or post on Google Drive publicly. The certificates created a
 echo -n " to the ones downloaded by web browsers from Amazon to secure the communication"
 echo -e " channel from prying eyes when passwords and credit card details are transmitted"
 echo
-echo -n "The open source nebula provides a VPN that allows oomerfarm to secure your"
+echo -e "In the same way that the .ssh folder needs to be protected, the  _oomerfarm_ subdirectory"
+echo -e "needs only be stored on a secure computer"
+echo -n "The open source Nebula project provides a VPN that allows oomerfarm to secure your"
 echo -e " renderfarm while using public internet infrastructure."
 echo
-echo -e "1. Your keys and certificates will be saved in a folder named _credentials_"
-echo -e "   Stolen _credentials_ can access your VPN and add more hosts to your VPN"
-echo -e "2. Before continuing, launch two cloud servers 1 hub, 1 worker"
 
 if ! ( test -d "_oomerfarm_" ); then
 	mkdir -p _oomerfarm_/nebula-authority
@@ -81,23 +80,24 @@ if ! ( test -f "./_oomerfarm_/bin/nebula-cert" ); then
 	rm ./_oomerfarm_/bin/${nebularelease}
 fi
 
-echo -e "\nEnter passphrase to encrypt keybundles...( typing is ghosted )"
-#echo "By storing these files on Google Drive, \"secrets management\" is simplified"
-#echo "Without resorting to manual copy pasting secrets to each node over ssh"
-#echo "nor requiring an automation layer like Ansible playbooks"
-#echo "nor requiring a third party secrets management layer like Hashicorp Vault"
-#echo "We can allow each node to pull bundled secrets from Google Drive during the manual bootstrap step"
-#echo "bootstrapping is achieved by ssh'ing to the hubb and worker hosts and running one script on each"
-#echo "The batch scripts bootstraphub.sh, bootstrapworker.sh each pull only their required"
-#echo "secrets bundle that is decoded on each platform when the passphrase is passed to the script"
-#echo "On linux/macos the interactive passphrase is not written to the console using /dev/tty, limiting exposure"
-# [TODO] add MFA
 
-read -rs encryption_passphrase
-if [ -z "$encryption_passphrase" ]; then
-    echo "FAIL: invalid empty passphrase"
-    exit
-fi
+
+while :
+do
+	echo -e "\nEnter passphrase to encrypt keybundles...( typing is ghosted )"
+	read -rs encryption_passphrase
+	if [ -z "$encryption_passphrase" ]; then
+	    echo "FAIL: invalid empty passphrase"
+	    exit
+	fi
+	echo "Verifying: re-enter password"
+	read -rs encryption_passphrase_check 
+	    if [[ "$encryption_passphrase" == "$encryption_passphrase_check" ]]; then
+		break
+	    fi
+	echo "Passphrase verification failed! Try again."
+done
+
 
 ca_name_default="oomerfarm"
 ca_name=$ca_name_default
