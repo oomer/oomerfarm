@@ -22,7 +22,6 @@ fi
 
 #if ! test -d _oomerpath_/testboss; then
 
-mkdir -p _oomerfarm_/bin
 mkdir -p _oomerfarm_/testboss
 nebula_version="v1.7.2"
 
