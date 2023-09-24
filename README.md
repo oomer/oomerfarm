@@ -1,10 +1,10 @@
 # oomerfarm
 
 [ DO NOT USE IN PRODUCTION -- WORK IN PROGRESS ]
-[ ALPHA release v0.1]
-[ BellaRender plugin is especially janky ]
-[ Linux desktop not tested yet , it may work ]
-[ security model under review ]
+
+[ ALPHA release v0.1 , only for the technically curious]
+
+[ BellaRender plugin is janky, animation support temporarily removed ]
 
 ### Disposable personal renderfarm
 >Set up a renderfarm with rented cloud or in-house computers and security bundled in a VPN.
@@ -31,7 +31,7 @@
 
  📘 To test drive for a few hours
 
-1. **Warning** The test drive uses VPN certificates that are in this code. This allows somebody who can access this github AND who knows the public ip address of your hub<sup>oomerfarm</sup> connect to the VPN<sup>oomerfarm</sup>. Use the test drive only if you understand this security hole. 
+1. **Warning** The test drive uses VPN certificates that are in this code. This allows somebody who can access this github AND who knows the public ip address of your hub<sup>oomerfarm</sup> to connect to your VPN<sup>oomerfarm</sup>. Use the test drive only if you understand this security hole. 
 
 2. <sup>[aka hub]</sup> Rent AlmaLinux 8.x or get Linux on an old computer<sup>1 core is enough</sup>
 
