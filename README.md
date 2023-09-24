@@ -1,56 +1,127 @@
 # oomerfarm
 
 [ DO NOT USE IN PRODUCTION -- WORK IN PROGRESS ]
-[ Windows and Linux desktop not tested yet , it may work ]
-[ Bella plugins not integrated yet ]
-[ No bootstrapworker.sh yet ]
-[ No local hub install yet ]
+[ ALPHA release ]
+[ BellaRender plugin is especially janky ]
+[ Linux desktop not tested yet , it may work ]
 [ security model under review ]
-# *oomerfarm:* an occasional renderfarm deployed using simple bash scripts and Google Drive 
+
+### Disposable personal renderfarm
+    Set up a renderfarm with rented cloud or in-house computers and security bundled in a VPN.
+
+***Requirements:***
+
+**Cloud**
+- 1+ server(s) with LOTSA<sup>TM</sup> cores
+- AlmaLinux 8.x 
+- git
+- Google account<sup>not needed for test drive</sup>
+
+**Desktop**
+- ssh, git 
+- [ git-bash ]( https://git-scm.com )
+- [ Deadline ]( https://awsthinkbox.com )
+
+**Cloud or in-house server**
+- 1 server with 1+ cores
+- AlmaLinux 8.x in the cloud
+- git
 
 ![image](./img/bootstraphub.gif )
 
-#### Navigate the complex render manager interdependencies between networking, database server, certificate-signing, secrets management and file sharing allowing you to:
+ 📘 To test drive for a few hours
 
-- Spin up a weekend renderfarm on Friday and tear it all down on Sunday.
-- Install AWS Thinkbox's Deadline and get all the the benefits of a studio grade render manger.
-- Connect to a cloud file server to save textures and scene files and to download rendered frames.
-- Use vms from Google Cloud, AWS, Azure simultaneously or dump those guys and book an all-expenses-included monthly provider like https://crunchbits.com ( not a paid schill, I just love them )
+1. **Warning** The test drive uses VPN certificates that are in this code. This allows somebody who can access this github AND who knows the public ip address of your hub<sup>oomerfarm</sup> to access your renderfarm. Use the test drive only if you understand this security hole. 
 
-> 📘 10 Steps for the weekend render warrior!
->
->1. Buy a cloud server for an hour, week or a year and install AlmaLinux 8.x or RockLinux 8.x, [[ ***keyoomerfarm.sh*** will request IPv4 internet address of this machine]]
->> - or use an old computer in the basement 
->2. Install **git** on personal computer. Execute these lines natively on Linux/MacOS and via Windows bash if https://git-scm.com is installed.
->```sh
->git clone https://github.com/oomer/oomerfarm.git
->cd oomerfarm 
->bash keyoomerfarm.sh
->```
->
->3. Open folder oomerfarm/_oomerkeys_ . Open https://drive.google.com . Drag ***hub.keybundle.enc*** and ***workers.keybundle.enc*** to a Google Drive folder. Share using ***Anyone with link*** then click ***Copy Link***'. ***bootstraphub.sh*** will request this URL
->4. From personal computer ***ssh*** to server from step #1
->>> as root or as sudo user [ sudo bash ...]
->```sh
->git clone https://github.com/oomer/oomerfarm.git
->cd oomerfarm
->bash bootstraphub.sh
->```
->5. On personal computer
-> - ( leave this window open to maintain VPN)
->```sh
->bash joinoomerfarm.sh
->```
->6. ***Finder:*** ( smb://10.10.0.1 )
+1. <sup>hub</sup> Rent AlmaLinux 8.x or in-house comouter
+
+```sh
+dnf -y install git
+git clone https://github.com/oomer/oomerfarm.git
+cd oomerfarm 
+bash bootstraphub.sh
+```
+2. <sup>worker</sup> Rent 1+ servers with LOTSA<sup>TM</sup> cores
+
+```sh
+dnf -y install git
+git clone https://github.com/oomer/oomerfarm.git
+cd oomerfarm 
+bash bootstrapworker.sh
+```
+
+3. <sup>boss</sup> on Desktop Linux/MacOS shell or [ git-bash ]( https://git-scm.com )
+```sh
+git clone https://github.com/oomer/oomerfarm.git
+cd oomerfarm 
+bash joinoomerfarm.sh
+* On Windows run joinoomerfarm.bat as administrator
+```
+4. On desktop computer
+    - Install [ Deadline ]( https://awsthinkbox.com )
+    - Mount<sup>win/mac/linux</sup> DeadlineRepositry10<sup>share</sup> from 10.10.0.1 
+    - Mount<sup>win/mac/linux</sup> oomerfarm<sup>share</sup> from 10.10.0.1
+        - [user] ***oomerfarm***
+        - [password] ***oomerfarm***
+    - Start DeadlineMonitor
+    - Select BellaRender 
+        - pick orange-juice.bsz on oomerfarm<sup>share</sup>
+        - pick output directory on oomerfarm<sup>share</sup>
+        - submit job
+        - monitor job
+        - copy rendered images locally from oomerfarm<sup>share</sup>
+5. Terminate any rented hubs + workers to avoid any further hourly charges. Done!
+
+ 📘 Steps for a long term personal renderfarm
+
+1. 
+1. On desktop<sup>win/mac/linux</sup>
+
+```sh
+dnf -y install git
+git clone https://github.com/oomer/oomerfarm.git
+cd oomerfarm 
+bash keyoomerfarm.sh
+```
+
+2. Open folder oomerfarm/_oomerkeys_ . Put ***hub.keybundle.enc*** and ***workers.keybundle.enc*** on Google Drive. Share using ***Anyone with link*** then click ***Copy Link***'. 
+
+3. Rent AlmaLinux 8.x or in-house computer<sup>hub</sup>
+
+```sh
+dnf -y install git
+git clone https://github.com/oomer/oomerfarm.git
+cd oomerfarm 
+bash bootstraphub.sh
+* instead of "i_agree_this_is_unsafe" use "hub"
+* Use your google drive url to hub.keybundle.enc
+```
+4. Rent 1+ servers with LOTSA<sup>TM</sup> cores<sup>worker(s)</sup>
+
+```sh
+dnf -y install git
+git clone https://github.com/oomer/oomerfarm.git
+cd oomerfarm 
+bash bootstrapworker.sh
+* Use your google drive url to worker.keybundle.enc
+```
+5. On desktop<sup>win/mac/linux</sup>
+```sh
+bash joinoomerfarm.sh
+* Leave shell open to maintain VPN
+```
+6. ***Finder:*** ( smb://10.10.0.1 )
 ***Explorer:*** ( \\\\10.10.0.1 )
-> - mount shares ***DeadineRepository10*** and ***Bella***
-> - [user] ***deadline***
-> - [password] as requested by ***boostraphub.sh***
->7. Drag a Bella scene file (***.bzx***) to smb://10.10.0.1/Bella
->8. Run Deadline Client installer on personal computer from https://awsthinkbox.com
->9. Launch Deadline Monitor and submit job
->10. Wonder why nothing happens...Duh we forgot to spin up some workers. [ to be continued ]
-
+ - mount shares ***DeadineRepository10*** and ***Bella***
+ - [user] ***oomerfarm***
+ - [password] only you know
+7. Drag a Bella scene file (***.bzx***) to 
+    - //10.10.0.1/oomerfarm/bella <sup>windows</sup>
+    - //Volumes/oomerfarm/bella <sup>mac</sup>
+    - //mnt/oomerfarm/bella <sup>linux</sup>
+8. Run [***Deadline Client***](https://awsthinkbox.com) installer on desktop<sup>win/mac/linux</sup>
+9. Launch Deadline Monitor and submit job
+10. Done!
 
 ## Tech breakdown:
 -  a **hub** host running Alma/Rocky Linux 8.x, Samba, MongoDB and AWS Thinkbox's Deadline Repository in the cloud
@@ -60,6 +131,9 @@
 - Win/Mac/Linux **boss** hosts for submitting jobs
 - certificate signing scripts generic enough to natively run on Linux and MacOS without additonal runtimes.
 ( Windows needs msys as in https://git-scm.com )
+
+#### Navigate the complex render manager interdependencies between networking, database server, certificate-signing, secrets management and file sharing
+
 
 TODO:
 - MongoDB security is over unsecure http but within secure VPN, should add openssl certs to secure against man-in-the-VPN-middle attacks
