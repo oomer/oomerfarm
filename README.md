@@ -7,7 +7,7 @@
 [ security model under review ]
 
 ### Disposable personal renderfarm
-    Set up a renderfarm with rented cloud or in-house computers and security bundled in a VPN.
+>Set up a renderfarm with rented cloud or in-house computers and security bundled in a VPN.
 
 ***Requirements:***
 
@@ -19,21 +19,21 @@
 
 **Desktop**
 - ssh, git 
-- [ git-bash ]( https://git-scm.com )
 - [ Deadline ]( https://awsthinkbox.com )
+- [ git-bash ]( https://git-scm.com )<sup>win only</sup>
 
 **Cloud or in-house server**
 - 1 server with 1+ cores
-- AlmaLinux 8.x in the cloud
+- AlmaLinux 8.x 
 - git
 
 ![image](./img/bootstraphub.gif )
 
  📘 To test drive for a few hours
 
-1. **Warning** The test drive uses VPN certificates that are in this code. This allows somebody who can access this github AND who knows the public ip address of your hub<sup>oomerfarm</sup> to access your renderfarm. Use the test drive only if you understand this security hole. 
+1. **Warning** The test drive uses VPN certificates that are in this code. This allows somebody who can access this github AND who knows the public ip address of your hub<sup>oomerfarm</sup> connect to the VPN<sup>oomerfarm</sup>. Use the test drive only if you understand this security hole. 
 
-1. <sup>hub</sup> Rent AlmaLinux 8.x or in-house comouter
+2. <sup>[aka hub]</sup> Rent AlmaLinux 8.x or get Linux on an old computer<sup>1 core is enough</sup>
 
 ```sh
 dnf -y install git
@@ -41,7 +41,7 @@ git clone https://github.com/oomer/oomerfarm.git
 cd oomerfarm 
 bash bootstraphub.sh
 ```
-2. <sup>worker</sup> Rent 1+ servers with LOTSA<sup>TM</sup> cores
+3. <sup>[aka worker(s)]</sup> Rent 1+ servers with LOTSA<sup>TM</sup> cores
 
 ```sh
 dnf -y install git
@@ -50,14 +50,14 @@ cd oomerfarm
 bash bootstrapworker.sh
 ```
 
-3. <sup>boss</sup> on Desktop Linux/MacOS shell or [ git-bash ]( https://git-scm.com )
+4. <sup>[aka boss]</sup> on Desktop Linux/MacOS shell or [ git-bash ]( https://git-scm.com )
 ```sh
 git clone https://github.com/oomer/oomerfarm.git
 cd oomerfarm 
 bash joinoomerfarm.sh
 * On Windows run joinoomerfarm.bat as administrator
 ```
-4. On desktop computer
+5. On desktop<sup>boss</sup>
     - Install [ Deadline ]( https://awsthinkbox.com )
     - Mount<sup>win/mac/linux</sup> DeadlineRepositry10<sup>share</sup> from 10.10.0.1 
     - Mount<sup>win/mac/linux</sup> oomerfarm<sup>share</sup> from 10.10.0.1
@@ -70,12 +70,11 @@ bash joinoomerfarm.sh
         - submit job
         - monitor job
         - copy rendered images locally from oomerfarm<sup>share</sup>
-5. Terminate any rented hubs + workers to avoid any further hourly charges. Done!
+6. Terminate any rented hubs + workers to avoid any further hourly charges. Done!
 
  📘 Steps for a long term personal renderfarm
 
-1. 
-1. On desktop<sup>win/mac/linux</sup>
+1. On desktop<sup>boss</sup>
 
 ```sh
 dnf -y install git
@@ -86,7 +85,7 @@ bash keyoomerfarm.sh
 
 2. Open folder oomerfarm/_oomerkeys_ . Put ***hub.keybundle.enc*** and ***workers.keybundle.enc*** on Google Drive. Share using ***Anyone with link*** then click ***Copy Link***'. 
 
-3. Rent AlmaLinux 8.x or in-house computer<sup>hub</sup>
+3. <sup>[aka hub]</sup> Rent AlmaLinux 8.x or get Linux on an old computer<sup>1 core is enough</sup>
 
 ```sh
 dnf -y install git
@@ -96,7 +95,7 @@ bash bootstraphub.sh
 * instead of "i_agree_this_is_unsafe" use "hub"
 * Use your google drive url to hub.keybundle.enc
 ```
-4. Rent 1+ servers with LOTSA<sup>TM</sup> cores<sup>worker(s)</sup>
+4. <sup>[aka worker(s)]</sup> Rent 1+ servers with LOTSA<sup>TM</sup> cores
 
 ```sh
 dnf -y install git
