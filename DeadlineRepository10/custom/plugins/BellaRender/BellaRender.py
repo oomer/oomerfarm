@@ -4,11 +4,13 @@ from Deadline.Plugins import *
 from Deadline.Scripting import FileUtils, SystemUtils, RepositoryUtils, FileUtils, PathUtils, FrameUtils, StringUtils
 from System.Diagnostics import *
 
+
 from pathlib import Path
 import shutil
 import math as m
 import random
 import sys
+import os
 
 cam_mat4 = [[-0.991192, 0, 0, 0],
             [0, 0, -1, 0],
@@ -25,6 +27,10 @@ def CleanupDeadlinePlugin(deadlinePlugin):
 
 class BellaRenderPlugin(DeadlinePlugin):
     sceneFile = ""
+    sceneFilesStem = ""
+    outputDirectory = ""
+    outputExt = ""
+    outputName = ""
     def __init__(self):
         """setup Deadline callbacks"""
         if sys.version_info.major == 3:
@@ -33,6 +39,7 @@ class BellaRenderPlugin(DeadlinePlugin):
         self.PreRenderTasksCallback += self.PreRenderTasks
         self.RenderExecutableCallback += self.RenderExecutable
         self.RenderArgumentCallback += self.RenderArgument
+        self.PostRenderTasksCallback += self.PostRenderTasks
 
     def Cleanup(self):
         """Clean up the plugin."""
@@ -52,7 +59,9 @@ class BellaRenderPlugin(DeadlinePlugin):
         self.ProcessPriority = ProcessPriorityClass.BelowNormal
         self.UseProcessTree = True
         self.StdoutHandling = True
-
+        bella_lic = Path('/mnt/oomerfarm/bella/bella.lic')
+        if bella_lic.exists():
+            self.SetEnvironmentVariable("BELLA_LICENSE_TEXT",bella_lic.read_text())
         self.AddStdoutHandlerCallback(
             "(\[WARNING\])").HandleCallback += self.HandleStdoutWarning
         # [ ] bella_cli currently has a lot of non critical error messages
@@ -76,52 +85,63 @@ class BellaRenderPlugin(DeadlinePlugin):
     def PreRenderTasks( self ):
         # This Plugin instance knows what frame it is working on via self.getStartFrame()
         # Substitute work frame into sceneFile string
-        self.sceneFile = self.GetPluginInfoEntry( "sceneFile" ).strip()
-        self.sceneFile = RepositoryUtils.CheckPathMapping( self.sceneFile )
+        sceneFile = self.GetPluginInfoEntry( "sceneFile" ).strip()
+        # GUI Configure Repository Options -> Mapped Paths
+        sceneFile = RepositoryUtils.CheckPathMapping( sceneFile )
+
+        outputDirectory = self.GetPluginInfoEntry( "outputDirectory" ).strip()  
+        outputDirectory = RepositoryUtils.CheckPathMapping( outputDirectory )
+        
+        sceneFile = sceneFile.replace( "\\", "/" ) #win
+        sceneFile = sceneFile.replace("//10.10.0.1","/mnt") #win
+        sceneFile = sceneFile.replace("/Volumes","/mnt") #mac
+
+        outputDirectory = outputDirectory.replace( "\\", "/" ) #win
+        outputDirectory = outputDirectory.replace("//10.10.0.1","/mnt") #win
+        outputDirectory = outputDirectory.replace("/Volumes","/mnt") #mac
+        
+        self.outputExt = self.GetPluginInfoEntryWithDefault( "outputExt", "").strip()
+        if self.outputExt == 'default':
+            self.outputExt = '.png'
 
         ##padded frame stuff is messing with smb octet name
-	## OOF the problem is the smb path //10.10.0.1 is being replaced with //10.10.$framenumber.1
+	## OOF problem is the smb path //10.10.0.1 is being replaced with //10.10.$framenumber.1
+        # should be fine if //10.10.0.1 is converted to /mnt before padding is done
+        # suspect that GetFrameStringFromFilename just looks for last num.* pattern 
 	## [TODO] write my own function without this problem
-        ###sceneFileFramePadded = FrameUtils.GetFrameStringFromFilename( self.sceneFile )
-        ###paddingSize = len( sceneFileFramePadded )
-        #print('userFramePadded', sceneFileFramePadded, 'paddingSize', paddingSize) 
-        ###if paddingSize > 0:
-        ###    renderFramePadded = StringUtils.ToZeroPaddedString( self.GetStartFrame(), paddingSize, False )
-        ###    #print('renderFramePadded',renderFramePadded)
-        ###    self.sceneFile = FrameUtils.SubstituteFrameNumber( self.sceneFile, renderFramePadded )
+
+        sceneFileFramePadded = FrameUtils.GetFrameStringFromFilename( sceneFile )
+        paddingSize = len( sceneFileFramePadded )
+        print('userFramePadded', sceneFileFramePadded, 'paddingSize', paddingSize) 
+        if paddingSize > 0:
+            # current frame
+            renderFramePadded = StringUtils.ToZeroPaddedString( self.GetStartFrame(), paddingSize, False )
+            self.sceneFile = FrameUtils.SubstituteFrameNumber( sceneFile, renderFramePadded )
+        else:
+            self.sceneFile = sceneFile
+        self.outputDirectory = outputDirectory
+
+    def PostRenderTasks( self ):
+        tempPath = Path(PathUtils.GetSystemTempPath())
+        shutil.copy( tempPath / self.outputName, self.outputDirectory)
 
     def RenderExecutable(self):
         """Callback to get executable used for rendering"""
         executableList =  self.GetConfigEntry("BellaRenderPluginRenderExecutable")
         # Goes through semi colon separated list of paths in Bella.param
         # Uses default Diffuse Logic install location for Windows, MacOS and Linux Bella CLI
-        #executable = FileUtils.SearchFileList( executableList )
-        executable="/usr/local/bin/bella_cli" # [TODO] hardcoded for now, therefore no cross platform rendering for now
+        executable = FileUtils.SearchFileList( executableList )
+        #print(FileUtils.SearchFileList( executableList ),"fileutile",executableList)
+        #executable="/usr/local/bin/bella_cli" # [TODO] hardcoded for now, therefore no cross platform rendering for now
         if( executable == "" ): self.FailRender( "Bella render executable not found in plugin search paths" )
         return executable
 
     def RenderArgument(self):
         """Callback to get arguments passed to the executable"""
         sceneFile = self.sceneFile
-        #bypassing because remap exists only in the database
-        # [TODO] initial oomerfarm is pretty standardized so can insert this and then allow user to change afterwards
-        #sceneFile = RepositoryUtils.CheckPathMapping( sceneFile )   # remap path for worker's OS
-
-        # [TODO] because of bypass above need to handle win,mac,linux cases
-        sceneFile = sceneFile.replace( "\\", "/" ) #win
-        sceneFile = sceneFile.replace("//10.10.0.1","/mnt") #win
-        sceneFile = sceneFile.replace("/Volumes","/mnt") #mac
-
-        outputDirectory = self.GetPluginInfoEntry( "outputDirectory" ).strip()  
-        #outputDirectory = RepositoryUtils.CheckPathMapping( outputDirectory )   
-        
-        # TODO
-        outputDirectory = outputDirectory.replace( "\\", "/" ) #win
-        outputDirectory = outputDirectory.replace("//10.10.0.1","/mnt") #win
-        outputDirectory = outputDirectory.replace("/Volumes","/mnt") #mac
-        #outputDirectory = "/mnt/oomerfarm/bella/renders"
-        print("AAAAAAA",outputDirectory)
-        outputExt = self.GetPluginInfoEntryWithDefault( "outputExt", "").strip()
+        outputDirectory = self.outputDirectory
+    
+        outputExt = self.outputExt
         imageWidth = self.GetPluginInfoEntryWithDefault( "imageWidth", "").strip()
         imageHeight = self.GetPluginInfoEntryWithDefault( "imageHeight", "").strip()
         targetNoise = self.GetPluginInfoEntryWithDefault( "targetNoise", "").strip()
@@ -129,44 +149,50 @@ class BellaRenderPlugin(DeadlinePlugin):
         timeLimit = self.GetPluginInfoEntryWithDefault( "timeLimit", "").strip()
         denoiseName = self.GetPluginInfoEntryWithDefault( "denoise", "").strip()
 
-	# [TODO] disable for alpha release
-        #floatAttributeName = self.GetPluginInfoEntryWithDefault( "floatAttributeName", "").strip()
-        #print("XXXXXX",self.GetPluginInfoEntryWithDefault( "floatAttributeStart", ""))
-        #floatAttributeStart = float(self.GetPluginInfoEntryWithDefault( "floatAttributeStart", "").strip())
-        #floatAttributeEnd = float(self.GetPluginInfoEntryWithDefault( "floatAttributeEnd", "").strip())
-        #animationFrames = int(self.GetPluginInfoEntryWithDefault( "animationFrames", "").strip())
-        #animationLinearIncrement = float(self.GetPluginInfoEntryWithDefault( "animationLinearIncrement", "").strip())
-        #currentFrame = self.GetStartFrame()
-        #print(floatAttributeName )
-        #print(floatAttributeStart )
-        #print(floatAttributeEnd )
-        #print(animationFrames,animationLinearIncrement )
-        #print((float(currentFrame-1)*animationLinearIncrement)+floatAttributeStart)
-        #focalLen = (float(currentFrame-1)*animationLinearIncrement)+floatAttributeStart
+        floatAttributeName = self.GetPluginInfoEntryWithDefault( "floatAttributeName", "").strip()
+        print("XXXXXX",self.GetPluginInfoEntryWithDefault( "floatAttributeStart", ""))
+        if floatAttributeName != "":
+            floatAttributeStart = float(self.GetPluginInfoEntryWithDefault( "floatAttributeStart", "").strip())
+            floatAttributeEnd = float(self.GetPluginInfoEntryWithDefault( "floatAttributeEnd", "").strip())
+            animationFrames = int(self.GetPluginInfoEntryWithDefault( "animationFrames", "").strip())
+            animationLinearIncrement = float(self.GetPluginInfoEntryWithDefault( "animationLinearIncrement", "").strip())
+            currentFrame = self.GetStartFrame()
+            print(floatAttributeName )
+            print(floatAttributeStart )
+            print(floatAttributeEnd )
+            print(animationFrames,animationLinearIncrement )
+            print((float(currentFrame-1)*animationLinearIncrement)+floatAttributeStart)
+            animInterp = (float(currentFrame-1)*animationLinearIncrement)+floatAttributeStart
+        else:
+            currentFrame = self.GetStartFrame()
+            animationFrames = 10
 
-        #result_mat4 = [[ 0,0,0,0],
-        #        [0,0,0,0],
-        #        [0,0,0,0],
-        #        [0,0,0,0]]
+        camera_anim = 1
 
-        
-        #rot_mat4 = [[m.cos(m.radians((5.0/animationFrames)*(currentFrame-1))), m.sin(m.radians((5.0/animationFrames)*(currentFrame-1))), 0, 0],
-        #            [-m.sin(m.radians((5.0/animationFrames)*(currentFrame-1))), m.cos(m.radians((5.0/animationFrames)*(currentFrame-1))), 0, 0],
-        #            [0, 0, 1, 0],
-        #            [0, 0, 0, 1]]
+        if camera_anim:
+            result_mat4 = [[ 0,0,0,0],
+                    [0,0,0,0],
+                    [0,0,0,0],
+                    [0,0,0,0]]
 
-        #for i in range(len(cam_mat4)):
-        #    for j in range(len(rot_mat4[0])):
-        #        for k in range(len(rot_mat4)):
-        #            result_mat4[i][j] += cam_mat4[i][k] * rot_mat4[k][j]
+            #         
+            rot_mat4 = [[m.cos(m.radians((5.0/animationFrames)*(currentFrame-1))), m.sin(m.radians((5.0/animationFrames)*(currentFrame-1))), 0, 0],
+                        [-m.sin(m.radians((5.0/animationFrames)*(currentFrame-1))), m.cos(m.radians((5.0/animationFrames)*(currentFrame-1))), 0, 0],
+                        [0, 0, 1, 0],
+                        [0, 0, 0, 1]]
 
-        #print('cam transform',result_mat4)
+            for i in range(len(cam_mat4)):
+                for j in range(len(rot_mat4[0])):
+                    for k in range(len(rot_mat4)):
+                        result_mat4[i][j] += cam_mat4[i][k] * rot_mat4[k][j]
 
-        #bella_mat4 = "mat4( "
-        #for each in result_mat4:
-        #    for col in each:
-        #        bella_mat4 += str(col)+" "
-        #bella_mat4 += " )"
+            print('cam transform',result_mat4)
+
+            bella_mat4 = "mat4( "
+            for each in result_mat4:
+                for col in each:
+                    bella_mat4 += str(col)+" "
+            bella_mat4 += " )"
 
         #instances_mat4 = "mat4f["+str(currentFrame)+"]{ "
         #for each in range(1,currentFrame+1):
@@ -199,25 +225,12 @@ class BellaRenderPlugin(DeadlinePlugin):
 
         #print(instances_mat4)
 
-
-        # [ ] do this in PreRenderTasks, needs cross platform testing 
-        if SystemUtils.IsRunningOnWindows():
-            sceneFile = sceneFile.replace( "/", "\\" )
-            outputDirectory = outputDirectory.replace( "/", "\\" )
-            if sceneFile.startswith( "\\" ) and not sceneFile.startswith( "\\\\" ):
-                sceneFile = "\\" + sceneFile
-            if outputDirectory.startswith( "\\" ) and not outputDirectory.startswith( "\\\\" ):
-                outputDirectory = "\\" + outputDirectory
-        else:
-            sceneFile = sceneFile.replace( "\\", "/" )
-
         sceneFilePathlib = Path(sceneFile)
         sceneFileStem = sceneFilePathlib.stem
         sceneFileSuffix = sceneFilePathlib.suffix
         # [ ] Had issue with .bsz res directory failing creation by bella_cli
         # created /tmp/res manually and it worked
         tempPath = Path(PathUtils.GetSystemTempPath())
-        print(tempPath,sceneFileSuffix)
 
         if sceneFileSuffix == ".bsz":
             # Make a local copy of the sceneFile when rendering a .bsz to prevent unzip clashes with multiple machines
@@ -234,23 +247,22 @@ class BellaRenderPlugin(DeadlinePlugin):
         if outputExt == ".png" or outputExt == "default":
             outputExt = "" # [ ] HACK, parseFragment has no method to unset .outputExt properly ( like null )  
         arguments += " -pf:\"beautyPass.outputExt=\\\"%s\\\";\"" % outputExt
-        
-        arguments += " -pf:\"beautyPass.outputName=\\\"%s\\\";\"" % sceneFileStem
 
-        #if floatAttributeName == "":
-        #   arguments += " -pf:\"beautyPass.outputName=\\\"%s\\\";\"" % sceneFileStem
-        #lse:
-        #   renderFramePadded = StringUtils.ToZeroPaddedString( self.GetStartFrame(), 5, False )
-        #   print(str(sceneFileStem)+renderFramePadded)
-        #   arguments += " -pf:\"beautyPass.outputName=\\\"%s\\\";\"" % (str(sceneFileStem)+renderFramePadded)
+        if floatAttributeName == "":
+           paddedStem = sceneFileStem
+        else:
+           renderFramePadded = StringUtils.ToZeroPaddedString( self.GetStartFrame(), 5, False )
+           paddedStem = (str(sceneFileStem)+renderFramePadded)
 
-
-
+        arguments += " -pf:\"beautyPass.outputName=\\\"%s\\\";\"" % paddedStem
+        if outputExt == "":
+            outputExt = ".png"
+        self.outputName = paddedStem + outputExt
 
         # [ ] Warning: sceneFile name used for the outputName, to avoid name clashing by blindly using what is set in bella
         # bella_cli will fail when the outputName has the string default anywhere
-        #if not floatAttributeName == "":
-        #    arguments += " -pf:\"{:s}={:f}f;\"".format(floatAttributeName, focalLen)
+        if not floatAttributeName == "":
+            arguments += " -pf:\"{:s}={:f}f;\"".format(floatAttributeName, animInterp)
 
         if not targetNoise == "":
             arguments += " -pf:\"beautyPass.targetNoise=%su;\"" % targetNoise
@@ -261,11 +273,11 @@ class BellaRenderPlugin(DeadlinePlugin):
         if not denoiseName == "":
             arguments += " -pf:\"beautyPass.denoise=true; beautyPass.denoiseOutputName=\\\"%s\\\";\"" % denoiseName
         arguments += " -pf:\"settings.threads=0;\"" 
-        #arguments += " -pf:\"camera_xform.steps[0].xform=%s;\"" % bella_mat4
+        arguments += " -pf:\"camera_xform.steps[0].xform=%s;\"" % bella_mat4
         
         #arguments += " -pf:\"instancer.steps[0].instances=%s;\"" % instances_mat4
 
-        arguments += " -od:\"%s\"" % outputDirectory
+        arguments += " -od:\"%s\"" % tempPath
         arguments += " -vo" 
         if not imageWidth == "":
             arguments += " -res:\"%sx%s\"" %(imageWidth,imageHeight)
