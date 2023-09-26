@@ -24,7 +24,6 @@ nebulasha256="4600c23344a07c9eda7da4b844730d2e5eb6c36b806eb0e54e4833971f336f70"
 
 worker_prefix=worker
 encryption_passphrase="oomerfarm"
-linux_password="oomerfarm"
 
 lighthouse_internet_port="42042"
 lighthouse_internet_port_default="42042"
@@ -173,8 +172,8 @@ fi
 dnf -y install tar
 
 # needed for /usr/local/bin/oomerfarm_shutdown.sh
-#dnf -y install sysstat
-#systemctl enable --now sysstat
+dnf -y install sysstat
+systemctl enable --now sysstat
 
 # probe to see if downloadables exist
 echo "thinkbox"
@@ -236,7 +235,7 @@ rm ${worker_prefix}.keybundle
 
 cat <<EOF > /etc/nebula/smb_credentials
 username=${deadline_user}
-password=${linux_user}
+password=${linux_password}
 domain=WORKGROUP
 EOF
 chmod go-rwx /etc/nebula/smb_credentials
@@ -404,45 +403,41 @@ firewall:
 
 EOF
 
-#cat <<EOF > /etc/systemd/system/oomerfarm-idle-check.timer
-#[Unit]
-#Description=oomerfarm worker idle check timer
-#
-#[Timer]
-#OnCalendar=*:0/10:0
-#Persistent=true
-#Unit=oomerfarm-idle-shutdown.service
-#
-#[Install]
-#WantedBy=timers.target
-#EOF
-#
-#cat <<EOF > /etc/systemd/system/oomerfarm-idle-check.shutdown.service
-#[Unit]
-#description=Bella idle shutdown service
-#
-#[Service]
-#Type=oneshot
-#Nice=19
-#IOSchedulingClass=idle
-#ExecStart=/usr/local/bin/oomerfarm_shutdown.sh
-#EOF
+cat <<EOF > /etc/systemd/system/oomerfarm-shutdown.timer
+[Unit]
+Description=oomerfarm worker idle check timer
 
-#cat <<EOF > /usr/local/bin/oomerfarm_shutdown.sh
-##!/bin/bash
-#
-##systat runs every 15 minutes, therefore we need to hold off until uptime > 900 seconds
-#uptime=$(awk '{print $1}' /proc/uptime)
-#minutesago=$(date -d -30mins +"%T")
-#idle=$(sar -u -s ${minutesago} | grep "Average" | awk '{print $8}')
-#if [ ${uptime%.*} -gt 900 ]; then
-#	if [ ${idle%.*} -gt 90 ]; then
-#		/usr/sbin/shutdown now
-#	fi
-#fi
-#EOF
-#
-#chmod +x /usr/local/bin/oomerfarm_shutdown.sh
+[Timer]
+OnCalendar=*:0/10:0
+Persistent=true
+Unit=oomerfarm-shutdown.service
+
+[Install]
+WantedBy=timers.target
+EOF
+
+cat <<EOF > /etc/systemd/system/oomerfarm-shutdown.service
+[Unit]
+description=Bella idle shutdown service
+
+[Service]
+Type=oneshot
+Nice=19
+IOSchedulingClass=idle
+ExecStart=/usr/local/bin/oomerfarm_shutdown.sh
+EOF
+
+systemctl enable --now oomerfarm-shutdown.timer
+
+
+cat <<EOF > /usr/local/bin/oomerfarm_shutdown.sh
+#!/bin/bash
+uptime=$(awk '{print $1}' /proc/uptime)
+if [ ${uptime%.*} -gt 900 ]; then
+	/usr/sbin/shutdown now
+fi
+EOF
+chmod +x /usr/local/bin/oomerfarm_shutdown.sh
 
 firewall-cmd --quiet --zone=public --add-port=42042/udp --permanent
 firewall-cmd -q --new-zone nebula --permanent

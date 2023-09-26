@@ -11,48 +11,50 @@
 
 ***Requirements:***
 
-**Cloud**
+**Cloud**<sup>worker(s)</sup>
 - 1+ server(s) with LOTSA<sup>TM</sup> cores
 - AlmaLinux 8.x 
 - git
 - Google account<sup>not needed for test drive</sup>
 
-**Desktop**
+**Desktop Win/Mac/Linux**<sup>boss</sup>
 - ssh, git 
 - [ Deadline ]( https://awsthinkbox.com )
 - [ git-bash ]( https://git-scm.com )<sup>win only</sup>
 
-**Cloud or in-house server**
+**Cloud or in-house server**<sup>hub</sup>
 - 1 server with 1+ cores
 - AlmaLinux 8.x 
 - git
+
+---
 
 ![image](./img/bootstraphub.gif )
 
  📘 To test drive for a few hours
 
-1. **Warning** The test drive uses VPN certificates that are in this code. This allows somebody who can access this github AND who knows the public ip address of your hub<sup>oomerfarm</sup> to connect to your VPN<sup>oomerfarm</sup>. Use the test drive only if you understand this security hole. 
+1. **Warning** The oomerfarm test drive uses VPN certificates that are in this code. This allows somebody who can access this github AND who knows the public ip address of your hub to connect to your VPN. Test drive only if you understand this security hole. 
 
-2. <sup>[aka hub]</sup> Rent AlmaLinux 8.x or get Linux on an old computer<sup>1 core is enough</sup>
+2. <sup>[hub]</sup> Rent AlmaLinux 8.x or get Linux on an old computer<sup>1 core is enough</sup>
 
 ```sh
 dnf -y install git
-git clone -b "v0.1" https://github.com/oomer/oomerfarm.git
+git clone -b "v0.2" https://github.com/oomer/oomerfarm.git
 cd oomerfarm 
 bash bootstraphub.sh
 ```
-3. <sup>[aka worker(s)]</sup> Rent 1+ servers with LOTSA<sup>TM</sup> cores
+3. <sup>[worker(s)]</sup> Rent 1+ servers with LOTSA<sup>TM</sup> cores
 
 ```sh
 dnf -y install git
-git clone -b "v0.1" https://github.com/oomer/oomerfarm.git
+git clone -b "v0.2" https://github.com/oomer/oomerfarm.git
 cd oomerfarm 
 bash bootstrapworker.sh
 ```
 
-4. <sup>[aka boss]</sup> on Desktop Linux/MacOS shell or [ git-bash ]( https://git-scm.com )
+4. <sup>[boss]</sup> on Desktop Linux/MacOS shell or [ git-bash ]( https://git-scm.com )<sup>Win</sup>
 ```sh
-git clone "v0.1" https://github.com/oomer/oomerfarm.git
+git clone "v0.2" https://github.com/oomer/oomerfarm.git
 cd oomerfarm 
 bash joinoomerfarm.sh
 * On Windows run joinoomerfarm.bat as administrator
@@ -78,7 +80,7 @@ bash joinoomerfarm.sh
 
 ```sh
 dnf -y install git
-git clone -b "v0.1" https://github.com/oomer/oomerfarm.git
+git clone -b "v0.2" https://github.com/oomer/oomerfarm.git
 cd oomerfarm 
 bash keyoomerfarm.sh
 ```
@@ -89,7 +91,7 @@ bash keyoomerfarm.sh
 
 ```sh
 dnf -y install git
-git clone -b "v0.1" https://github.com/oomer/oomerfarm.git
+git clone -b "v0.2" https://github.com/oomer/oomerfarm.git
 cd oomerfarm 
 bash bootstraphub.sh
 * instead of "i_agree_this_is_unsafe" use "hub"
@@ -99,19 +101,22 @@ bash bootstraphub.sh
 
 ```sh
 dnf -y install git
-git clone -b "v0.1" https://github.com/oomer/oomerfarm.git
+git clone -b "v0.2" https://github.com/oomer/oomerfarm.git
 cd oomerfarm 
 bash bootstrapworker.sh
 * Use your google drive url to worker.keybundle.enc
+* Use unique name required per worker ie worker0001, worker0002 
 ```
-5. On desktop<sup>win/mac/linux</sup>
+5. Back to desktop<sup>mac/linux</sup>
 ```sh
 bash joinoomerfarm.sh
 * Leave shell open to maintain VPN
+---
+* On Windows run joinoomerfarm.bat as administrator
 ```
 6. ***Finder:*** ( smb://10.10.0.1 )
 ***Explorer:*** ( \\\\10.10.0.1 )
- - mount shares ***DeadineRepository10*** and ***Bella***
+ - mount shares ***DeadineRepository10*** and ***oomerfarm***
  - [user] ***oomerfarm***
  - [password] only you know
 7. Drag a Bella scene file (***.bzx***) to 
