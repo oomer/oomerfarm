@@ -16,8 +16,7 @@ fi
 
 unprivileged_account="oomerfarm"
 
-thinkboxurl="https://thinkbox-installers.s3.us-west-2.amazonaws.com/Releases/Deadline/10.3/2_10.3.0.10/"
-thinkboxtar="Deadline-10.3.0.10-linux-installers.tar"
+thinkboxversion="10.2.1.1"
 
 keybundle_url_default="https://drive.google.com/file/d/13xH4vNrr6DSocD9Bhi1cEKl8FU_QIi5K/view?usp=share_link"
 
@@ -25,7 +24,6 @@ nebulasha256="4600c23344a07c9eda7da4b844730d2e5eb6c36b806eb0e54e4833971f336f70"
 
 worker_prefix=worker
 encryption_passphrase="oomerfarm"
-linux_password="oomerfarm"
 
 lighthouse_internet_port="42042"
 lighthouse_internet_port_default="42042"
@@ -174,15 +172,15 @@ fi
 dnf -y install tar
 
 # needed for /usr/local/bin/oomerfarm_shutdown.sh
-#dnf -y install sysstat
-#systemctl enable --now sysstat
+dnf -y install sysstat
+systemctl enable --now sysstat
 
 # probe to see if downloadables exist
 echo "thinkbox"
-if ! ( curl -s --head --fail -o /dev/null ${thinkboxurl}${thinkboxtar} ); then
-        echo -e "FAIL: No file found at ${mongourl}${mongotar}"
-        exit
-fi
+#if ! ( curl -s --head --fail -o /dev/null ${thinkboxurl}${thinkboxtar} ); then
+#        echo -e "FAIL: No file found at ${mongourl}${mongotar}"
+$        exit
+$fi
 
 # Get Nebula credentials
 # ======================
@@ -237,7 +235,7 @@ rm ${worker_prefix}.keybundle
 
 cat <<EOF > /etc/nebula/smb_credentials
 username=${deadline_user}
-password=${linux_user}
+password=${linux_password}
 domain=WORKGROUP
 EOF
 chmod go-rwx /etc/nebula/smb_credentials
@@ -405,25 +403,20 @@ firewall:
 
 EOF
 
-
-# Activate auto shutdown
-# ======================
-cat <<EOF > /etc/systemd/system/oomerfarm-idle-check.timer
+cat <<EOF > /etc/systemd/system/oomerfarm-shutdown.timer
 [Unit]
 Description=oomerfarm worker idle check timer
 
 [Timer]
-OnCalendar=*:0/10:0
+OnCalendar=*:0/5:0
 Persistent=true
-Unit=oomerfarm-idle-shutdown.service
+Unit=oomerfarm-shutdown.service
 
 [Install]
 WantedBy=timers.target
 EOF
 
-systemctl enable --npw oomerfarm-idle-check.timer
-
-cat <<EOF > /etc/systemd/system/oomerfarm-idle-check.shutdown.service
+cat <<EOF > /etc/systemd/system/oomerfarm-shutdown.service
 [Unit]
 description=Bella idle shutdown service
 
@@ -434,10 +427,13 @@ IOSchedulingClass=idle
 ExecStart=/usr/local/bin/oomerfarm_shutdown.sh
 EOF
 
+systemctl enable --now oomerfarm-shutdown.timer
+
+
 cat <<EOF > /usr/local/bin/oomerfarm_shutdown.sh
 #!/bin/bash
-uptime=$(awk '{print $1}' /proc/uptime)
-if [ ${uptime%.*} -gt 3600 ]; then
+uptime=\$(awk '{print \$1}' /proc/uptime)
+if [ \${uptime%.*} -gt 7000 ]; then
 	/usr/sbin/shutdown now
 fi
 EOF
@@ -460,9 +456,9 @@ grep -qxF "//$lighthouse_nebula_ip/oomerfarm /mnt/oomerfarm cifs rw,noauto,x-sys
 
 mount /mnt/DeadlineRepository10
 mount /mnt/oomerfarm
-cp /mnt/oomerfarm/installers/DeadlineClient-10.3.0.10-linux-x64-installer.run .
-chmod +x DeadlineClient-10.3.0.10-linux-x64-installer.run 
-./DeadlineClient-10.3.0.10-linux-x64-installer.run --mode unattended --unattendedmodeui minimal --repositorydir /mnt$optional_subfolder/DeadlineRepository10  --connectiontype Direct --noguimode true
+cp /mnt/oomerfarm/installers/DeadlineClient-${thinkboxversion}-linux-x64-installer.run .
+chmod +x DeadlineClient-${thinkboxversion}-linux-x64-installer.run 
+./DeadlineClient-${thinkboxversion}-linux-x64-installer.run --mode unattended --unattendedmodeui minimal --repositorydir /mnt$optional_subfolder/DeadlineRepository10  --connectiontype Direct --noguimode true
 
 cat <<EOF > /etc/systemd/system/deadlinelauncher.service 
 [Unit]
