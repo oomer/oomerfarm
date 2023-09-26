@@ -2,16 +2,22 @@
 
 # bootstrapworker.sh
 
-# Bootstrap a Deadline Worker with Nebula network on a cloud server
+# Bootstrap a Deadline renderfarm worker on AlmaLinux 8.x
+# - join existing Nebula virtual private network 
+# - with Deadline client software
+# - with Bella render plugin
 
-# Manual Deadline worker bootstrap script to set up Diffuse Logic's Bella path tracer
-# Tested on AlmaLinux 8.7 and RockyLinux 8.7
-# Provisions single machine or small scale renderfarms by hand
 # Tested on AWS, Azure, Google, Oracle, Vultr, Digital Ocaan, Linode, Heztner, Server-Factory, Crunchbits
 
+if ! [[ "$OSTYPE" == "linux-gnu"* ]]; then
+        echo -e "FAIL: Run this on Alma or Rocky Linux 8.x"
+        exit
+fi
+
 unprivileged_account="oomerfarm"
-thinkboxurl="https://thinkbox-installers.s3.us-west-2.amazonaws.com/Releases/Deadline/10.3/2_10.3.0.10/"
-thinkboxtar="Deadline-10.3.0.10-linux-installers.tar"
+
+thinkboxversion="10.2.1.1"
+
 keybundle_url_default="https://drive.google.com/file/d/13xH4vNrr6DSocD9Bhi1cEKl8FU_QIi5K/view?usp=share_link"
 
 nebulasha256="4600c23344a07c9eda7da4b844730d2e5eb6c36b806eb0e54e4833971f336f70"
@@ -19,6 +25,7 @@ nebulasha256="4600c23344a07c9eda7da4b844730d2e5eb6c36b806eb0e54e4833971f336f70"
 worker_prefix=worker
 encryption_passphrase="oomerfarm"
 linux_password="oomerfarm"
+
 lighthouse_internet_port="42042"
 lighthouse_internet_port_default="42042"
 lighthouse_nebula_ip="10.10.0.1"
@@ -26,15 +33,21 @@ lighthouse_nebula_ip_default="10.10.0.1"
 
 nebula_version="v1.7.2"
 nebula_version_default="v1.7.2"
+
+# Linux and smb user
+# ==================
 deadline_user="oomerfarm"
 deadline_user_default="oomerfarm"
+linux_password="oomerfarm"
+linux_password_default="oomerfarm"
+
 worker_auto_shutdow=0
 worker_name_default=$(hostname)
 hub_name_default="i_agree_this_is_unsafe"
 
 # Security best practice #1: add non-privileged/no-shell user to run daemons/systemd units/etc
-# Runs deadline10launcher systemd unit
-# Matches uid/gid on remote file server to read/write permissions
+# Runs deadlinelauncher systemd unit
+# Matches uid/gid on remote file server to sync read/write permissions
 
 echo -e "\n==================================================================="
 echo -e "Bootstrap this Alma/Rocky Linux machine into an oomerfarm worker"
@@ -105,10 +118,18 @@ if ! [ "$hub_name" = "i_agree_this_is_unsafe" ]; then
 	#    groupname_trusted=$groupname_trusted_default
 	#fi
 
-	echo -e "\nWhat username did you use fro file server connections?"
+	echo -e "\nFrom bootstraphub.sh what username did you choose for file server connections?"
 	read -p "    (default: $deadline_user_default): " deadline_user
 	if [ -z "$deadline_user" ]; then
 	    deadline_user=$deadline_user_default
+	fi
+
+	echo -e "\nFrom bootstraphub.sh what password did you choose for file sharing access"
+	echo "Keystrokes hidden, then hit return"
+	IFS= read -rs linux_password < /dev/tty
+	if [ -z "$linux_password" ]; then
+	    echo -e "\nFAIL: Invalid empty password"
+	    exit
 	fi
 
 	echo -e "\nENTER Google Drive URL to your keybundle"
@@ -117,21 +138,11 @@ if ! [ "$hub_name" = "i_agree_this_is_unsafe" ]; then
 	    keybundle_url=$keybundle_url_default
 	fi
 
-	if ! [ "$nebula_name" = "I_agree_this_is_unsafe_hub" ]; then
-		echo -e "\nEnter Linux/smb password of deadline user"
-		echo "Keystrokes hidden, then hit return"
-		echo "===="
-		IFS= read -rs linux_password < /dev/tty
-		if [ -z "$linux_password" ]; then
-		    echo -e "\nFAIL: invalid empty password"
-		    exit
-		fi
-	fi
 else
 	keybundle_url=$keybundle_url_default
 fi
 
-echo -e "\nEnter public ip address of hub"
+echo -e "\nEnter public ip address of oomerfarm hub"
 read -p "x.x.x.x:" lighthouse_internet_ip
 if [ -z  $lighthouse_internet_ip ]; then
         echo "Cannot continue without public ip address of hub"
@@ -167,10 +178,10 @@ dnf -y install tar
 
 # probe to see if downloadables exist
 echo "thinkbox"
-if ! ( curl -s --head --fail -o /dev/null ${thinkboxurl}${thinkboxtar} ); then
-        echo -e "FAIL: No file found at ${mongourl}${mongotar}"
-        exit
-fi
+#if ! ( curl -s --head --fail -o /dev/null ${thinkboxurl}${thinkboxtar} ); then
+#        echo -e "FAIL: No file found at ${mongourl}${mongotar}"
+$        exit
+$fi
 
 # Get Nebula credentials
 # ======================
@@ -202,6 +213,7 @@ fi
 while :
 do
     if openssl enc -aes-256-cbc -pbkdf2 -d -in ${worker_prefix}.keybundle.enc -out ${worker_prefix}.keybundle -pass file:<( echo -n "$encryption_passphrase" ) ; then
+	rm ${worker_prefix}.keybundle.enc
         break
     else
         echo "WRONG passphrase entered for ${worker_prefix}.keybundle.enc, try again"
@@ -211,14 +223,20 @@ do
     fi 
 done  
 
+# Store and secure nebula credentials
+# ===================================
 if ! test -d /etc/nebula; then
 	mkdir /etc/nebula
 fi
 tar --strip-components 1 -xvf ${worker_prefix}.keybundle -C /etc/nebula
+chown root.root /etc/nebula/*.crt
+chown root.root /etc/nebula/*.key
+rm ${worker_prefix}.keybundle
+
 
 cat <<EOF > /etc/nebula/smb_credentials
-username=oomerfarm
-password=oomerfarm
+username=${deadline_user}
+password=${linux_user}
 domain=WORKGROUP
 EOF
 chmod go-rwx /etc/nebula/smb_credentials
@@ -298,7 +316,6 @@ if ! ( test -f /usr/local/bin/nebula ); then
 	rm -f nebula-linux-amd64.tar.gz
 fi 
 
-#dnf install -y epel-release htop
 #dnf install -y epel-release htop
 
 # Install cifs dependencies
@@ -444,9 +461,9 @@ grep -qxF "//$lighthouse_nebula_ip/oomerfarm /mnt/oomerfarm cifs rw,noauto,x-sys
 
 mount /mnt/DeadlineRepository10
 mount /mnt/oomerfarm
-cp /mnt/oomerfarm/installers/DeadlineClient-10.3.0.10-linux-x64-installer.run .
-chmod +x DeadlineClient-10.3.0.10-linux-x64-installer.run 
-./DeadlineClient-10.3.0.10-linux-x64-installer.run --mode unattended --unattendedmodeui minimal --repositorydir /mnt$optional_subfolder/DeadlineRepository10  --connectiontype Direct --noguimode true
+cp /mnt/oomerfarm/installers/DeadlineClient-${thinkboxversion}-linux-x64-installer.run .
+chmod +x DeadlineClient-${thinkboxversion}-linux-x64-installer.run 
+./DeadlineClient-${thinkboxversion}-linux-x64-installer.run --mode unattended --unattendedmodeui minimal --repositorydir /mnt$optional_subfolder/DeadlineRepository10  --connectiontype Direct --noguimode true
 
 cat <<EOF > /etc/systemd/system/deadlinelauncher.service 
 [Unit]
@@ -470,8 +487,8 @@ EOF
 
 # Install Bella 
 # ====
+echo -e "\nInstalling bella_cli"
 dnf install -y --quiet mesa-vulkan-drivers mesa-libGL
-#curl -O  https://downloads.bellarender.com/bella_cli-23.1.0.tar.gz
 cp /mnt/oomerfarm/installers/bella_cli-23.4.0.tar.gz .
 tar -xvf bella_cli-23.4.0.tar.gz 
 chmod +x bella_cli
