@@ -219,6 +219,7 @@ def submitButtonPressed(*args):
         # Error Checking
         sceneFile = scriptDialog.GetValue( "sceneFileBox" )
         sequenceFramesString =  scriptDialog.GetValue( "sequenceFramesBox" ) 
+        print(sequenceFramesString) 
         if not FrameUtils.FrameRangeValid( sequenceFramesString ):
             scriptDialog.ShowMessageBox( "Frame range string is invalid, should be in form 1-10", "Error" )
             return
@@ -229,14 +230,13 @@ def submitButtonPressed(*args):
         if not File.Exists( sceneFile ):
             scriptDialog.ShowMessageBox( "Bella file %s does not exist" % sceneFile, "Error" )
             return
-        
-
+ 
         # Create Bella job info file
         # ==========================
         jobName = scriptDialog.GetValue( "nameBox" )
         jobInfoFilename = Path.Combine( ClientUtils.GetDeadlineTempPath(), "bella_job_info.job" )
         writer = StreamWriter( jobInfoFilename, False, Encoding.Unicode )
-        writer.WriteLine( "Plugin=Bella" )
+        writer.WriteLine( "Plugin=BellaRender" )
         writer.WriteLine( "Name=%s" % jobName )
         writer.WriteLine( "Comment=%s" % scriptDialog.GetValue( "commentBox" ) )
         writer.WriteLine( "Department=%s" % scriptDialog.GetValue( "departmentBox" ) )

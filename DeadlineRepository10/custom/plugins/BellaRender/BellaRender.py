@@ -123,6 +123,7 @@ class BellaRenderPlugin(DeadlinePlugin):
 
     def PostRenderTasks( self ):
         tempPath = Path(PathUtils.GetSystemTempPath())
+        print( tempPath / self.outputName, self.outputDirectory)
         shutil.copy( tempPath / self.outputName, self.outputDirectory)
 
     def RenderExecutable(self):
