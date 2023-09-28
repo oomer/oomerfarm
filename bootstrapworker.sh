@@ -40,7 +40,7 @@ deadline_user_default="oomerfarm"
 linux_password="oomerfarm"
 linux_password_default="oomerfarm"
 
-worker_auto_shutdow=0
+worker_auto_shutdown=0
 worker_name_default=$(hostname)
 hub_name_default="i_agree_this_is_unsafe"
 
@@ -168,35 +168,70 @@ fi
 #    fi
 #    echo "Passwords do not match! Try again."
 #done
+firewalld_status=$(systemctl status firewalld)
 
-dnf -y install tar
+#if ! [[ "$firewalld_status" == *"running"* ]]; then
+#fi
 
-# needed for /usr/local/bin/oomerfarm_shutdown.sh
-dnf -y install sysstat
+
+os_name=$(awk -F= '$1=="NAME" { print $2 ;}' /etc/os-release)
+if [ "$os_name" == "\"Ubuntu\"" ]; then
+	apt -y update
+	systemctl stop apparmor
+	systemctl disable apparmor
+	apt -y install sysstat
+	if [ -z "$firewalld_status" ]; then
+		apt -y install firewalld
+	fi
+	apt install policycoreutils selinux-utils selinux-basics
+	selinux-activate
+	apt -y  install cifs-utils
+	apt -y install mesa-vulkan-drivers 
+	apt install freeglut3-dev
+	apt -y install libffi7
+	ln -s /usr/lib/x86_64-linux-gnu/libffi.so.7 /usr/lib/libffi.so.6
+elif [ "$os_name"= = "\"AlmaLinux\"" ]; then
+	dnf -y update
+	dnf -y install tar
+	# needed for /usr/local/bin/oomerfarm_shutdown.sh
+	dnf -y install sysstat
+	if [ -z "$firewalld_status" ]; then
+		dnf -y install firewalld
+	fi
+	dnf install -y mesa-vulkan-drivers mesa-libGL
+	dnf install -y cifs-utils
+else
+	echo "FAIL"
+	exit
+fi
+
 systemctl enable --now sysstat
+systemctl enable --now firewalld
+modprobe cifs
 
 # probe to see if downloadables exist
 echo "thinkbox"
 #if ! ( curl -s --head --fail -o /dev/null ${thinkboxurl}${thinkboxtar} ); then
 #        echo -e "FAIL: No file found at ${mongourl}${mongotar}"
-$        exit
-$fi
+#        exit
+#fi
 
 # Get Nebula credentials
 # ======================
 if [[ "$keybundle_url" == *"https://drive.google.com/file/d"* ]]; then
 	# if find content-length, then gdrive link is not restricted, this is a guess
-	echo "foo$head"
 	head=$(curl -s --head ${keybundle_url} | grep "content-length")
 	if [[ "$head" == *"content-length"* ]]; then
 		# Extract Google uuid 
 		googlefileid=$(echo $keybundle_url | egrep -o '(\w|-){26,}')
-		echo $head2
+		echo $googlefileid
 		head2=$(curl -s --head -L "https://drive.google.com/uc?export=download&id=${googlefileid}" | grep "content-length")
 		if [[ "$head2" == *"content-length"* ]]; then
 			echo "Downloading https://drive.google.com/uc?export=download&id=${googlefileid}"
-			# [TODO fix hardcoded]
-			curl -L "https://drive.google.com/uc?export=download&id=${googlefileid}" -o ${worker_prefix}.keybundle.enc
+			# Hack with set curl fails under ubuntu , not sure how it helps
+			set -x
+			curl -L "https://drive.google.com/uc?export=download&id=$googlefileid" -o ${worker_prefix}.keybundle.enc
+			set +x
 		else
 			echo "FAIL: ${keybundle_url} is not public, Set General Access to Anyone with Link"
 			exit
@@ -240,13 +275,12 @@ domain=WORKGROUP
 EOF
 chmod go-rwx /etc/nebula/smb_credentials
 
-#dnf update -y
-dnf install tar -y
 
 # Ensure max security
 # ===================
 test_selinux=$( getenforce )
-if [[ "$test_selinux" == "Disabled" ]]; then
+if [ "$test_selinux" == "Disabled" ];  then
+	selinux-config-enforcing
 	echo -e "/nFAIL: Selinux is disabled, edit /etc/selinux/config"
 	echo "==================================================="
 	echo "Change SELINUX=disabled to SELINUX=enforcing"
@@ -255,17 +289,6 @@ if [[ "$test_selinux" == "Disabled" ]]; then
 	exit
 fi
 
-firewalld_status=$(systemctl status firewalld)
-
-if [ -z "$firewalld_status" ]; then
-	echo "INSTALL firewald"
-	dnf -y install firewalld
-	systemctl enable --now firewalld
-fi
-
-if ! [[ "$firewalld_status" == *"running"* ]]; then
-	systemctl enable --now firewalld
-fi
 
 # Wipe all services and ports except ssh and 22/tcp, may break your system
 for systemdservice in $(firewall-cmd --list-services);
@@ -315,15 +338,12 @@ if ! ( test -f /usr/local/bin/nebula ); then
 	rm -f nebula-linux-amd64.tar.gz
 fi 
 
-#dnf install -y epel-release htop
 
 # Install cifs dependencies
 # [TODO] fix kernel mismatch errors with Alma, works fine in Rocky
 # ====
-echo -e "/nInstalling cifs (smb) client dependencies"
+#echo -e "/nInstalling cifs (smb) client dependencies"
 #dnf install -y kernel-modules
-dnf install -y cifs-utils
-modprobe cifs
 
 # Create Nebula systemd unit 
 # ====
@@ -483,7 +503,6 @@ EOF
 # Install Bella 
 # ====
 echo -e "\nInstalling bella_cli"
-dnf install -y --quiet mesa-vulkan-drivers mesa-libGL
 cp /mnt/oomerfarm/installers/bella_cli-23.4.0.tar.gz .
 tar -xvf bella_cli-23.4.0.tar.gz 
 chmod +x bella_cli
