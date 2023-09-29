@@ -4,7 +4,6 @@ from Deadline.Plugins import *
 from Deadline.Scripting import FileUtils, SystemUtils, RepositoryUtils, FileUtils, PathUtils, FrameUtils, StringUtils
 from System.Diagnostics import *
 
-
 from pathlib import Path
 import shutil
 import math as m
@@ -150,37 +149,73 @@ class BellaRenderPlugin(DeadlinePlugin):
         timeLimit = self.GetPluginInfoEntryWithDefault( "timeLimit", "").strip()
         denoiseName = self.GetPluginInfoEntryWithDefault( "denoise", "").strip()
 
-        floatAttributeName = self.GetPluginInfoEntryWithDefault( "floatAttributeName", "").strip()
-        print("XXXXXX",self.GetPluginInfoEntryWithDefault( "floatAttributeStart", ""))
-        if floatAttributeName != "":
-            floatAttributeStart = float(self.GetPluginInfoEntryWithDefault( "floatAttributeStart", "").strip())
-            floatAttributeEnd = float(self.GetPluginInfoEntryWithDefault( "floatAttributeEnd", "").strip())
+        useFreeformA = self.GetPluginInfoEntryWithDefault( "useFreeformA", "").strip()
+        useFreeformB = self.GetPluginInfoEntryWithDefault( "useFreeformB", "").strip()
+        useOrbit = self.GetPluginInfoEntryWithDefault( "useOrbit", "").strip()
+        if useOrbit == "True": useOrbit = True
+        else: useOrbit = False
+        if useFreeformA == "True": useFreeformA = True
+        else: useFreeformA = False
+        if useFreeformB == "True": useFreeformB = True
+        else: useFreeformB = False
+        if useFreeformA:
+            freeformA = self.GetPluginInfoEntryWithDefault( "freeformA", "").strip()
+            freeformAStart = float(self.GetPluginInfoEntryWithDefault( "freeformAStart", "").strip())
+            freeformAEnd = float(self.GetPluginInfoEntryWithDefault( "freeformAEnd", "").strip())
             animationFrames = int(self.GetPluginInfoEntryWithDefault( "animationFrames", "").strip())
-            animationLinearIncrement = float(self.GetPluginInfoEntryWithDefault( "animationLinearIncrement", "").strip())
             currentFrame = self.GetStartFrame()
-            print(floatAttributeName )
-            print(floatAttributeStart )
-            print(floatAttributeEnd )
-            print(animationFrames,animationLinearIncrement )
-            print((float(currentFrame-1)*animationLinearIncrement)+floatAttributeStart)
-            animInterp = (float(currentFrame-1)*animationLinearIncrement)+floatAttributeStart
+            freeformAStep = float((freeformAEnd-freeformAStart ) / animationFrames)
+            freeformAVal = (float(currentFrame-1)*freeformAStep)+freeformAStart
+        # [TODO] do step calc here, allowing us to do inteps other than lerp
+        elif useFreeformB:
+            freeformB = self.GetPluginInfoEntryWithDefault( "freeformB", "").strip()
+            freeformBStart = float(self.GetPluginInfoEntryWithDefault( "freeformBStart", "").strip())
+            freeformBEnd = float(self.GetPluginInfoEntryWithDefault( "freefromBEnd", "").strip())
+            freeformBStep = float(self.GetPluginInfoEntryWithDefault( "freefromBStep", "").strip())
+            animationFrames = int(self.GetPluginInfoEntryWithDefault( "animationFrames", "").strip())
+            currentFrame = self.GetStartFrame()
+            freeformBStep = float((freeformBEnd-freeformBStart ) / animationFrames)
+            freeformBVal = (float(currentFrame-1)*freeformBStep)+freeformBStart
         else:
             currentFrame = self.GetStartFrame()
-            animationFrames = 10
+            animationFrames = int(self.GetPluginInfoEntryWithDefault( "animationFrames", "").strip())
 
-        camera_anim = 1
-
-        if camera_anim:
+        if useOrbit:
             result_mat4 = [[ 0,0,0,0],
                     [0,0,0,0],
                     [0,0,0,0],
                     [0,0,0,0]]
+            cam_matrix_a = float(self.GetPluginInfoEntryWithDefault( "cam_matrix_a", "0").strip())
+            cam_matrix_b = float(self.GetPluginInfoEntryWithDefault( "cam_matrix_b", "0").strip())
+            cam_matrix_c = float(self.GetPluginInfoEntryWithDefault( "cam_matrix_c", "0").strip())
+            cam_matrix_d = float(self.GetPluginInfoEntryWithDefault( "cam_matrix_d", "0").strip())
+            cam_matrix_e = float(self.GetPluginInfoEntryWithDefault( "cam_matrix_e", "0").strip())
+            cam_matrix_f = float(self.GetPluginInfoEntryWithDefault( "cam_matrix_f", "0").strip())
+            cam_matrix_g = float(self.GetPluginInfoEntryWithDefault( "cam_matrix_g", "0").strip())
+            cam_matrix_h = float(self.GetPluginInfoEntryWithDefault( "cam_matrix_h", "0").strip())
+            cam_matrix_i = float(self.GetPluginInfoEntryWithDefault( "cam_matrix_i", "0").strip())
+            cam_matrix_j = float(self.GetPluginInfoEntryWithDefault( "cam_matrix_j", "0").strip())
+            cam_matrix_k = float(self.GetPluginInfoEntryWithDefault( "cam_matrix_k", "0").strip())
+            cam_matrix_l = float(self.GetPluginInfoEntryWithDefault( "cam_matrix_l", "0").strip())
+            cam_matrix_m = float(self.GetPluginInfoEntryWithDefault( "cam_matrix_m", "0").strip())
+            cam_matrix_n = float(self.GetPluginInfoEntryWithDefault( "cam_matrix_n", "0").strip())
+            cam_matrix_o = float(self.GetPluginInfoEntryWithDefault( "cam_matrix_o", "0").strip())
+            cam_matrix_p = float(self.GetPluginInfoEntryWithDefault( "cam_matrix_p", "1").strip())
+            orbDegrees = float(self.GetPluginInfoEntryWithDefault( "orbDegrees", "0").strip())
+            cam_mat4 = [[cam_matrix_a, cam_matrix_b, cam_matrix_c, cam_matrix_d],
+                        [cam_matrix_e, cam_matrix_f, cam_matrix_g, cam_matrix_h],
+                        [cam_matrix_i, cam_matrix_j, cam_matrix_k, cam_matrix_l],
+                        [cam_matrix_m, cam_matrix_n, cam_matrix_o, cam_matrix_p]]
 
+            print(orbDegrees)
+            orbDegrees=5
+            print(cam_mat4)
             #         
-            rot_mat4 = [[m.cos(m.radians((5.0/animationFrames)*(currentFrame-1))), m.sin(m.radians((5.0/animationFrames)*(currentFrame-1))), 0, 0],
-                        [-m.sin(m.radians((5.0/animationFrames)*(currentFrame-1))), m.cos(m.radians((5.0/animationFrames)*(currentFrame-1))), 0, 0],
+            rot_mat4 = [[m.cos(m.radians((orbDegrees/animationFrames)*(currentFrame-1))), m.sin(m.radians((orbDegrees/animationFrames)*(currentFrame-1))), 0, 0],
+                        [-m.sin(m.radians((orbDegrees/animationFrames)*(currentFrame-1))), m.cos(m.radians((orbDegrees/animationFrames)*(currentFrame-1))), 0, 0],
                         [0, 0, 1, 0],
                         [0, 0, 0, 1]]
+            print(rot_mat4)
 
             for i in range(len(cam_mat4)):
                 for j in range(len(rot_mat4[0])):
@@ -249,11 +284,12 @@ class BellaRenderPlugin(DeadlinePlugin):
             outputExt = "" # [ ] HACK, parseFragment has no method to unset .outputExt properly ( like null )  
         arguments += " -pf:\"beautyPass.outputExt=\\\"%s\\\";\"" % outputExt
 
-        if floatAttributeName == "":
-           paddedStem = sceneFileStem
-        else:
+        #if floatAttributeName == "":
+        if useOrbit or useFreeformA or useFreeformB:
            renderFramePadded = StringUtils.ToZeroPaddedString( self.GetStartFrame(), 5, False )
            paddedStem = (str(sceneFileStem)+renderFramePadded)
+        else:
+           paddedStem = sceneFileStem
 
         arguments += " -pf:\"beautyPass.outputName=\\\"%s\\\";\"" % paddedStem
         if outputExt == "":
@@ -262,8 +298,10 @@ class BellaRenderPlugin(DeadlinePlugin):
 
         # [ ] Warning: sceneFile name used for the outputName, to avoid name clashing by blindly using what is set in bella
         # bella_cli will fail when the outputName has the string default anywhere
-        if not floatAttributeName == "":
-            arguments += " -pf:\"{:s}={:f}f;\"".format(floatAttributeName, animInterp)
+        if useFreeformA:
+            arguments += " -pf:\"{:s}={:f}f;\"".format(freeformA, freeformAVal)
+        if useFreeformB:
+            arguments += " -pf:\"{:s}={:f}f;\"".format(freeformB, freeformBVal)
 
         if not targetNoise == "":
             arguments += " -pf:\"beautyPass.targetNoise=%su;\"" % targetNoise
@@ -274,7 +312,8 @@ class BellaRenderPlugin(DeadlinePlugin):
         if not denoiseName == "":
             arguments += " -pf:\"beautyPass.denoise=true; beautyPass.denoiseOutputName=\\\"%s\\\";\"" % denoiseName
         arguments += " -pf:\"settings.threads=0;\"" 
-        arguments += " -pf:\"camera_xform.steps[0].xform=%s;\"" % bella_mat4
+        if useOrbit:
+            arguments += " -pf:\"camera_xform.steps[0].xform=%s;\"" % bella_mat4
         
         #arguments += " -pf:\"instancer.steps[0].instances=%s;\"" % instances_mat4
 

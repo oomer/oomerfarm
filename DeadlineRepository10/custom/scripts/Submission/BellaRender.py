@@ -42,6 +42,7 @@ def __main__():
     scriptDialog.AddControlToGrid("sequenceFramesLabel", "LabelControl", "Frame Range", 3, 0, "Numeric frame range to render, ie 1-10", False)
     scriptDialog.AddControlToGrid("sequenceFramesBox", "TextControl", "", 3, 1, colSpan=1)
     scriptDialog.AddControlToGrid("sequenceFramesLabel2", "LabelControl", "Blank for single scenefile", 3, 2, "", False)
+    scriptDialog.SetEnabled( "sequenceFramesBox", False )
 
     scriptDialog.EndGrid()
     scriptDialog.EndTabPage() 
@@ -50,14 +51,86 @@ def __main__():
     # =================
     scriptDialog.AddTabPage( "Animation" )
     scriptDialog.AddGrid()
-    scriptDialog.AddControlToGrid( "floatAttributeNameLabel1", "LabelControl", "A Bella floating point attribute", 1, 0, "Name of a bella node , full path, must be one that holds an unsigned int", False )
-    scriptDialog.AddControlToGrid("floatAttributeNameBox1", "TextControl", "", 1, 1, colSpan=8)
-    scriptDialog.AddControlToGrid( "floatAttributeStartLabel1", "LabelControl", "Start Value", 2, 0, "Float start value", False )
-    scriptDialog.AddRangeControlToGrid( "floatAttributeStartRange1", "RangeControl", 0, -100000, 100000, 5, .1, 2, 1 )
-    scriptDialog.AddControlToGrid( "floatAttributeEndLabel1", "LabelControl", "End Value", 2, 2, "Float end value", False )
-    scriptDialog.AddRangeControlToGrid( "floatAttributeEndRange1", "RangeControl", 0, -100000, 100000, 5, .1, 2, 3 )
-    scriptDialog.AddControlToGrid( "animationFramesLabel1", "LabelControl", "Animate over this number of frames", 2, 4, "Animation frames", False )
-    scriptDialog.AddRangeControlToGrid( "animationFramesRange1", "RangeControl", 10, 1, 10000, 0, 1, 2, 5 )
+    scriptDialog.AddControlToGrid( "test3333", "LabelControl", "Animate over this number of frames", 1, 0, "Animation frames", False )
+    scriptDialog.AddRangeControlToGrid( "globalNumFrames", "RangeControl", 10, 1, 10000, 0, 1, 1, 1 )
+
+    # Camera
+    scriptDialog.AddControlToGrid( "sepa109", "SeparatorControl", "Camera", 2, 0, colSpan=10 )
+    useOrbit = scriptDialog.AddSelectionControlToGrid( "useOrbit", "CheckBoxControl", False, "Enable", 3, 0, "" )
+    scriptDialog.AddControlToGrid("cam_name", "TextControl", "cam", 3, 1, colSpan=1)
+    useOrbit.ValueModified.connect( enableOrbit )
+    scriptDialog.AddControlToGrid( "Orbit", "LabelControl", "Orbit", 3, 1, "", False )
+    scriptDialog.AddControlToGrid( "txt109", "LabelControl", "Degrees", 3, 2, "", False )
+    scriptDialog.AddRangeControlToGrid( "orbDegrees", "RangeControl", 90, 1, 1000, 0, 1, 3, 3, "Orbit range" )
+    scriptDialog.SetEnabled( "orbDegrees", False )
+    scriptDialog.AddControlToGrid( "txt383838", "LabelControl", "Camera transform matrix", 4, 0, "", False )
+    scriptDialog.AddRangeControlToGrid( "cam_matrix_a", "RangeControl", -0.991192, -1000, 1000, 6, 1, 4, 1, "" )
+    scriptDialog.AddRangeControlToGrid( "cam_matrix_b", "RangeControl", 0.0, -100.0, 100.0, 6, 1, 4, 2, "" )
+    scriptDialog.AddRangeControlToGrid( "cam_matrix_c", "RangeControl", 0.0, -100.0, 100.0, 6, 1, 4, 3, "" )
+    scriptDialog.AddRangeControlToGrid( "cam_matrix_d", "RangeControl", 0.0, -100.0, 100.0, 6, 1, 4, 4, "" )
+    scriptDialog.AddRangeControlToGrid( "cam_matrix_e", "RangeControl", 0.0, -100.0, 100.0, 6, 1, 5, 1, "" )
+    scriptDialog.AddRangeControlToGrid( "cam_matrix_f", "RangeControl", 0.0, -100.0, 100.0, 6, 1, 5, 2, "" )
+    scriptDialog.AddRangeControlToGrid( "cam_matrix_g", "RangeControl", -1, -100.0, 100.0, 6, 1, 5, 3, "" )
+    scriptDialog.AddRangeControlToGrid( "cam_matrix_h", "RangeControl", 0.0, -100.0, 100.0, 6, 1, 5, 4, "" )
+    scriptDialog.AddRangeControlToGrid( "cam_matrix_i", "RangeControl", 0.0, -100.0, 100.0, 6, 1, 6, 1, "" )
+    scriptDialog.AddRangeControlToGrid( "cam_matrix_j", "RangeControl", 0.991192, -100.0, 100.0, 6, 1, 6, 2, "" )
+    scriptDialog.AddRangeControlToGrid( "cam_matrix_k", "RangeControl", -0.13243, -100.0, 100.0, 6, 1, 6, 3, "" )
+    scriptDialog.AddRangeControlToGrid( "cam_matrix_l", "RangeControl", 0.0, -100.0, 100.0, 6, 1, 6, 4, "" )
+    scriptDialog.AddRangeControlToGrid( "cam_matrix_m", "RangeControl", 0.0, -100.0, 100.0, 6, 1, 7, 1, "" )
+    scriptDialog.AddRangeControlToGrid( "cam_matrix_n", "RangeControl", -155.109, -100.0, 100.0, 6, 1, 7, 2, "" )
+    scriptDialog.AddRangeControlToGrid( "cam_matrix_o", "RangeControl", 29.1869, -100.0, 100.0, 6, 1, 7, 3, "" )
+    scriptDialog.AddRangeControlToGrid( "cam_matrix_p", "RangeControl", 1.0, -100.0, 100.0, 6, 1, 7, 4, "" )
+    scriptDialog.SetEnabled( "cam_name", False )
+    scriptDialog.SetEnabled( "cam_matrix_a", False )
+    scriptDialog.SetEnabled( "cam_matrix_b", False )
+    scriptDialog.SetEnabled( "cam_matrix_c", False )
+    scriptDialog.SetEnabled( "cam_matrix_d", False )
+    scriptDialog.SetEnabled( "cam_matrix_e", False )
+    scriptDialog.SetEnabled( "cam_matrix_f", False )
+    scriptDialog.SetEnabled( "cam_matrix_g", False )
+    scriptDialog.SetEnabled( "cam_matrix_h", False )
+    scriptDialog.SetEnabled( "cam_matrix_i", False )
+    scriptDialog.SetEnabled( "cam_matrix_j", False )
+    scriptDialog.SetEnabled( "cam_matrix_k", False )
+    scriptDialog.SetEnabled( "cam_matrix_l", False )
+    scriptDialog.SetEnabled( "cam_matrix_m", False )
+    scriptDialog.SetEnabled( "cam_matrix_n", False )
+    scriptDialog.SetEnabled( "cam_matrix_o", False )
+    scriptDialog.SetEnabled( "cam_matrix_p", False )
+
+    #a, b, c, d, 
+    #e, f, g, h, 
+    #i, j, k, l, 
+    #m, n, o, p
+
+    # Freefrom floats ( must know exact object path ie thinLens.steps[0].fStop)
+    scriptDialog.AddControlToGrid( "sepa109", "SeparatorControl", "Freefrom floats", 8, 0, colSpan=10 )
+
+    useFreeformA = scriptDialog.AddSelectionControlToGrid( "useFreeformA", "CheckBoxControl", False, "Enable", 9, 0, "" )
+    useFreeformA.ValueModified.connect( enableFreeformA )
+    scriptDialog.AddControlToGrid( "txt111", "LabelControl", "Bella freeform float A", 9, 1, "Name of a bella node , full path, must be one that holds an unsigned int", False )
+    scriptDialog.AddControlToGrid("freeformA", "TextControl", "thinLens.steps[0].fStop", 9, 2)
+    scriptDialog.AddControlToGrid( "txt777", "LabelControl", "Start", 9, 3, "Float start value", False )
+    scriptDialog.AddRangeControlToGrid( "freeformAStart", "RangeControl", 0, -100000, 100000, 5, .1, 9, 4 )
+    scriptDialog.AddControlToGrid( "txt888", "LabelControl", "End", 9, 5, "Float end value", False )
+    scriptDialog.AddRangeControlToGrid( "freeformAEnd", "RangeControl", 0, -100000, 100000, 5, .1, 9, 6 )
+    scriptDialog.SetEnabled( "freeformA", False )
+    scriptDialog.SetEnabled( "freeformAStart", False )
+    scriptDialog.SetEnabled( "freeformAEnd", False )
+
+    # free form
+    useFreeformB = scriptDialog.AddSelectionControlToGrid( "useFreeformB", "CheckBoxControl", False, "Enable", 10, 0, "" )
+    useFreeformB.ValueModified.connect( enableFreeformB )
+    scriptDialog.AddControlToGrid( "txt112", "LabelControl", "Bella freeform float B", 10, 1, "Name of a bella node , full path, must be one that holds an unsigned int", False )
+    scriptDialog.AddControlToGrid("freeformB", "TextControl", "", 10, 2 )
+    scriptDialog.AddControlToGrid( "txt113", "LabelControl", "Start", 10, 3, "Float start value", False )
+    scriptDialog.AddRangeControlToGrid( "freeformBStart", "RangeControl", 0, -100000, 100000, 5, .1, 10, 4 )
+    scriptDialog.AddControlToGrid( "txt114", "LabelControl", "End", 10, 5, "Float end value", False )
+    scriptDialog.AddRangeControlToGrid( "freeformBEnd", "RangeControl", 0, -100000, 100000, 5, .1, 10, 6 )
+    scriptDialog.SetEnabled( "freeformB", False )
+    scriptDialog.SetEnabled( "freeformBStart", False )
+    scriptDialog.SetEnabled( "freeformBEnd", False )
+
     scriptDialog.EndGrid()
     scriptDialog.EndTabPage() 
 
@@ -77,7 +150,7 @@ def __main__():
     scriptDialog.EndGrid()
 
     scriptDialog.AddGrid()
-    scriptDialog.AddControlToGrid( "separator22", "SeparatorControl", "Job Options", 0, 0, colSpan=3 )
+    scriptDialog.AddControlToGrid( "line22", "SeparatorControl", "Job Options", 0, 0, colSpan=3 )
 
     scriptDialog.AddControlToGrid( "poolLabel", "LabelControl", "Pool", 1, 0, "The pool that your job will be submitted to.", False )
     scriptDialog.AddControlToGrid( "poolBox", "PoolComboControl", "none", 1, 1 )
@@ -120,13 +193,11 @@ def __main__():
     scriptDialog.AddComboControlToGrid( "outputExtCombo", "ComboControl", "default", outputExtList, 8, 1, "Image format, default uses setting set in .bsx" )
     resolutionOverrideObj = scriptDialog.AddSelectionControlToGrid( "resolutionOverrideBool", "CheckBoxControl", False, "Resolution", 8, 3, "Enable resolution override" )
     resolutionOverrideObj.ValueModified.connect( enableResolutionOverride )
-    scriptDialog.AddControlToGrid( "widthLabel", "LabelControl", "Width", 8, 4, "Image Width" )
+    scriptDialog.AddControlToGrid( "gtext1", "LabelControl", "Width", 8, 4, "Image Width" )
     scriptDialog.AddRangeControlToGrid( "widthBox", "RangeControl", 800, 1, 10000, 0, 1, 8, 5, "Width" )
-    scriptDialog.SetEnabled( "widthLabel", False )
     scriptDialog.SetEnabled( "widthBox", False )
-    scriptDialog.AddControlToGrid( "heightLabel", "LabelControl", "Height", 8, 6, "Image Height" )
+    scriptDialog.AddControlToGrid( "gtest2", "LabelControl", "Height", 8, 6, "Image Height" )
     scriptDialog.AddRangeControlToGrid( "heightBox", "RangeControl", 600, 1, 50000, 0, 1, 8, 7, "Height" )
-    scriptDialog.SetEnabled( "heightLabel", False )
     scriptDialog.SetEnabled( "heightBox", False )
     targetNoiseOverrideObj = scriptDialog.AddSelectionControlToGrid( "targetNoiseOverrideBool", "CheckBoxControl", False, "Target Noise", 10, 0, "Enable targetNoise override" )
     targetNoiseOverrideObj.ValueModified.connect( enableTargetNoiseOverride )
@@ -169,13 +240,47 @@ def __main__():
     scriptDialog.LoadSettings( settingsFile, settings )
     scriptDialog.EnabledStickySaving( settings, settingsFile )
     scriptDialog.ShowDialog( False )
-    
+ 
+def enableOrbit( *args ):
+    global scriptDialog
+    val1 = scriptDialog.GetValue( "useOrbit" )
+    scriptDialog.SetEnabled( "orbDegrees", val1 )
+    scriptDialog.SetEnabled( "cam_name", val1 )
+    scriptDialog.SetEnabled( "cam_matrix_a", val1 )
+    scriptDialog.SetEnabled( "cam_matrix_b", val1 )
+    scriptDialog.SetEnabled( "cam_matrix_c", val1 )
+    scriptDialog.SetEnabled( "cam_matrix_d", val1 )
+    scriptDialog.SetEnabled( "cam_matrix_e", val1 )
+    scriptDialog.SetEnabled( "cam_matrix_f", val1 )
+    scriptDialog.SetEnabled( "cam_matrix_g", val1 )
+    scriptDialog.SetEnabled( "cam_matrix_h", val1 )
+    scriptDialog.SetEnabled( "cam_matrix_i", val1 )
+    scriptDialog.SetEnabled( "cam_matrix_j", val1 )
+    scriptDialog.SetEnabled( "cam_matrix_k", val1 )
+    scriptDialog.SetEnabled( "cam_matrix_l", val1 )
+    scriptDialog.SetEnabled( "cam_matrix_m", val1 )
+    scriptDialog.SetEnabled( "cam_matrix_n", val1 )
+    scriptDialog.SetEnabled( "cam_matrix_o", val1 )
+    scriptDialog.SetEnabled( "cam_matrix_p", val1 )
+
+def enableFreeformA( *args ):
+    global scriptDialog
+    boolean = scriptDialog.GetValue( "useFreeformA" )
+    scriptDialog.SetEnabled( "freeformA", boolean )
+    scriptDialog.SetEnabled( "freeformAStart", boolean )
+    scriptDialog.SetEnabled( "freeformAEnd", boolean )
+
+def enableFreeformB( *args ):
+    global scriptDialog
+    boolean = scriptDialog.GetValue( "useFreeformB" )
+    scriptDialog.SetEnabled( "freeformB", boolean )
+    scriptDialog.SetEnabled( "freeformBStart", boolean )
+    scriptDialog.SetEnabled( "freeformBEnd", boolean )
+     
 def enableResolutionOverride( *args ):
     global scriptDialog
     resolutionOverrideBool = scriptDialog.GetValue( "resolutionOverrideBool" )
-    scriptDialog.SetEnabled( "widthLabel", resolutionOverrideBool )
     scriptDialog.SetEnabled( "widthBox", resolutionOverrideBool )
-    scriptDialog.SetEnabled( "heightLabel", resolutionOverrideBool )
     scriptDialog.SetEnabled( "heightBox", resolutionOverrideBool )
 
 def enableTargetNoiseOverride( *args ):
@@ -186,9 +291,10 @@ def enableTargetNoiseOverride( *args ):
 def enableSequenceOverride( *args ):
     global scriptDialog
     sequenceOverrideBool = scriptDialog.GetValue( "sequenceOverrideBool" )
-    scriptDialog.SetEnabled( "sequenceFramesLabel", sequenceOverrideBool )
     scriptDialog.SetEnabled( "sequenceFramesBox", sequenceOverrideBool )
 
+# Based on incoming name, guess at desired frame range based on padded digits in scene file name
+# Allow file browseing any scene in the sequence 
 def autoDetectFrameRange( *args ):
     global scriptDialog
     sceneFile = scriptDialog.GetValue( "sceneFileBox" )
@@ -200,9 +306,11 @@ def autoDetectFrameRange( *args ):
         endFrame = FrameUtils.GetUpperFrameRange( sceneFile, selectedFrame, paddingSize )
         if startFrame == endFrame: sequenceFramesString = str(startFrame)
         else: sequenceFramesString = str(startFrame) + "-" + str(endFrame)
+        scriptDialog.SetEnabled( "sequenceFramesBox", True )
+        scriptDialog.SetValue( "sequenceFramesBox", sequenceFramesString )
     except:
         sequenceFramesString = ""
-    scriptDialog.SetValue( "sequenceFramesBox", sequenceFramesString )
+        scriptDialog.SetEnabled( "sequenceFramesBox", False )
 
 
 def submitButtonPressed(*args):
@@ -303,12 +411,19 @@ def submitButtonPressed(*args):
         
 
         # framestrings define the frame workload, are text based and can define arbitrarily complex steps, skips, etc
+        # animation is merely calculatin the linear step value and passing that to plugin
         Frames="0"
-        if not scriptDialog.GetValue( "floatAttributeNameBox1" ) == "":
-            floatAttributeStart = float(scriptDialog.GetValue( "floatAttributeStartRange1" ) )
-            floatAttributeEnd = float(scriptDialog.GetValue( "floatAttributeEndRange1" ) )
-            animationFrames = int(scriptDialog.GetValue( "animationFramesRange1" ))
-            animationLinearIncrement = float((floatAttributeEnd-floatAttributeStart ) / animationFrames)
+        freeformBStep=0
+        animationLinearIncrement=0
+        if scriptDialog.GetValue( "useFreeformA" ) == True:
+            freeformAStart = float(scriptDialog.GetValue( "freeformAStart" ) )
+            freeformAEnd = float(scriptDialog.GetValue( "freeformAEnd" ) )
+            animationFrames = int(scriptDialog.GetValue( "globalNumFrames" ))
+            Frames = FrameUtils.ToFrameString(range(1,animationFrames+1,1))
+        if scriptDialog.GetValue( "useFreeformB" ) == True:
+            freeformBStart = float(scriptDialog.GetValue( "freeformBStart" ) )
+            freeformBEnd = float(scriptDialog.GetValue( "freeformBEnd" ) )
+            animationFrames = int(scriptDialog.GetValue( "globalNumFrames" ))
             Frames = FrameUtils.ToFrameString(range(1,animationFrames+1,1))
 
         jobName = scriptDialog.GetValue( "nameBox" )
@@ -362,13 +477,38 @@ def submitButtonPressed(*args):
         if scriptDialog.GetValue( "timeLimitOverrideBool" ):
             writer.WriteLine( "timeLimit=%s" % scriptDialog.GetValue( "timeLimitBox" ) )
         writer.WriteLine( "outputExt=%s" % scriptDialog.GetValue( "outputExtCombo" ) )
+
         if not Frames == "0":
-            writer.WriteLine( "floatAttributeName=%s" % scriptDialog.GetValue( "floatAttributeNameBox1" ) )
-            writer.WriteLine( "floatAttributeStart=%s" % scriptDialog.GetValue( "floatAttributeStartRange1" ) )
-            writer.WriteLine( "floatAttributeEnd=%s" % scriptDialog.GetValue( "floatAttributeEndRange1" ) )
-            writer.WriteLine( "animationLinearIncrement=%f" % animationLinearIncrement )
             writer.WriteLine( "animationFrames=%d" % animationFrames )
             writer.WriteLine( "animationOffset=0" )
+            writer.WriteLine( "freeformA=%s" % scriptDialog.GetValue( "freeformA" ) )
+            writer.WriteLine( "freeformAStart=%s" % scriptDialog.GetValue( "freeformAStart" ) )
+            writer.WriteLine( "freeformAEnd=%s" % scriptDialog.GetValue( "freeformAEnd" ) )
+            writer.WriteLine( "freeformB=%s" % scriptDialog.GetValue( "freeformB" ) )
+            writer.WriteLine( "freeformBStart=%s" % scriptDialog.GetValue( "freeformBStart" ) )
+            writer.WriteLine( "freeformBEnd=%s" % scriptDialog.GetValue( "freeformBEnd" ) )
+            writer.WriteLine( "useFreeformA=%s" % scriptDialog.GetValue( "useFreeformA" ) )
+            writer.WriteLine( "useFreeformB=%s" % scriptDialog.GetValue( "useFreeformB" ) )
+            writer.WriteLine( "useOrbit=%s" % scriptDialog.GetValue( "useOrbit" ) )
+            writer.WriteLine( "cam_matrix_a=%s" % scriptDialog.GetValue( "cam_matrix_a" ) )
+            writer.WriteLine( "cam_matrix_b=%s" % scriptDialog.GetValue( "cam_matrix_b" ) )
+            writer.WriteLine( "cam_matrix_c=%s" % scriptDialog.GetValue( "cam_matrix_c" ) )
+            writer.WriteLine( "cam_matrix_d=%s" % scriptDialog.GetValue( "cam_matrix_d" ) )
+            writer.WriteLine( "cam_matrix_e=%s" % scriptDialog.GetValue( "cam_matrix_e" ) )
+            writer.WriteLine( "cam_matrix_f=%s" % scriptDialog.GetValue( "cam_matrix_f" ) )
+            writer.WriteLine( "cam_matrix_g=%s" % scriptDialog.GetValue( "cam_matrix_g" ) )
+            writer.WriteLine( "cam_matrix_h=%s" % scriptDialog.GetValue( "cam_matrix_h" ) )
+            writer.WriteLine( "cam_matrix_i=%s" % scriptDialog.GetValue( "cam_matrix_i" ) )
+            writer.WriteLine( "cam_matrix_j=%s" % scriptDialog.GetValue( "cam_matrix_j" ) )
+            writer.WriteLine( "cam_matrix_k=%s" % scriptDialog.GetValue( "cam_matrix_k" ) )
+            writer.WriteLine( "cam_matrix_l=%s" % scriptDialog.GetValue( "cam_matrix_l" ) )
+            writer.WriteLine( "cam_matrix_m=%s" % scriptDialog.GetValue( "cam_matrix_m" ) )
+            writer.WriteLine( "cam_matrix_n=%s" % scriptDialog.GetValue( "cam_matrix_n" ) )
+            writer.WriteLine( "cam_matrix_o=%s" % scriptDialog.GetValue( "cam_matrix_o" ) )
+            writer.WriteLine( "cam_matrix_p=%s" % scriptDialog.GetValue( "cam_matrix_p" ) )
+
+
+
         writer.Close()
 
         # End Deadline Single Submit 
