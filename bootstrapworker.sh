@@ -183,11 +183,11 @@ if [ "$os_name" == "\"Ubuntu\"" ]; then
 	if [ -z "$firewalld_status" ]; then
 		apt -y install firewalld
 	fi
-	apt install policycoreutils selinux-utils selinux-basics
+	apt -y install policycoreutils selinux-utils selinux-basics
 	selinux-activate
 	apt -y  install cifs-utils
 	apt -y install mesa-vulkan-drivers 
-	apt install freeglut3-dev
+	apt -y install freeglut3-dev
 	apt -y install libffi7
 	ln -s /usr/lib/x86_64-linux-gnu/libffi.so.7 /usr/lib/libffi.so.6
 elif [ "$os_name"= = "\"AlmaLinux\"" ]; then
@@ -208,6 +208,17 @@ fi
 systemctl enable --now sysstat
 systemctl enable --now firewalld
 modprobe cifs
+
+# Ensure max security
+# ===================
+test_selinux=$( getenforce )
+if [ "$test_selinux" == "Disabled" ] || [ "$test_selinux" == "Permissive" ];  then
+	selinux-config-enforcing
+	echo "Reboot Required for SELinux( SELinux chcon on boot drive takes awhile)"
+	echo "run this script again"
+	exit
+fi
+
 
 # probe to see if downloadables exist
 echo "thinkbox"
@@ -274,20 +285,6 @@ password=${linux_password}
 domain=WORKGROUP
 EOF
 chmod go-rwx /etc/nebula/smb_credentials
-
-
-# Ensure max security
-# ===================
-test_selinux=$( getenforce )
-if [ "$test_selinux" == "Disabled" ];  then
-	selinux-config-enforcing
-	echo -e "/nFAIL: Selinux is disabled, edit /etc/selinux/config"
-	echo "==================================================="
-	echo "Change SELINUX=disabled to SELINUX=enforcing"
-	echo "Reboot ( SELinux chcon on boot drive takes awhile)"
-	echo "=================================================="
-	exit
-fi
 
 
 # Wipe all services and ports except ssh and 22/tcp, may break your system
