@@ -177,20 +177,20 @@ firewalld_status=$(systemctl status firewalld)
 os_name=$(awk -F= '$1=="NAME" { print $2 ;}' /etc/os-release)
 if [ "$os_name" == "\"Ubuntu\"" ]; then
 	apt -y update
-	systemctl stop apparmor
-	systemctl disable apparmor
+	#systemctl stop apparmor
+	#systemctl disable apparmor
 	apt -y install sysstat
 	if [ -z "$firewalld_status" ]; then
 		apt -y install firewalld
 	fi
-	apt -y install policycoreutils selinux-utils selinux-basics
-	selinux-activate
+	#apt -y install policycoreutils selinux-utils selinux-basics
+	#selinux-activate
 	apt -y  install cifs-utils
 	apt -y install mesa-vulkan-drivers 
 	apt -y install freeglut3-dev
 	apt -y install libffi7
 	ln -s /usr/lib/x86_64-linux-gnu/libffi.so.7 /usr/lib/libffi.so.6
-elif [ "$os_name"= = "\"AlmaLinux\"" ]; then
+elif [ "$os_name" == "\"AlmaLinux\"" ]; then
 	dnf -y update
 	dnf -y install tar
 	# needed for /usr/local/bin/oomerfarm_shutdown.sh
@@ -211,13 +211,13 @@ modprobe cifs
 
 # Ensure max security
 # ===================
-test_selinux=$( getenforce )
-if [ "$test_selinux" == "Disabled" ] || [ "$test_selinux" == "Permissive" ];  then
-	selinux-config-enforcing
-	echo "Reboot Required for SELinux( SELinux chcon on boot drive takes awhile)"
-	echo "run this script again"
-	exit
-fi
+#test_selinux=$( getenforce )
+#if [ "$test_selinux" == "Disabled" ] || [ "$test_selinux" == "Permissive" ];  then
+#	selinux-config-enforcing
+#	echo "Reboot Required for SELinux( SELinux chcon on boot drive takes awhile)"
+#	echo "run this script again"
+#	exit
+#fi
 
 
 # probe to see if downloadables exist
@@ -419,6 +419,7 @@ firewall:
         - oomerfarm-admin
 
 EOF
+chmod go-rwx /etc/nebula/config.yml
 
 cat <<EOF > /etc/systemd/system/oomerfarm-shutdown.timer
 [Unit]
