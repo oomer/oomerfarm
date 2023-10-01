@@ -148,6 +148,9 @@ class BellaRenderPlugin(DeadlinePlugin):
         useGpu = self.GetPluginInfoEntryWithDefault( "useGpu", "").strip()
         timeLimit = self.GetPluginInfoEntryWithDefault( "timeLimit", "").strip()
         denoiseName = self.GetPluginInfoEntryWithDefault( "denoise", "").strip()
+        parseFragment1 = self.GetPluginInfoEntryWithDefault( "parseFragment1", "").strip()
+        parseFragment1 = parseFragment1.replace('"','\\\"')
+        print('pf',parseFragment1)
 
         useFreeformA = self.GetPluginInfoEntryWithDefault( "useFreeformA", "").strip()
         useFreeformB = self.GetPluginInfoEntryWithDefault( "useFreeformB", "").strip()
@@ -158,6 +161,9 @@ class BellaRenderPlugin(DeadlinePlugin):
         else: useFreeformA = False
         if useFreeformB == "True": useFreeformB = True
         else: useFreeformB = False
+        currentFrame = self.GetStartFrame()
+        animationFrames = 1
+
         if useFreeformA:
             freeformA = self.GetPluginInfoEntryWithDefault( "freeformA", "").strip()
             freeformAStart = float(self.GetPluginInfoEntryWithDefault( "freeformAStart", "").strip())
@@ -167,20 +173,17 @@ class BellaRenderPlugin(DeadlinePlugin):
             freeformAStep = float((freeformAEnd-freeformAStart ) / animationFrames)
             freeformAVal = (float(currentFrame-1)*freeformAStep)+freeformAStart
         # [TODO] do step calc here, allowing us to do inteps other than lerp
-        elif useFreeformB:
+        if useFreeformB:
             freeformB = self.GetPluginInfoEntryWithDefault( "freeformB", "").strip()
             freeformBStart = float(self.GetPluginInfoEntryWithDefault( "freeformBStart", "").strip())
-            freeformBEnd = float(self.GetPluginInfoEntryWithDefault( "freefromBEnd", "").strip())
-            freeformBStep = float(self.GetPluginInfoEntryWithDefault( "freefromBStep", "").strip())
+            freeformBEnd = float(self.GetPluginInfoEntryWithDefault( "freeformBEnd", "").strip())
             animationFrames = int(self.GetPluginInfoEntryWithDefault( "animationFrames", "").strip())
             currentFrame = self.GetStartFrame()
             freeformBStep = float((freeformBEnd-freeformBStart ) / animationFrames)
             freeformBVal = (float(currentFrame-1)*freeformBStep)+freeformBStart
-        else:
-            currentFrame = self.GetStartFrame()
-            animationFrames = int(self.GetPluginInfoEntryWithDefault( "animationFrames", "").strip())
 
         if useOrbit:
+            animationFrames = int(self.GetPluginInfoEntryWithDefault( "animationFrames", "").strip())
             result_mat4 = [[ 0,0,0,0],
                     [0,0,0,0],
                     [0,0,0,0],
@@ -202,27 +205,28 @@ class BellaRenderPlugin(DeadlinePlugin):
             cam_matrix_o = float(self.GetPluginInfoEntryWithDefault( "cam_matrix_o", "0").strip())
             cam_matrix_p = float(self.GetPluginInfoEntryWithDefault( "cam_matrix_p", "1").strip())
             orbDegrees = float(self.GetPluginInfoEntryWithDefault( "orbDegrees", "0").strip())
+            orbCam = self.GetPluginInfoEntryWithDefault( "orbCam", "camera_xform").strip()
             cam_mat4 = [[cam_matrix_a, cam_matrix_b, cam_matrix_c, cam_matrix_d],
                         [cam_matrix_e, cam_matrix_f, cam_matrix_g, cam_matrix_h],
                         [cam_matrix_i, cam_matrix_j, cam_matrix_k, cam_matrix_l],
                         [cam_matrix_m, cam_matrix_n, cam_matrix_o, cam_matrix_p]]
 
-            print(orbDegrees)
-            orbDegrees=5
+            #``orbDegrees=360
+            print('orbd',orbDegrees, 'numframes',animationFrames,'current', currentFrame)
             print(cam_mat4)
             #         
             rot_mat4 = [[m.cos(m.radians((orbDegrees/animationFrames)*(currentFrame-1))), m.sin(m.radians((orbDegrees/animationFrames)*(currentFrame-1))), 0, 0],
                         [-m.sin(m.radians((orbDegrees/animationFrames)*(currentFrame-1))), m.cos(m.radians((orbDegrees/animationFrames)*(currentFrame-1))), 0, 0],
                         [0, 0, 1, 0],
                         [0, 0, 0, 1]]
-            print(rot_mat4)
+            print('rot',rot_mat4)
 
             for i in range(len(cam_mat4)):
                 for j in range(len(rot_mat4[0])):
                     for k in range(len(rot_mat4)):
                         result_mat4[i][j] += cam_mat4[i][k] * rot_mat4[k][j]
 
-            print('cam transform',result_mat4)
+            print('final transform',result_mat4)
 
             bella_mat4 = "mat4( "
             for each in result_mat4:
@@ -296,11 +300,18 @@ class BellaRenderPlugin(DeadlinePlugin):
             outputExt = ".png"
         self.outputName = paddedStem + outputExt
 
+        if not parseFragment1 == "":
+            print('pf',parseFragment1)
+            arguments += " -pf:\"%s\"" %( parseFragment1 )
+
+
         # [ ] Warning: sceneFile name used for the outputName, to avoid name clashing by blindly using what is set in bella
         # bella_cli will fail when the outputName has the string default anywhere
         if useFreeformA:
+            print(freeformA, freeformAVal)
             arguments += " -pf:\"{:s}={:f}f;\"".format(freeformA, freeformAVal)
         if useFreeformB:
+            print(freeformB, freeformBVal)
             arguments += " -pf:\"{:s}={:f}f;\"".format(freeformB, freeformBVal)
 
         if not targetNoise == "":
@@ -312,8 +323,9 @@ class BellaRenderPlugin(DeadlinePlugin):
         if not denoiseName == "":
             arguments += " -pf:\"beautyPass.denoise=true; beautyPass.denoiseOutputName=\\\"%s\\\";\"" % denoiseName
         arguments += " -pf:\"settings.threads=0;\"" 
+
         if useOrbit:
-            arguments += " -pf:\"camera_xform.steps[0].xform=%s;\"" % bella_mat4
+            arguments += " -pf:\"%s.steps[0].xform=%s;\"" % ( orbCam, bella_mat4 )
         
         #arguments += " -pf:\"instancer.steps[0].instances=%s;\"" % instances_mat4
 
@@ -321,4 +333,5 @@ class BellaRenderPlugin(DeadlinePlugin):
         arguments += " -vo" 
         if not imageWidth == "":
             arguments += " -res:\"%sx%s\"" %(imageWidth,imageHeight)
+
         return arguments
