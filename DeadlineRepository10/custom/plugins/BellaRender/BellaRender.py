@@ -10,6 +10,7 @@ import math as m
 import random
 import sys
 import os
+import re
 
 cam_mat4 = [[-0.991192, 0, 0, 0],
             [0, 0, -1, 0],
@@ -89,6 +90,7 @@ class BellaRenderPlugin(DeadlinePlugin):
         sceneFile = RepositoryUtils.CheckPathMapping( sceneFile )
 
         outputDirectory = self.GetPluginInfoEntry( "outputDirectory" ).strip()  
+        Frames = self.GetPluginInfoEntry( "Frames" ).strip()  
         outputDirectory = RepositoryUtils.CheckPathMapping( outputDirectory )
         
         sceneFile = sceneFile.replace( "\\", "/" ) #win
@@ -112,11 +114,14 @@ class BellaRenderPlugin(DeadlinePlugin):
         sceneFileFramePadded = FrameUtils.GetFrameStringFromFilename( sceneFile )
         paddingSize = len( sceneFileFramePadded )
         print('userFramePadded', sceneFileFramePadded, 'paddingSize', paddingSize) 
-        if paddingSize > 0:
+        #This handles sequence renaming
+        print('ppp',paddingSize,Frames)
+        if paddingSize > 0 and Frames != '0':
             # current frame
             renderFramePadded = StringUtils.ToZeroPaddedString( self.GetStartFrame(), paddingSize, False )
             self.sceneFile = FrameUtils.SubstituteFrameNumber( sceneFile, renderFramePadded )
         else:
+            print('padded scnee with no sequence')
             self.sceneFile = sceneFile
         self.outputDirectory = outputDirectory
 
@@ -155,6 +160,7 @@ class BellaRenderPlugin(DeadlinePlugin):
         useFreeformA = self.GetPluginInfoEntryWithDefault( "useFreeformA", "").strip()
         useFreeformB = self.GetPluginInfoEntryWithDefault( "useFreeformB", "").strip()
         useOrbit = self.GetPluginInfoEntryWithDefault( "useOrbit", "").strip()
+        Frames = self.GetPluginInfoEntryWithDefault( "Frames", "").strip()
         if useOrbit == "True": useOrbit = True
         else: useOrbit = False
         if useFreeformA == "True": useFreeformA = True
@@ -188,30 +194,18 @@ class BellaRenderPlugin(DeadlinePlugin):
                     [0,0,0,0],
                     [0,0,0,0],
                     [0,0,0,0]]
-            cam_matrix_a = float(self.GetPluginInfoEntryWithDefault( "cam_matrix_a", "0").strip())
-            cam_matrix_b = float(self.GetPluginInfoEntryWithDefault( "cam_matrix_b", "0").strip())
-            cam_matrix_c = float(self.GetPluginInfoEntryWithDefault( "cam_matrix_c", "0").strip())
-            cam_matrix_d = float(self.GetPluginInfoEntryWithDefault( "cam_matrix_d", "0").strip())
-            cam_matrix_e = float(self.GetPluginInfoEntryWithDefault( "cam_matrix_e", "0").strip())
-            cam_matrix_f = float(self.GetPluginInfoEntryWithDefault( "cam_matrix_f", "0").strip())
-            cam_matrix_g = float(self.GetPluginInfoEntryWithDefault( "cam_matrix_g", "0").strip())
-            cam_matrix_h = float(self.GetPluginInfoEntryWithDefault( "cam_matrix_h", "0").strip())
-            cam_matrix_i = float(self.GetPluginInfoEntryWithDefault( "cam_matrix_i", "0").strip())
-            cam_matrix_j = float(self.GetPluginInfoEntryWithDefault( "cam_matrix_j", "0").strip())
-            cam_matrix_k = float(self.GetPluginInfoEntryWithDefault( "cam_matrix_k", "0").strip())
-            cam_matrix_l = float(self.GetPluginInfoEntryWithDefault( "cam_matrix_l", "0").strip())
-            cam_matrix_m = float(self.GetPluginInfoEntryWithDefault( "cam_matrix_m", "0").strip())
-            cam_matrix_n = float(self.GetPluginInfoEntryWithDefault( "cam_matrix_n", "0").strip())
-            cam_matrix_o = float(self.GetPluginInfoEntryWithDefault( "cam_matrix_o", "0").strip())
-            cam_matrix_p = float(self.GetPluginInfoEntryWithDefault( "cam_matrix_p", "1").strip())
             orbDegrees = float(self.GetPluginInfoEntryWithDefault( "orbDegrees", "0").strip())
+            cm4 = re.split('[\(\s)]',self.GetPluginInfoEntryWithDefault( "cam_mat4", "").strip() )
             orbCam = self.GetPluginInfoEntryWithDefault( "orbCam", "camera_xform").strip()
-            cam_mat4 = [[cam_matrix_a, cam_matrix_b, cam_matrix_c, cam_matrix_d],
-                        [cam_matrix_e, cam_matrix_f, cam_matrix_g, cam_matrix_h],
-                        [cam_matrix_i, cam_matrix_j, cam_matrix_k, cam_matrix_l],
-                        [cam_matrix_m, cam_matrix_n, cam_matrix_o, cam_matrix_p]]
+            #cam_mat4 = [[cam_matrix_a, cam_matrix_b, cam_matrix_c, cam_matrix_d],
+            #            [cam_matrix_e, cam_matrix_f, cam_matrix_g, cam_matrix_h],
+            #            [cam_matrix_i, cam_matrix_j, cam_matrix_k, cam_matrix_l],
+            #            [cam_matrix_m, cam_matrix_n, cam_matrix_o, cam_matrix_p]]
+            cam_mat4 = [ [ float(cm4[1]), float(cm4[2]), float(cm4[3]), float(cm4[4])],
+                        [ float(cm4[5]), float(cm4[6]), float(cm4[7]), float(cm4[8])],
+                        [ float(cm4[9]), float(cm4[10]), float(cm4[11]), float(cm4[12])],
+                        [ float(cm4[13]), float(cm4[14]), float(cm4[15]), float(cm4[16])] ]
 
-            #``orbDegrees=360
             print('orbd',orbDegrees, 'numframes',animationFrames,'current', currentFrame)
             print(cam_mat4)
             #         
@@ -288,14 +282,23 @@ class BellaRenderPlugin(DeadlinePlugin):
             outputExt = "" # [ ] HACK, parseFragment has no method to unset .outputExt properly ( like null )  
         arguments += " -pf:\"beautyPass.outputExt=\\\"%s\\\";\"" % outputExt
 
-        #if floatAttributeName == "":
+        # [TODO] When sceneFile has padded digits it will swap in currrent frame in PreRenderTasks
+        # The code below handles when the scenefile is not padded 
+        # 
         if useOrbit or useFreeformA or useFreeformB:
-           renderFramePadded = StringUtils.ToZeroPaddedString( self.GetStartFrame(), 5, False )
-           paddedStem = (str(sceneFileStem)+renderFramePadded)
+            if Frames == '': # in edge case where we send a sequence and animate simultaneously
+                renderFramePadded = StringUtils.ToZeroPaddedString( self.GetStartFrame(), 5, False )
+                paddedStem = (str(sceneFileStem)+renderFramePadded)
+                print('useorb',sceneFileStem,paddedStem,sceneFileStem)
+            else:
+                print('pasthru2')
+                paddedStem = sceneFileStem
         else:
+           #passthru
+           print('pasthru')
            paddedStem = sceneFileStem
 
-        arguments += " -pf:\"beautyPass.outputName=\\\"%s\\\";\"" % paddedStem
+        arguments += " -pf:\"beautyPass.outputName=\\\"%s\\\";\"" % paddedStem 
         if outputExt == "":
             outputExt = ".png"
         self.outputName = paddedStem + outputExt
@@ -333,5 +336,6 @@ class BellaRenderPlugin(DeadlinePlugin):
         arguments += " -vo" 
         if not imageWidth == "":
             arguments += " -res:\"%sx%s\"" %(imageWidth,imageHeight)
+        #arguments += " -res:\"%sx%s\"" %(200,200)
 
         return arguments

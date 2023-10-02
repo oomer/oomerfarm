@@ -58,7 +58,7 @@ def __main__():
     scriptDialog.AddTabPage( "Animation" )
     scriptDialog.AddGrid()
     scriptDialog.AddControlToGrid( "test3333", "LabelControl", "Animate over this number of frames", 1, 0, "Animation frames", False )
-    scriptDialog.AddRangeControlToGrid( "globalNumFrames", "RangeControl", 10, 1, 10000, 0, 1, 1, 1 )
+    scriptDialog.AddRangeControlToGrid( "globalNumFrames", "RangeControl", 0, 0, 10000, 0, 1, 1, 1 )
 
     # Camera
     scriptDialog.AddControlToGrid( "sepa109", "SeparatorControl", "Camera", 2, 0, colSpan=10 )
@@ -70,40 +70,10 @@ def __main__():
     scriptDialog.AddRangeControlToGrid( "orbDegrees", "RangeControl", 90, 1, 1000, 0, 1, 3, 4, "Orbit range" )
     scriptDialog.SetEnabled( "orbDegrees", False )
     scriptDialog.AddControlToGrid( "txt383838", "LabelControl", "Camera transform matrix", 4, 0, "", False )
-    scriptDialog.AddRangeControlToGrid( "cam_matrix_a", "RangeControl", -0.991192, -10000, 10000, 6, 1, 4, 1, "" )
-    scriptDialog.AddRangeControlToGrid( "cam_matrix_b", "RangeControl", 0.0, -10000, 10000, 6, 1, 4, 2, "" )
-    scriptDialog.AddRangeControlToGrid( "cam_matrix_c", "RangeControl", 0.0, -10000, 10000, 6, 1, 4, 3, "" )
-    scriptDialog.AddRangeControlToGrid( "cam_matrix_d", "RangeControl", 0.0, -10000, 10000, 6, 1, 4, 4, "" )
-    scriptDialog.AddRangeControlToGrid( "cam_matrix_e", "RangeControl", 0.0, -10000, 10000, 6, 1, 5, 1, "" )
-    scriptDialog.AddRangeControlToGrid( "cam_matrix_f", "RangeControl", 0.0, -10000, 10000, 6, 1, 5, 2, "" )
-    scriptDialog.AddRangeControlToGrid( "cam_matrix_g", "RangeControl", -1, -10000, 10000, 6, 1, 5, 3, "" )
-    scriptDialog.AddRangeControlToGrid( "cam_matrix_h", "RangeControl", 0.0, -10000, 10000, 6, 1, 5, 4, "" )
-    scriptDialog.AddRangeControlToGrid( "cam_matrix_i", "RangeControl", 0.0, -10000, 10000, 6, 1, 6, 1, "" )
-    scriptDialog.AddRangeControlToGrid( "cam_matrix_j", "RangeControl", 0.991192, -10000, 10000, 6, 1, 6, 2, "" )
-    scriptDialog.AddRangeControlToGrid( "cam_matrix_k", "RangeControl", -0.13243, -10000, 10000, 6, 1, 6, 3, "" )
-    scriptDialog.AddRangeControlToGrid( "cam_matrix_l", "RangeControl", 0.0, -10000, 10000, 6, 1, 6, 4, "" )
-    scriptDialog.AddRangeControlToGrid( "cam_matrix_m", "RangeControl", 0.0, -10000, 10000, 6, 1, 7, 1, "" )
-    scriptDialog.AddRangeControlToGrid( "cam_matrix_n", "RangeControl", -155.109, -10000, 10000, 6, 1, 7, 2, "" )
-    scriptDialog.AddRangeControlToGrid( "cam_matrix_o", "RangeControl", 29.1869, -10000, 10000, 6, 1, 7, 3, "" )
-    scriptDialog.AddRangeControlToGrid( "cam_matrix_p", "RangeControl", 1.0, -10000, 10000, 6, 1, 7, 4, "" )
+    scriptDialog.AddControlToGrid("cam_mat4", "TextControl", "", 8, 1, colSpan=8)
 
     scriptDialog.SetEnabled( "orbCam", False )
-    scriptDialog.SetEnabled( "cam_matrix_a", False )
-    scriptDialog.SetEnabled( "cam_matrix_b", False )
-    scriptDialog.SetEnabled( "cam_matrix_c", False )
-    scriptDialog.SetEnabled( "cam_matrix_d", False )
-    scriptDialog.SetEnabled( "cam_matrix_e", False )
-    scriptDialog.SetEnabled( "cam_matrix_f", False )
-    scriptDialog.SetEnabled( "cam_matrix_g", False )
-    scriptDialog.SetEnabled( "cam_matrix_h", False )
-    scriptDialog.SetEnabled( "cam_matrix_i", False )
-    scriptDialog.SetEnabled( "cam_matrix_j", False )
-    scriptDialog.SetEnabled( "cam_matrix_k", False )
-    scriptDialog.SetEnabled( "cam_matrix_l", False )
-    scriptDialog.SetEnabled( "cam_matrix_m", False )
-    scriptDialog.SetEnabled( "cam_matrix_n", False )
-    scriptDialog.SetEnabled( "cam_matrix_o", False )
-    scriptDialog.SetEnabled( "cam_matrix_p", False )
+    scriptDialog.SetEnabled( "cam_mat4", False )
 
     #a, b, c, d, 
     #e, f, g, h, 
@@ -111,29 +81,29 @@ def __main__():
     #m, n, o, p
 
     # Freefrom floats ( must know exact object path ie thinLens.steps[0].fStop)
-    scriptDialog.AddControlToGrid( "sepa109", "SeparatorControl", "Freefrom floats", 8, 0, colSpan=10 )
+    scriptDialog.AddControlToGrid( "sepa109", "SeparatorControl", "Freefrom floats", 9, 0, colSpan=10 )
 
-    useFreeformA = scriptDialog.AddSelectionControlToGrid( "useFreeformA", "CheckBoxControl", False, "Enable", 9, 0, "" )
+    useFreeformA = scriptDialog.AddSelectionControlToGrid( "useFreeformA", "CheckBoxControl", False, "Enable", 10, 0, "" )
     useFreeformA.ValueModified.connect( enableFreeformA )
-    scriptDialog.AddControlToGrid( "txt111", "LabelControl", "Bella freeform float A", 9, 1, "Name of a bella node , full path, must be one that holds an unsigned int", False )
-    scriptDialog.AddControlToGrid("freeformA", "TextControl", "thinLens.steps[0].fStop", 9, 2)
-    scriptDialog.AddControlToGrid( "txt777", "LabelControl", "Start", 9, 3, "Float start value", False )
-    scriptDialog.AddRangeControlToGrid( "freeformAStart", "RangeControl", 0, -100000, 100000, 5, .1, 9, 4 )
-    scriptDialog.AddControlToGrid( "txt888", "LabelControl", "End", 9, 5, "Float end value", False )
-    scriptDialog.AddRangeControlToGrid( "freeformAEnd", "RangeControl", 0, -100000, 100000, 5, .1, 9, 6 )
+    scriptDialog.AddControlToGrid( "txt111", "LabelControl", "Bella freeform float A", 10, 1, "Name of a bella node , full path, must be one that holds an unsigned int", False )
+    scriptDialog.AddControlToGrid("freeformA", "TextControl", "thinLens.steps[0].fStop", 10, 2)
+    scriptDialog.AddControlToGrid( "txt777", "LabelControl", "Start", 10, 3, "Float start value", False )
+    scriptDialog.AddRangeControlToGrid( "freeformAStart", "RangeControl", 0, -100000, 100000, 5, .1, 10, 4 )
+    scriptDialog.AddControlToGrid( "txt888", "LabelControl", "End", 10, 5, "Float end value", False )
+    scriptDialog.AddRangeControlToGrid( "freeformAEnd", "RangeControl", 0, -100000, 100000, 5, .1, 10, 6 )
     scriptDialog.SetEnabled( "freeformA", False )
     scriptDialog.SetEnabled( "freeformAStart", False )
     scriptDialog.SetEnabled( "freeformAEnd", False )
 
     # free form
-    useFreeformB = scriptDialog.AddSelectionControlToGrid( "useFreeformB", "CheckBoxControl", False, "Enable", 10, 0, "" )
+    useFreeformB = scriptDialog.AddSelectionControlToGrid( "useFreeformB", "CheckBoxControl", False, "Enable", 11, 0, "" )
     useFreeformB.ValueModified.connect( enableFreeformB )
-    scriptDialog.AddControlToGrid( "txt112", "LabelControl", "Bella freeform float B", 10, 1, "Name of a bella node , full path, must be one that holds an unsigned int", False )
-    scriptDialog.AddControlToGrid("freeformB", "TextControl", "", 10, 2 )
-    scriptDialog.AddControlToGrid( "txt113", "LabelControl", "Start", 10, 3, "Float start value", False )
-    scriptDialog.AddRangeControlToGrid( "freeformBStart", "RangeControl", 0, -100000, 100000, 5, .1, 10, 4 )
-    scriptDialog.AddControlToGrid( "txt114", "LabelControl", "End", 10, 5, "Float end value", False )
-    scriptDialog.AddRangeControlToGrid( "freeformBEnd", "RangeControl", 0, -100000, 100000, 5, .1, 10, 6 )
+    scriptDialog.AddControlToGrid( "txt112", "LabelControl", "Bella freeform float B", 11, 1, "Name of a bella node , full path, must be one that holds an unsigned int", False )
+    scriptDialog.AddControlToGrid("freeformB", "TextControl", "", 11, 2 )
+    scriptDialog.AddControlToGrid( "txt113", "LabelControl", "Start", 11, 3, "Float start value", False )
+    scriptDialog.AddRangeControlToGrid( "freeformBStart", "RangeControl", 0, -100000, 100000, 5, .1, 11, 4 )
+    scriptDialog.AddControlToGrid( "txt114", "LabelControl", "End", 11, 5, "Float end value", False )
+    scriptDialog.AddRangeControlToGrid( "freeformBEnd", "RangeControl", 0, -100000, 100000, 5, .1, 11, 6 )
     scriptDialog.SetEnabled( "freeformB", False )
     scriptDialog.SetEnabled( "freeformBStart", False )
     scriptDialog.SetEnabled( "freeformBEnd", False )
@@ -253,22 +223,7 @@ def enableOrbit( *args ):
     val1 = scriptDialog.GetValue( "useOrbit" )
     scriptDialog.SetEnabled( "orbDegrees", val1 )
     scriptDialog.SetEnabled( "orbCam", val1 )
-    scriptDialog.SetEnabled( "cam_matrix_a", val1 )
-    scriptDialog.SetEnabled( "cam_matrix_b", val1 )
-    scriptDialog.SetEnabled( "cam_matrix_c", val1 )
-    scriptDialog.SetEnabled( "cam_matrix_d", val1 )
-    scriptDialog.SetEnabled( "cam_matrix_e", val1 )
-    scriptDialog.SetEnabled( "cam_matrix_f", val1 )
-    scriptDialog.SetEnabled( "cam_matrix_g", val1 )
-    scriptDialog.SetEnabled( "cam_matrix_h", val1 )
-    scriptDialog.SetEnabled( "cam_matrix_i", val1 )
-    scriptDialog.SetEnabled( "cam_matrix_j", val1 )
-    scriptDialog.SetEnabled( "cam_matrix_k", val1 )
-    scriptDialog.SetEnabled( "cam_matrix_l", val1 )
-    scriptDialog.SetEnabled( "cam_matrix_m", val1 )
-    scriptDialog.SetEnabled( "cam_matrix_n", val1 )
-    scriptDialog.SetEnabled( "cam_matrix_o", val1 )
-    scriptDialog.SetEnabled( "cam_matrix_p", val1 )
+    scriptDialog.SetEnabled( "cam_mat4", val1 )
 
 def enableFreeformA( *args ):
     global scriptDialog
@@ -329,203 +284,111 @@ def submitButtonPressed(*args):
         return
     
 
+    # Start Deadline Single Submit
+    # Error checking
+    
+    sceneFile = scriptDialog.GetValue( "sceneFileBox" )
+    if len( sceneFile ) == 0:
+        scriptDialog.ShowMessageBox( "No Bella file specified", "Error" )
+        return
+    if not File.Exists( sceneFile ):
+        scriptDialog.ShowMessageBox( "Bella file %s does not exist" % sceneFile, "Error" )
+        return
+    
+    # framestrings define the frame workload, are text based and can define arbitrarily complex steps, skips, etc
+    # animation is merely calculatin the linear step value and passing that to plugin
+    animationFrames = int(scriptDialog.GetValue( "globalNumFrames" ))
     if not scriptDialog.GetValue( "sequenceFramesBox") == "":
-        # Start Deadline Sequence Submit
-        # Error Checking
-        sceneFile = scriptDialog.GetValue( "sceneFileBox" )
         sequenceFramesString =  scriptDialog.GetValue( "sequenceFramesBox" ) 
-        print(sequenceFramesString) 
         if not FrameUtils.FrameRangeValid( sequenceFramesString ):
             scriptDialog.ShowMessageBox( "Frame range string is invalid, should be in form 1-10", "Error" )
             return
-        if len( sceneFile ) == 0:
-            scriptDialog.ShowMessageBox( "No Bella sequence file specified", "Error" )
-            return
-        
-        if not File.Exists( sceneFile ):
-            scriptDialog.ShowMessageBox( "Bella file %s does not exist" % sceneFile, "Error" )
-            return
- 
-        # Create Bella job info file
-        # ==========================
-        jobName = scriptDialog.GetValue( "nameBox" )
-        jobInfoFilename = Path.Combine( ClientUtils.GetDeadlineTempPath(), "bella_job_info.job" )
-        writer = StreamWriter( jobInfoFilename, False, Encoding.Unicode )
-        writer.WriteLine( "Plugin=BellaRender" )
-        writer.WriteLine( "Name=%s" % jobName )
-        writer.WriteLine( "Comment=%s" % scriptDialog.GetValue( "commentBox" ) )
-        writer.WriteLine( "Department=%s" % scriptDialog.GetValue( "departmentBox" ) )
-        writer.WriteLine( "Pool=%s" % scriptDialog.GetValue( "poolBox" ) )
-        writer.WriteLine( "SecondaryPool=%s" % scriptDialog.GetValue( "secondaryPoolBox" ) )
-        writer.WriteLine( "Group=%s" % scriptDialog.GetValue( "groupBox" ) )
-        writer.WriteLine( "Priority=%s" % scriptDialog.GetValue( "priorityBox" ) )
-        writer.WriteLine( "TaskTimeoutMinutes=%s" % scriptDialog.GetValue( "taskTimeoutBox" ) )
-        if( bool(scriptDialog.GetValue( "isBlacklistBox" )) ):
-            writer.WriteLine( "Blacklist=%s" % scriptDialog.GetValue( "machineListBox" ) )
-        else:
-            writer.WriteLine( "Whitelist=%s" % scriptDialog.GetValue( "machineListBox" ) )
-        writer.WriteLine( "LimitGroups=%s" % scriptDialog.GetValue( "limitGroupBox" ) )
-        writer.WriteLine( "JobDependencies=%s" % scriptDialog.GetValue( "dependencyBox" ) )
-        writer.WriteLine( "OnJobComplete=%s" % scriptDialog.GetValue( "onJobCompleteBox" ) )
-        if( bool(scriptDialog.GetValue( "submitSuspendedBool" )) ):
-            writer.WriteLine( "InitialStatus=Suspended" )
-        writer.WriteLine( "MachineLimit=0" ) 
-        writer.WriteLine( "Frames=%s" % scriptDialog.GetValue( "sequenceFramesBox" )  ) 
-        writer.WriteLine( "ChunkSize=1" )
-        writer.Close()
-
-        # Create Bella plugin info file
-        # =============================
-        pluginInfoFilename = Path.Combine( ClientUtils.GetDeadlineTempPath(), "bella_plugin_info.job" )
-        writer = StreamWriter( pluginInfoFilename, False, Encoding.Unicode )
-
-        # Bella Required Parameters
-        writer.WriteLine("sceneFile=" + sceneFile)
-        writer.WriteLine( "outputDirectory=%s" % outputDirectory )
-
-        # Bella Override Parameters
-        if scriptDialog.GetValue( "resolutionOverrideBool") :
-            writer.WriteLine( "imageWidth=%s" % scriptDialog.GetValue( "widthBox" ) )
-            writer.WriteLine( "imageHeight=%s" % scriptDialog.GetValue( "heightBox" ) )
-        if scriptDialog.GetValue( "targetNoiseOverrideBool" ):
-            writer.WriteLine( "targetNoise=%s" % scriptDialog.GetValue( "targetNoiseBox" ) )
-        if scriptDialog.GetValue( "denoiseOverrideBool" ):
-            writer.WriteLine( "denoise=%s" % scriptDialog.GetValue( "denoiseBox" ) )
-        if scriptDialog.GetValue( "timeLimitOverrideBool" ):
-            writer.WriteLine( "timeLimit=%s" % scriptDialog.GetValue( "timeLimitBox" ) )
-        #writer.WriteLine( "replaceFrameNumber=false" )
-        writer.Close()
-
-        # End Deadline Sequence Submit       
-        arguments = StringCollection()
-        arguments.Add( jobInfoFilename )
-        arguments.Add( pluginInfoFilename )
-        report = ClientUtils.ExecuteCommandAndGetOutput( arguments )
-        scriptDialog.ShowMessageBox( report, "Sequence submission report" )
-        scriptDialog.CloseDialog()
-
-    else:
-        # Start Deadline Single Submit
-        # Error checking
-        
-        sceneFile = scriptDialog.GetValue( "sceneFileBox" )
-        if len( sceneFile ) == 0:
-            scriptDialog.ShowMessageBox( "No Bella file specified", "Error" )
-            return
-        if not File.Exists( sceneFile ):
-            scriptDialog.ShowMessageBox( "Bella file %s does not exist" % sceneFile, "Error" )
-            return
-        
-
-        # framestrings define the frame workload, are text based and can define arbitrarily complex steps, skips, etc
-        # animation is merely calculatin the linear step value and passing that to plugin
+        listFrames = FrameUtils.Parse( sequenceFramesString )
+        animationFrames = listFrames[-1]
+        Frames = sequenceFramesString
+    elif animationFrames == 0: 
+        animationFrames = 0
         Frames="0"
-        freeformBStep=0
-        animationLinearIncrement=0
-        if scriptDialog.GetValue( "useFreeformA" ) == True:
-            freeformAStart = float(scriptDialog.GetValue( "freeformAStart" ) )
-            freeformAEnd = float(scriptDialog.GetValue( "freeformAEnd" ) )
-            animationFrames = int(scriptDialog.GetValue( "globalNumFrames" ))
-            Frames = FrameUtils.ToFrameString(range(1,animationFrames+1,1))
-        if scriptDialog.GetValue( "useFreeformB" ) == True:
-            freeformBStart = float(scriptDialog.GetValue( "freeformBStart" ) )
-            freeformBEnd = float(scriptDialog.GetValue( "freeformBEnd" ) )
-            animationFrames = int(scriptDialog.GetValue( "globalNumFrames" ))
-            Frames = FrameUtils.ToFrameString(range(1,animationFrames+1,1))
-        if scriptDialog.GetValue( "useOrbit" ) == True:
-            animationFrames = int(scriptDialog.GetValue( "globalNumFrames" ))
-            Frames = FrameUtils.ToFrameString(range(1,animationFrames+1,1))
+    else:
+        animationFrames = int(scriptDialog.GetValue( "globalNumFrames" ))
+        Frames = FrameUtils.ToFrameString(range(1,animationFrames+1,1))
 
-        jobName = scriptDialog.GetValue( "nameBox" )
+    jobName = scriptDialog.GetValue( "nameBox" )
 
-        # Create Bella job info file
-        # ==========================
-        # [ ] This is boilerplate, should create common method to avoid code duplication
-        jobInfoFilename = Path.Combine( ClientUtils.GetDeadlineTempPath(), "bella_job_info.job" )
-        writer = StreamWriter( jobInfoFilename, False, Encoding.Unicode )
-        writer.WriteLine( "Plugin=BellaRender" )
-        writer.WriteLine( "Name=%s" % jobName )
-        writer.WriteLine( "Comment=%s" % scriptDialog.GetValue( "commentBox" ) )
-        writer.WriteLine( "Department=%s" % scriptDialog.GetValue( "departmentBox" ) )
-        writer.WriteLine( "Pool=%s" % scriptDialog.GetValue( "poolBox" ) )
-        writer.WriteLine( "SecondaryPool=%s" % scriptDialog.GetValue( "secondaryPoolBox" ) )
-        writer.WriteLine( "Group=%s" % scriptDialog.GetValue( "groupBox" ) )
-        writer.WriteLine( "Priority=%s" % scriptDialog.GetValue( "priorityBox" ) )
-        writer.WriteLine( "TaskTimeoutMinutes=%s" % scriptDialog.GetValue( "taskTimeoutBox" ) )
-        if( bool(scriptDialog.GetValue( "isBlacklistBox" )) ):
-            writer.WriteLine( "Blacklist=%s" % scriptDialog.GetValue( "machineListBox" ) )
-        else:
-            writer.WriteLine( "Whitelist=%s" % scriptDialog.GetValue( "machineListBox" ) )
-        writer.WriteLine( "LimitGroups=%s" % scriptDialog.GetValue( "limitGroupBox" ) )
-        writer.WriteLine( "JobDependencies=%s" % scriptDialog.GetValue( "dependencyBox" ) )
-        writer.WriteLine( "OnJobComplete=%s" % scriptDialog.GetValue( "onJobCompleteBox" ) )
-        if( bool(scriptDialog.GetValue( "submitSuspendedBool" )) ):
-            writer.WriteLine( "InitialStatus=Suspended" )
-        writer.WriteLine( "MachineLimit=0" )
-        writer.WriteLine( "Frames=%s" % Frames )
-        writer.WriteLine( "ChunkSize=1" )
-        writer.Close()
+    # Create Bella job info file
+    # ==========================
+    # [ ] This is boilerplate, should create common method to avoid code duplication
+    jobInfoFilename = Path.Combine( ClientUtils.GetDeadlineTempPath(), "bella_job_info.job" )
+    writer = StreamWriter( jobInfoFilename, False, Encoding.Unicode )
+    writer.WriteLine( "Plugin=BellaRender" )
+    writer.WriteLine( "Name=%s" % jobName )
+    writer.WriteLine( "Comment=%s" % scriptDialog.GetValue( "commentBox" ) )
+    writer.WriteLine( "Department=%s" % scriptDialog.GetValue( "departmentBox" ) )
+    writer.WriteLine( "Pool=%s" % scriptDialog.GetValue( "poolBox" ) )
+    writer.WriteLine( "SecondaryPool=%s" % scriptDialog.GetValue( "secondaryPoolBox" ) )
+    writer.WriteLine( "Group=%s" % scriptDialog.GetValue( "groupBox" ) )
+    writer.WriteLine( "Priority=%s" % scriptDialog.GetValue( "priorityBox" ) )
+    writer.WriteLine( "TaskTimeoutMinutes=%s" % scriptDialog.GetValue( "taskTimeoutBox" ) )
+    if( bool(scriptDialog.GetValue( "isBlacklistBox" )) ):
+        writer.WriteLine( "Blacklist=%s" % scriptDialog.GetValue( "machineListBox" ) )
+    else:
+        writer.WriteLine( "Whitelist=%s" % scriptDialog.GetValue( "machineListBox" ) )
+    writer.WriteLine( "LimitGroups=%s" % scriptDialog.GetValue( "limitGroupBox" ) )
+    writer.WriteLine( "JobDependencies=%s" % scriptDialog.GetValue( "dependencyBox" ) )
+    writer.WriteLine( "OnJobComplete=%s" % scriptDialog.GetValue( "onJobCompleteBox" ) )
+    if( bool(scriptDialog.GetValue( "submitSuspendedBool" )) ):
+        writer.WriteLine( "InitialStatus=Suspended" )
+    writer.WriteLine( "MachineLimit=0" )
+    writer.WriteLine( "Frames=%s" % Frames )
+    writer.WriteLine( "ChunkSize=1" )
+    writer.Close()
 
-        # Create Bella plugin info file
-        # =============================
-        pluginInfoFilename = Path.Combine( ClientUtils.GetDeadlineTempPath(), "bella_plugin_info.job" )
-        writer = StreamWriter( pluginInfoFilename, False, Encoding.Unicode )
+    # Create Bella plugin info file
+    # =============================
+    pluginInfoFilename = Path.Combine( ClientUtils.GetDeadlineTempPath(), "bella_plugin_info.job" )
+    writer = StreamWriter( pluginInfoFilename, False, Encoding.Unicode )
 
-        # Bella Required Parameters
-        writer.WriteLine("sceneFile=" + sceneFile)
-        #writer.WriteLine("sceneFile=/mnt/DeadlineRepository10/BellaShared/alab01200.bsx")
-        writer.WriteLine( "outputDirectory=%s" % scriptDialog.GetValue( "outputDirectoryBox" ) )
-        
-        # Bella Override Parameters
-        if scriptDialog.GetValue( "resolutionOverrideBool") :
-            writer.WriteLine( "imageWidth=%s" % scriptDialog.GetValue( "widthBox" ) )
-            writer.WriteLine( "imageHeight=%s" % scriptDialog.GetValue( "heightBox" ) )
-        if scriptDialog.GetValue( "targetNoiseOverrideBool" ):
-            writer.WriteLine( "targetNoise=%s" % scriptDialog.GetValue( "targetNoiseBox" ) )
-        if scriptDialog.GetValue( "denoiseOverrideBool" ):
-            writer.WriteLine( "denoise=%s" % scriptDialog.GetValue( "denoiseBox" ) )
-        if scriptDialog.GetValue( "timeLimitOverrideBool" ):
-            writer.WriteLine( "timeLimit=%s" % scriptDialog.GetValue( "timeLimitBox" ) )
-        writer.WriteLine( "outputExt=%s" % scriptDialog.GetValue( "outputExtCombo" ) )
+    # Bella Required Parameters
+    writer.WriteLine("sceneFile=" + sceneFile)
+    #writer.WriteLine("sceneFile=/mnt/DeadlineRepository10/BellaShared/alab01200.bsx")
+    writer.WriteLine( "outputDirectory=%s" % scriptDialog.GetValue( "outputDirectoryBox" ) )
+    
+    # Bella Override Parameters
+    if scriptDialog.GetValue( "resolutionOverrideBool") :
+        writer.WriteLine( "imageWidth=%s" % scriptDialog.GetValue( "widthBox" ) )
+        writer.WriteLine( "imageHeight=%s" % scriptDialog.GetValue( "heightBox" ) )
+    if scriptDialog.GetValue( "targetNoiseOverrideBool" ):
+        writer.WriteLine( "targetNoise=%s" % scriptDialog.GetValue( "targetNoiseBox" ) )
+    if scriptDialog.GetValue( "denoiseOverrideBool" ):
+        writer.WriteLine( "denoise=%s" % scriptDialog.GetValue( "denoiseBox" ) )
+    if scriptDialog.GetValue( "timeLimitOverrideBool" ):
+        writer.WriteLine( "timeLimit=%s" % scriptDialog.GetValue( "timeLimitBox" ) )
+    writer.WriteLine( "outputExt=%s" % scriptDialog.GetValue( "outputExtCombo" ) )
 
-        if not Frames == "0":
-            writer.WriteLine( "animationFrames=%d" % animationFrames )
-            writer.WriteLine( "animationOffset=0" )
-            writer.WriteLine( "freeformA=%s" % scriptDialog.GetValue( "freeformA" ) )
-            writer.WriteLine( "freeformAStart=%s" % scriptDialog.GetValue( "freeformAStart" ) )
-            writer.WriteLine( "freeformAEnd=%s" % scriptDialog.GetValue( "freeformAEnd" ) )
-            writer.WriteLine( "freeformB=%s" % scriptDialog.GetValue( "freeformB" ) )
-            writer.WriteLine( "freeformBStart=%s" % scriptDialog.GetValue( "freeformBStart" ) )
-            writer.WriteLine( "freeformBEnd=%s" % scriptDialog.GetValue( "freeformBEnd" ) )
-            writer.WriteLine( "useFreeformA=%s" % scriptDialog.GetValue( "useFreeformA" ) )
-            writer.WriteLine( "orbDegrees=%s" % scriptDialog.GetValue( "orbDegrees" ) )
-            writer.WriteLine( "useFreeformB=%s" % scriptDialog.GetValue( "useFreeformB" ) )
-            writer.WriteLine( "useOrbit=%s" % scriptDialog.GetValue( "useOrbit" ) )
-            writer.WriteLine( "orbCam=%s" % scriptDialog.GetValue( "orbCam" ) )
-            writer.WriteLine( "cam_matrix_a=%s" % scriptDialog.GetValue( "cam_matrix_a" ) )
-            writer.WriteLine( "cam_matrix_b=%s" % scriptDialog.GetValue( "cam_matrix_b" ) )
-            writer.WriteLine( "cam_matrix_c=%s" % scriptDialog.GetValue( "cam_matrix_c" ) )
-            writer.WriteLine( "cam_matrix_d=%s" % scriptDialog.GetValue( "cam_matrix_d" ) )
-            writer.WriteLine( "cam_matrix_e=%s" % scriptDialog.GetValue( "cam_matrix_e" ) )
-            writer.WriteLine( "cam_matrix_f=%s" % scriptDialog.GetValue( "cam_matrix_f" ) )
-            writer.WriteLine( "cam_matrix_g=%s" % scriptDialog.GetValue( "cam_matrix_g" ) )
-            writer.WriteLine( "cam_matrix_h=%s" % scriptDialog.GetValue( "cam_matrix_h" ) )
-            writer.WriteLine( "cam_matrix_i=%s" % scriptDialog.GetValue( "cam_matrix_i" ) )
-            writer.WriteLine( "cam_matrix_j=%s" % scriptDialog.GetValue( "cam_matrix_j" ) )
-            writer.WriteLine( "cam_matrix_k=%s" % scriptDialog.GetValue( "cam_matrix_k" ) )
-            writer.WriteLine( "cam_matrix_l=%s" % scriptDialog.GetValue( "cam_matrix_l" ) )
-            writer.WriteLine( "cam_matrix_m=%s" % scriptDialog.GetValue( "cam_matrix_m" ) )
-            writer.WriteLine( "cam_matrix_n=%s" % scriptDialog.GetValue( "cam_matrix_n" ) )
-            writer.WriteLine( "cam_matrix_o=%s" % scriptDialog.GetValue( "cam_matrix_o" ) )
-            writer.WriteLine( "cam_matrix_p=%s" % scriptDialog.GetValue( "cam_matrix_p" ) )
-        writer.WriteLine( "parseFragment1=%s" % scriptDialog.GetValue( "parseFragment1" ) )
+    if not Frames == "0":
+        writer.WriteLine( "animationFrames=%d" % animationFrames )
+        writer.WriteLine( "animationOffset=0" )
+        writer.WriteLine( "freeformA=%s" % scriptDialog.GetValue( "freeformA" ) )
+        writer.WriteLine( "freeformAStart=%s" % scriptDialog.GetValue( "freeformAStart" ) )
+        writer.WriteLine( "freeformAEnd=%s" % scriptDialog.GetValue( "freeformAEnd" ) )
+        writer.WriteLine( "freeformB=%s" % scriptDialog.GetValue( "freeformB" ) )
+        writer.WriteLine( "freeformBStart=%s" % scriptDialog.GetValue( "freeformBStart" ) )
+        writer.WriteLine( "freeformBEnd=%s" % scriptDialog.GetValue( "freeformBEnd" ) )
+        writer.WriteLine( "useFreeformA=%s" % scriptDialog.GetValue( "useFreeformA" ) )
+        writer.WriteLine( "orbDegrees=%s" % scriptDialog.GetValue( "orbDegrees" ) )
+        writer.WriteLine( "useFreeformB=%s" % scriptDialog.GetValue( "useFreeformB" ) )
+        writer.WriteLine( "useOrbit=%s" % scriptDialog.GetValue( "useOrbit" ) )
+        writer.WriteLine( "orbCam=%s" % scriptDialog.GetValue( "orbCam" ) )
+        writer.WriteLine( "cam_mat4=%s" % scriptDialog.GetValue( "cam_mat4" ) )
+    writer.WriteLine( "Frames=%s" % Frames )
+    writer.WriteLine( "parseFragment1=%s" % scriptDialog.GetValue( "parseFragment1" ) )
 
-        writer.Close()
+    writer.Close()
 
-        # End Deadline Single Submit 
-        arguments = StringCollection()
-        arguments.Add( jobInfoFilename )
-        arguments.Add( pluginInfoFilename )
-        report = ClientUtils.ExecuteCommandAndGetOutput( arguments )
-        scriptDialog.ShowMessageBox( report, "Scene submission report" )
-        scriptDialog.CloseDialog()
+    # End Deadline Single Submit 
+    arguments = StringCollection()
+    arguments.Add( jobInfoFilename )
+    arguments.Add( pluginInfoFilename )
+    report = ClientUtils.ExecuteCommandAndGetOutput( arguments )
+    scriptDialog.ShowMessageBox( report, "Scene submission report" )
+    scriptDialog.CloseDialog()
