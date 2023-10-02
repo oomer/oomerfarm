@@ -31,6 +31,7 @@ class BellaRenderPlugin(DeadlinePlugin):
     outputDirectory = ""
     outputExt = ""
     outputName = ""
+    paddingSize = ""
     def __init__(self):
         """setup Deadline callbacks"""
         if sys.version_info.major == 3:
@@ -113,13 +114,27 @@ class BellaRenderPlugin(DeadlinePlugin):
 
         sceneFileFramePadded = FrameUtils.GetFrameStringFromFilename( sceneFile )
         paddingSize = len( sceneFileFramePadded )
-        print('userFramePadded', sceneFileFramePadded, 'paddingSize', paddingSize) 
+        self.paddingSize = paddingSize
         #This handles sequence renaming
-        print('ppp',paddingSize,Frames)
-        if paddingSize > 0 and Frames != '0':
+        if Frames != '0':
+            # Frames gets set either by enabling anim or choosing a padded sequence
+        #if paddingSize > 0 and Frames != '0':
             # current frame
-            renderFramePadded = StringUtils.ToZeroPaddedString( self.GetStartFrame(), paddingSize, False )
-            self.sceneFile = FrameUtils.SubstituteFrameNumber( sceneFile, renderFramePadded )
+            print("padding introduced here if a sequence of bsz OR if using a single file passes that",paddingSize)
+            #if paddingSize == 0: 
+            #    print('padding0 chnaged to 4')
+            #    paddingSize = 4 
+            #    renderFramePadded = StringUtils.ToZeroPaddedString( self.GetStartFrame(), paddingSize, False )
+            #    sceneFilePathlib = Path(sceneFile)
+            #    sceneFileStem = sceneFilePathlib.stem
+            #    sceneFileSuffix = sceneFilePathlib.suffix
+            #    self.sceneFile = (str(sceneFileStem)+renderFramePadded+sceneFileSuffix)
+            if paddingSize == 0:
+                self.sceneFile = sceneFile
+            else:
+                renderFramePadded = StringUtils.ToZeroPaddedString( self.GetStartFrame(), paddingSize, False )
+                self.sceneFile = FrameUtils.SubstituteFrameNumber( sceneFile, renderFramePadded )
+                print(renderFramePadded,self.sceneFile)
         else:
             print('padded scnee with no sequence')
             self.sceneFile = sceneFile
@@ -286,7 +301,7 @@ class BellaRenderPlugin(DeadlinePlugin):
         # The code below handles when the scenefile is not padded 
         # 
         if useOrbit or useFreeformA or useFreeformB:
-            if Frames == '': # in edge case where we send a sequence and animate simultaneously
+            if self.paddingSize == 0: # in edge case where we send a sequence and animate simultaneously
                 renderFramePadded = StringUtils.ToZeroPaddedString( self.GetStartFrame(), 5, False )
                 paddedStem = (str(sceneFileStem)+renderFramePadded)
                 print('useorb',sceneFileStem,paddedStem,sceneFileStem)
@@ -297,6 +312,7 @@ class BellaRenderPlugin(DeadlinePlugin):
            #passthru
            print('pasthru')
            paddedStem = sceneFileStem
+        #paddedStem = sceneFileStem
 
         arguments += " -pf:\"beautyPass.outputName=\\\"%s\\\";\"" % paddedStem 
         if outputExt == "":

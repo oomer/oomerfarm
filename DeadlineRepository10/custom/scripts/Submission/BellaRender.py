@@ -198,7 +198,6 @@ def __main__():
     settings = ("departmentBox","poolBox","secondaryPoolBox","groupBox","priorityBox","isBlacklistBox","machineListBox","limitGroupBox",
                 "sceneFileBox",
                 "outputDirectoryBox",
-                "sequenceFramesBox",
                 "outputExtCombo",
                 "resolutionOverrideBool",
                 "widthBox",
