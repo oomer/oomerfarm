@@ -190,7 +190,7 @@ if [ "$os_name" == "\"Ubuntu\"" ]; then
 	apt -y install freeglut3-dev
 	apt -y install libffi7
 	ln -s /usr/lib/x86_64-linux-gnu/libffi.so.7 /usr/lib/libffi.so.6
-elif [ "$os_name" == "\"AlmaLinux\"" ]; then
+elif [ "$os_name" == "\"AlmaLinux\"" ] || [ "$os_name" == "\"Rocky Linux\"" ]; then
 	dnf -y update
 	dnf -y install tar
 	# needed for /usr/local/bin/oomerfarm_shutdown.sh
