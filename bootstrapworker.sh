@@ -252,7 +252,7 @@ if [[ "$keybundle_url" == *"https://drive.google.com/file/d"* ]]; then
 		exit
 	fi
 else
-	curl -s -L -O "${keybundle_url}${worker_prefix}.keybundle.enc" 
+	curl -L -o ${worker_prefix}.keybundle.enc "${keybundle_url}" 
 fi
 
 while :
