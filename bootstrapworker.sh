@@ -358,8 +358,8 @@ if ! ( test -f /usr/local/bin/goofys ); then
 	curl -L -o /usr/local/bin/goofys https://github.com/kahing/goofys/releases/download/v0.24.0/goofys
 	MatchFile="$(echo "${goofyssha256} /usr/local/bin/goofys" | sha256sum --check)"
 	if [ "$MatchFile" = "/usr/local/bin/goofys: OK" ] ; then
-		chmod 755 /user/local/bin/goofys
-		chown root.root /usr/local/bin
+		chmod +x /usr/local/bin/goofys
+		chown root.root /usr/local/bin/goofys
 		chcon -t bin_t /usr/local/bin/goofys # SELinux security clearance
 	else
 		echo "FAIL"
@@ -532,6 +532,7 @@ if ! [ $skip_advanced = "yes" ]; then
 	# s3 goofys
 	# =========
 	grep -qxF "goofys#oomerfarm /mnt/s3 fuse ro,_netdev,allow_other,--file-mode=0666,--dir-mode=0777,--endpoint=$s3_endpoint 0 0" /etc/fstab || echo "goofys#oomerfarm /mnt/s3 fuse ro,_netdev,allow_other,--file-mode=0666,--dir-mode=0777,--endpoint=$s3_endpoint 0 0" >> /etc/fstab
+	systemctl daemon-reload
 	mount /mnt/s3
 fi
 
