@@ -218,6 +218,11 @@ elif [ "$os_name" == "\"AlmaLinux\"" ] || [ "$os_name" == "\"Rocky Linux\"" ]; t
 	dnf install -y mesa-vulkan-drivers mesa-libGL
 	dnf install -y cifs-utils
 	dnf install -y fuse
+	#Houdini dependencies
+	dnf install -y ncurses-compat-lib
+	dnf install -y mesa-libGLU
+	dnf install -y libSM
+	dnf install -y libnsl
 else
 	echo "FAIL"
 	exit
@@ -564,3 +569,7 @@ tar -xvf bella_cli-23.4.0.tar.gz
 chmod +x bella_cli
 mv bella_cli /usr/local/bin
 rm bella_cli-23.4.0.tar.gz
+
+# Install Houdini
+# ===============
+bash /mnt/s3/houdini/houdini-py3-18.5.759-linux_x86_64_gcc6.3/houdini.install --install-houdini --install-license --auto-install --make-dir --no-root-check --no-menus --accept-EULA 2021-10-13 /opt/hfs18.5.759
