@@ -29,6 +29,18 @@ echo ${thinkboxurl}
 #thinkboxsha256="2da400837c202b2e0b306d606c3f832e4eae91822e2ac98f7ab6db241af77a43"
 #thinkboxsha256="ee7835233f3f15f25bea818962e90a4edf12d432092ea56ad135a5f480f282d8"
 thinkboxsha256="56a985a4a7ae936ff5cf265222c0b3e667ad294b32dfdc73253d6144d2f50134"
+
+
+thinkboxversion="10.1.23.6"
+thinkboxtar="Deadline-10.3.0.13-linux-installers.tar"
+thinkboxurl="https://thinkbox-installers.s3.us-west-2.amazonaws.com/Releases/Deadline/10.1/36_10.1.23.6/"
+thinkboxtar="Deadline-${thinkboxversion}-linux-installers.tar"
+thinkboxrun="./DeadlineRepository-${thinkboxversion}-linux-x64-installer.run"
+thinkboxsha256="e0ca90bd089d702908577ea97d0ecf8ebd20d1c547db075f2c6f9e248409efe1"
+
+
+
+
 mongourl="https://fastdl.mongodb.org/linux/"
 mongotar="mongodb-linux-x86_64-rhel80-4.4.16.tgz"
 mongosha256="78c3283bd570c7c88ac466aa6cc6e93486e061c28a37790e0eebf722ae19a0cb"
@@ -470,6 +482,13 @@ firewall-cmd -q --zone nebula --add-port 445/tcp --permanent
 # Add MongoDB port on Nebula VPN port
 # -----------------------------------
 firewall-cmd -q --zone nebula --add-port 27100/tcp --permanent
+
+# sesi
+firewall-cmd -q --zone nebula --add-port 1714/tcp --permanent
+firewall-cmd -q --zone nebula --add-port 1715/tcp --permanent
+firewall-cmd -q --zone nebula --add-port 1716/tcp --permanent
+firewall-cmd -q --zone nebula --add-port 17000/tcp --permanent
+firewall-cmd -q --zone nebula --add-port 40645/tcp --permanent
 firewall-cmd -q --reload
 
 
@@ -618,7 +637,7 @@ if ! test -f /mnt/DeadlineRepository10/ThinkboxEULA.txt ; then
 	fi
 	mkdir /mnt/oomerfarm/installers
 	cp DeadlineClient-${thinkboxversion}-linux-x64-installer.run /mnt/oomerfarm/installers
-	rm DeadlineClient-${thinkboxversion}-linux-x64-installer.run
+	#rm DeadlineClient-${thinkboxversion}-linux-x64-installer.run
 	rm DeadlineClient-${thinkboxversion}-linux-x64-installer.run.sig
 	rm DeadlineRepository-${thinkboxversion}-linux-x64-installer.run.sig
 	rm AWSPortalLink-*-linux-x64-installer.run
@@ -629,6 +648,9 @@ if ! test -f /mnt/DeadlineRepository10/ThinkboxEULA.txt ; then
 	echo -e "\n\nYou accept AWS Thinkbox Deadline EULA when installing:"
 	echo -e "========================================================"
 	cat /mnt/DeadlineRepository10/ThinkboxEULA.txt
+	chmod +x DeadlineClient-${thinkboxversion}-linux-x64-installer.run
+	./DeadlineClient-${thinkboxversion}-linux-x64-installer.run --mode unattended --unattendedmodeui minimal --repositorydir /mnt/DeadlineRepository10  --connectiontype Direct --noguimode true --binariesonly true
+
 else
 	echo "Deadline Repository exists...skipping installation"
 fi
