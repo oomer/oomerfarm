@@ -19,7 +19,7 @@ fi
 # --------------------------------
 test_selinux=$( getenforce )
 if [ "$test_selinux" == "Disabled" ] || [ "$test_selinux" == "Permissive" ];  then
-        echo -e "/nFAIL: Selinux is disabled, edit /etc/selinux/config"
+        echo -e "\nFAIL: Selinux is disabled, edit /etc/selinux/config"
         echo "==================================================="
         echo "Change SELINUX=disabled to SELINUX=enforcing"
         echo "Reboot ( SELinux chcon on boot drive takes awhile)"
@@ -29,28 +29,17 @@ fi
 
 skip_advanced_default="yes"
 
-#thinkboxurl="https://thinkbox-installers.s3.us-west-2.amazonaws.com/Releases/Deadline/10.3/2_10.3.0.10/"
-#thinkboxurl="https://thinkbox-installers.s3.us-west-2.amazonaws.com/Releases/Deadline/10.3/3_10.3.0.13/"
-#thinkboxtar="Deadline-10.3.0.13-linux-installers.tar"
-
-thinkboxversion="10.2.1.1"
-thinkboxurl="https://thinkbox-installers.s3.us-west-2.amazonaws.com/Releases/Deadline/10.2/5_${thinkboxversion}/"
-thinkboxtar="Deadline-${thinkboxversion}-linux-installers.tar"
-thinkboxrun="./DeadlineRepository-${thinkboxversion}-linux-x64-installer.run"
-
-echo ${thinkboxurl}
-
-#thinkboxsha256="2da400837c202b2e0b306d606c3f832e4eae91822e2ac98f7ab6db241af77a43"
-#thinkboxsha256="ee7835233f3f15f25bea818962e90a4edf12d432092ea56ad135a5f480f282d8"
-thinkboxsha256="56a985a4a7ae936ff5cf265222c0b3e667ad294b32dfdc73253d6144d2f50134"
-
-
 thinkboxversion="10.1.23.6"
-thinkboxtar="Deadline-10.3.0.13-linux-installers.tar"
-thinkboxurl="https://thinkbox-installers.s3.us-west-2.amazonaws.com/Releases/Deadline/10.1/36_10.1.23.6/"
+thinkboxsha256="e0ca90bd089d702908577ea97d0ecf8ebd20d1c547db075f2c6f9e248409efe1"
+thinkboxurl="https://thinkbox-installers.s3.us-west-2.amazonaws.com/Releases/Deadline/10.1/36_${thinkboxversion}/"
 thinkboxtar="Deadline-${thinkboxversion}-linux-installers.tar"
 thinkboxrun="./DeadlineRepository-${thinkboxversion}-linux-x64-installer.run"
-thinkboxsha256="e0ca90bd089d702908577ea97d0ecf8ebd20d1c547db075f2c6f9e248409efe1"
+
+thinkboxversion_2="10.3.0.13"
+thinkboxsha256_2="ee7835233f3f15f25bea818962e90a4edf12d432092ea56ad135a5f480f282d8"
+thinkboxurl_2="https://thinkbox-installers.s3.us-west-2.amazonaws.com/Releases/Deadline/10.3/3_10.3.0.13/"
+thinkboxtar_2="Deadline-10.3.0.13-linux-installers.tar"
+thinkboxrun_2="./DeadlineRepository-${thinkboxversion_2}-linux-x64-installer.run"
 
 # s3 fuse filesystem
 goofysurl="https://github.com/kahing/goofys/releases/download/v0.24.0/goofys"
@@ -653,7 +642,7 @@ fi
 
 # Install MongoDB
 # ===============
-
+orig_dir=$(pwd)
 if ! test -d /opt/Thinkbox/DeadlineDatabase10/mongo/application/mongodb-linux-x86_64-rhel80-4.4.16 ; then
 	echo -e "\nInstalling MongoDB"
 	echo -e "=================="
@@ -682,7 +671,6 @@ if ! test -d /opt/Thinkbox/DeadlineDatabase10/mongo/application/mongodb-linux-x8
 	chown mongod.mongod /opt/Thinkbox/DeadlineDatabase10/mongo
 	chown mongod.mongod /opt/Thinkbox/DeadlineDatabase10/mongo/log
 
-	orig_dir=$(pwd)
 	cd /opt/Thinkbox/DeadlineDatabase10/mongo
 	if ! ( test -d application/mongodb-linux-x86_64-rhel80-4.4.16 ); then
 		echo -e "Downloading ${mongourl}${mongotar}"
@@ -766,7 +754,7 @@ if ! test -f /mnt/DeadlineRepository10/ThinkboxEULA.txt ; then
 	cd ${orig_dir}
 	if ! ( test -f "${thinkboxtar}" ); then
 		echo -e "\nDownloading AWS Thinkbox Deadline Software 900MB+ ..."
-		curl -sL -O ${thinkboxurl}${thinkboxtar}
+		curl -O ${thinkboxurl}${thinkboxtar}
 	fi
 	MatchFile="$(echo "${thinkboxsha256} ${thinkboxtar}" | sha256sum --check)"
 	if [ "$MatchFile" == "${thinkboxtar}: OK" ] ; then
@@ -777,12 +765,41 @@ if ! test -f /mnt/DeadlineRepository10/ThinkboxEULA.txt ; then
 	    exit
 	fi
 	mkdir /mnt/oomerfarm/installers
-	cp DeadlineClient-${thinkboxversion}-linux-x64-installer.run /mnt/oomerfarm/installers
-	#rm DeadlineClient-${thinkboxversion}-linux-x64-installer.run
+	#cp DeadlineClient-${thinkboxversion}-linux-x64-installer.run /mnt/oomerfarm/installers
+	rm DeadlineClient-${thinkboxversion}-linux-x64-installer.run
 	rm DeadlineClient-${thinkboxversion}-linux-x64-installer.run.sig
 	rm DeadlineRepository-${thinkboxversion}-linux-x64-installer.run.sig
 	rm AWSPortalLink-*-linux-x64-installer.run
 	rm AWSPortalLink-*-linux-x64-installer.run.sig
+
+
+        echo -e "\nChecking existence of ${thinkboxurl_2}${thinkboxtar_2}"
+        if ! (curl -s --head --fail -o /dev/null "${thinkboxurl_2}${thinkboxtar_2}" ); then
+                echo -e "FAIL: no Thinkbox Software at ${thinkboxurl_2}${thinkboxtar_2}"
+                exit
+        fi
+
+        cd ${orig_dir}
+        if ! ( test -f "${thinkboxtar_2}" ); then
+                echo -e "\nDownloading AWS Thinkbox Deadline Software 900MB+ ..."
+                curl -sL -O ${thinkboxurl_2}${thinkboxtar_2}
+        fi
+        MatchFile="$(echo "${thinkboxsha256_2} ${thinkboxtar_2}" | sha256sum --check)"
+        if [ "$MatchFile" == "${thinkboxtar_2}: OK" ] ; then
+            echo -e "Extracting ${thinkboxurl_2}${thinkboxtar_2}\n===="
+            tar --skip-old-files -xzf ${thinkboxtar_2}
+        else
+            echo "FAIL: ${thinkboxtar_2} checksum failed, file possibly maliciously altered on AWS"
+            exit
+        fi
+        mkdir /mnt/oomerfarm/installers
+        cp DeadlineClient-${thinkboxversion_2}-linux-x64-installer.run /mnt/oomerfarm/installers
+        #rm DeadlineClient-${thinkboxversion_2}-linux-x64-installer.run
+        rm DeadlineClient-${thinkboxversion_2}-linux-x64-installer.run.sig
+        rm DeadlineRepository-${thinkboxversion_2}-linux-x64-installer.run.sig
+        rm AWSPortalLink-*-linux-x64-installer.run
+        rm AWSPortalLink-*-linux-x64-installer.run.sig
+
 
 	echo ${thinkboxrun} --mode unattended --unattendedmodeui none --prefix /mnt/DeadlineRepository10 --dbLicenseAcceptance accept --dbhost ${nebula_ip}
 	${thinkboxrun} --mode unattended --unattendedmodeui none --prefix /mnt/DeadlineRepository10 --dbLicenseAcceptance accept --dbhost ${nebula_ip}
@@ -791,6 +808,15 @@ if ! test -f /mnt/DeadlineRepository10/ThinkboxEULA.txt ; then
 	cat /mnt/DeadlineRepository10/ThinkboxEULA.txt
 	chmod +x DeadlineClient-${thinkboxversion}-linux-x64-installer.run
 	./DeadlineClient-${thinkboxversion}-linux-x64-installer.run --mode unattended --unattendedmodeui minimal --repositorydir /mnt/DeadlineRepository10  --connectiontype Direct --noguimode true --binariesonly true
+
+        echo ${thinkboxrun_2} --mode unattended --unattendedmodeui none --prefix /mnt/DeadlineRepository10 --dbLicenseAcceptance accept --dbhost ${nebula_ip}
+        ${thinkboxrun_2} --mode unattended --unattendedmodeui none --prefix /mnt/DeadlineRepository10 --dbLicenseAcceptance accept --dbhost ${nebula_ip}
+        echo -e "\n\nYou accept AWS Thinkbox Deadline EULA when installing:"
+        echo -e "========================================================"
+        cat /mnt/DeadlineRepository10/ThinkboxEULA.txt
+
+	./DeadlineClient-${thinkboxversion_2}-linux-x64-installer.run --mode unattended --unattendedmodeui minimal --repositorydir /mnt/DeadlineRepository10  --connectiontype Direct --noguimode true
+
 
 else
 	echo "Deadline Repository exists...skipping installation"
