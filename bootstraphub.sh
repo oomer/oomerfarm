@@ -15,6 +15,20 @@ if ! [[ "$OSTYPE" == "linux-gnu"* ]]; then
 	exit
 fi
 
+# abort if selinux is not enforced
+# --------------------------------
+test_selinux=$( getenforce )
+if [ "$test_selinux" == "Disabled" ] || [ "$test_selinux" == "Permissive" ];  then
+        echo -e "/nFAIL: Selinux is disabled, edit /etc/selinux/config"
+        echo "==================================================="
+        echo "Change SELINUX=disabled to SELINUX=enforcing"
+        echo "Reboot ( SELinux chcon on boot drive takes awhile)"
+        echo "=================================================="
+        exit
+fi
+
+skip_advanced_default="yes"
+
 #thinkboxurl="https://thinkbox-installers.s3.us-west-2.amazonaws.com/Releases/Deadline/10.3/2_10.3.0.10/"
 #thinkboxurl="https://thinkbox-installers.s3.us-west-2.amazonaws.com/Releases/Deadline/10.3/3_10.3.0.13/"
 #thinkboxtar="Deadline-10.3.0.13-linux-installers.tar"
@@ -38,7 +52,9 @@ thinkboxtar="Deadline-${thinkboxversion}-linux-installers.tar"
 thinkboxrun="./DeadlineRepository-${thinkboxversion}-linux-x64-installer.run"
 thinkboxsha256="e0ca90bd089d702908577ea97d0ecf8ebd20d1c547db075f2c6f9e248409efe1"
 
-
+# s3 fuse filesystem
+goofysurl="https://github.com/kahing/goofys/releases/download/v0.24.0/goofys"
+goofyssha256="729688b6bc283653ea70f1b2b6406409ec1460065161c680f3b98b185d4bf364"
 
 
 mongourl="https://fastdl.mongodb.org/linux/"
@@ -71,6 +87,7 @@ fi
 
 
 dnf -y install tar
+dnf -y install fuse
 
 # Use AWS service to get public ip
 public_ip=$(curl -s https://checkip.amazonaws.com)
@@ -186,6 +203,43 @@ if ! [ "$nebula_name" = "i_agree_this_is_unsafe" ]; then
 		    exit
 		fi
 	fi
+
+        echo -e "\nSkip advanced setup:"
+        read -p "(default: $skip_advanced_default): " skip_advanced
+        if [ -z "$skip_advanced" ]; then
+            skip_advanced=$skip_advanced_default
+        fi
+
+	if ! [ $skip_advanced == "yes" ]; then
+		echo -e "\nEnter URL"
+		read -p "S3 Endpoint:" s3_endpoint
+		if [ -z  $s3_endpoint ]; then
+			echo "FAIL: s3_endpoint url must be set"
+			exit
+		fi
+
+		echo -e "\nEnter"
+		read -p "S3 Access Key Id:" s3_access_key_id
+		if [ -z  $s3_access_key_id ]; then
+			echo "FAIL: s3_access_key_id must be set"
+			exit
+		fi
+
+		echo -e "\nEnter"
+		read -p "S3 Secret Access Key:" s3_secret_access_key
+		if [ -z  $s3_secret_access_key ]; then
+			echo "FAIL: s3_secret_access_key must be set"
+			exit
+		fi
+        	mkdir /root/.aws
+cat <<EOF > /root/.aws/credentials
+[default]
+aws_access_key_id=${s3_access_key_id}
+aws_secret_access_key=${s3_secret_access_key}
+EOF
+        	chmod go-rwx /root/.aws/credentials
+	fi
+
 else
 	keybundle_url=$keybundle_url_default
 fi
@@ -196,18 +250,6 @@ fi
 # disallow ssh password authentication
 # ------------------------------------
 sed -i -E 's/#?PasswordAuthentication yes/PasswordAuthentication no/' /etc/ssh/sshd_config 
-
-# abort if selinux is not enforced
-# --------------------------------
-test_selinux=$( getenforce )
-if [[ "$test_selinux" == "Disabled" ]]; then
-	echo -e "/nFAIL: Selinux is disabled, edit /etc/selinux/config"
-	echo "==================================================="
-	echo "Change SELINUX=disabled to SELINUX=enforcing"
-	echo "Reboot ( SELinux chcon on boot drive takes awhile)"
-	echo "=================================================="
-	exit
-fi
 
 # enable firewalld
 # ---------------- 
@@ -252,6 +294,7 @@ echo "${smb_user}:${linux_password}" | chpasswd
 
 if ! ( test -d /etc/nebula ); then
 	mkdir -p /etc/nebula
+	mkdir -p /etc/deadline
 fi 
 curl -s -L -O https://github.com/slackhq/nebula/releases/download/${nebula_version}/nebula-linux-amd64.tar.gz
 MatchFile="$(echo "${nebulasha256} nebula-linux-amd64.tar.gz" | sha256sum --check)"
@@ -268,6 +311,35 @@ mv nebula-cert /usr/local/bin/
 chmod +x /usr/local/bin/nebula-cert
 chcon -t bin_t /usr/local/bin/nebula # SELinux security clearance
 rm -f nebula-linux-amd64.tar.gz
+
+# Install goofys after sha256 checksum security check
+# ===================================================
+if ! ( test -f /usr/local/bin/goofys ); then
+        curl -L -o /usr/local/bin/goofys https://github.com/kahing/goofys/releases/download/v0.24.0/goofys
+        MatchFile="$(echo "${goofyssha256} /usr/local/bin/goofys" | sha256sum --check)"
+        if [ "$MatchFile" = "/usr/local/bin/goofys: OK" ] ; then
+                chmod +x /usr/local/bin/goofys
+		mkdir /mnt/s3
+                chown root.root /usr/local/bin/goofys
+                chcon -t bin_t /usr/local/bin/goofys # SELinux security clearance
+        else
+                echo "FAIL"
+                echo "goofys checksum is wrong, may indicate download failure of malicious alteration"
+                exit
+        fi
+fi
+
+if ! [ $skip_advanced = "yes" ]; then
+        # s3 goofys
+        # =========
+        grep -qxF "goofys#oomerfarm /mnt/s3 fuse ro,_netdev,allow_other,--file-mode=0666,--dir-mode=0777,--endpoint=$s3_endpoint 0 0" /etc/fstab || echo "goofys#oomerfarm /mnt/s3 fuse ro,_netdev,allow_other,--file-mode=0666,--dir-mode=0777,--endpoint=$s3_endpoint 0 0" >> /etc/fstab
+        systemctl daemon-reload
+        mount /mnt/s3
+	mkdir /etc/deadline
+	cp /mnt/s3/houdini/mantra.pfx /etc/deadline
+	cp /mnt/s3/houdini/houdini.pfx /etc/deadline
+fi
+
 
 # Get credentials from public url
 # -------------------------------
@@ -327,7 +399,7 @@ if ! [[ "${testkeybundle}" == *"Not found"* ]]; then
 	    mv "${nebula_name}.crt" /etc/nebula
 	    mv "${nebula_name}.key" /etc/nebula
 	    rm ${nebula_name}.keybundle
-	else:
+	else
 	    rm ${nebula_name}.keybundle
 	fi 
 else
@@ -410,6 +482,27 @@ firewall:
       proto: tcp
       groups:
         - oomerfarm
+
+    - port: 17004
+      proto: tcp
+      groups:
+        - oomerfarm
+
+    - port: 1714
+      proto: tcp
+      groups:
+        - oomerfarm
+
+    - port: 1715
+      proto: tcp
+      groups:
+        - oomerfarm
+
+    - port: 1716
+      proto: tcp
+      groups:
+        - oomerfarm
+
 EOF
 
 # create boot script for Nebula
@@ -430,6 +523,54 @@ WantedBy=multi-user.target
 EOF
 systemctl enable --now nebula
 
+
+cat <<EOF > /var/lib/Thinkbox/Deadline10/licenseforwarder.ini
+[Deadline]
+LicenseForwarderProcessID=92562
+LicenseForwarderMessagingPort=40635
+EOF
+chown oomerfarm.oomerfarm /var/lib/Thinkbox/Deadline10/licenseforwarder.ini
+
+cat <<EOF > /var/lib/Thinkbox/Deadline10/deadline.ini
+[Deadline]
+LicenseMode=LicenseFree
+Region=
+LauncherListeningPort=17000
+LauncherServiceStartupDelay=60
+AutoConfigurationPort=17001
+SlaveStartupPort=17003
+SlaveDataRoot=
+RestartStalledSlave=false
+NoGuiMode=true
+LaunchSlaveAtStartup=0
+AutoUpdateOverride=
+ConnectionType=Repository
+NetworkRoot=/mnt/DeadlineRepository10
+DbSSLCertificate=
+NetworkRoot0=/mnt/DeadlineRepository10
+LicenseForwarderSSLPath=/etc/deadline
+EOF
+
+
+cat <<EOF > /etc/systemd/system/deadlinelicenseforwarder.service
+[Unit]
+Description=Deadline 10 License Forwarder
+After= nebula.service
+
+[Service]
+Type=simple
+Restart=always
+RestartSec=5
+User=oomerfarm
+ExecStart=/usr/bin/bash -l -c "/opt/Thinkbox/Deadline10/bin/deadlinelicenseforwarder --sslpath /etc/deadline"
+ExecStop=/opt/Thinkbox/Deadline10/bin/deadlinelauncher -shutdownall
+SuccessExitStatus=143
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+systemctl enable --now deadlinelicenseforwarder
 
 # Install Samba
 # =============
@@ -487,7 +628,7 @@ firewall-cmd -q --zone nebula --add-port 27100/tcp --permanent
 firewall-cmd -q --zone nebula --add-port 1714/tcp --permanent
 firewall-cmd -q --zone nebula --add-port 1715/tcp --permanent
 firewall-cmd -q --zone nebula --add-port 1716/tcp --permanent
-firewall-cmd -q --zone nebula --add-port 17000/tcp --permanent
+firewall-cmd -q --zone nebula --add-port 17004/tcp --permanent
 firewall-cmd -q --zone nebula --add-port 40645/tcp --permanent
 firewall-cmd -q --reload
 
