@@ -1,3 +1,5 @@
+#!/bin/bash
+
 # bootstraphub.sh
 
 # Turns this machine into a renderfarm hub
@@ -74,33 +76,32 @@ echo -e "\nTurns this machine into a renderfarm \"hub\""
 echo -e "=========================================="
 echo -e "WARNING: Major system changes will occur"
 echo -e "DO NOT run on a production machine, or an existing server"
-echo -e " - deploys Nebula VPN node at 10.10.0.1/16"
+echo -e " - becomes Nebula VPN node at 10.10.0.1/16"
 echo -e " - deploys Nebula lighthouse at ${public_ip} allowing node discovery over internet"
-echo -e " - deploys Deadline Repository into /mnt/DeadlineRepository10"
+echo -e " - deploys Samba file server, reachable within VPN at //10.10.0.1 (win) and smb://10.10.0.1"
 echo -e " - deploys Deadline Client software into /opt/Thinkbox/Deadline10"
 echo -e " - starts Deadline License Forwarder required for Usage Based Licensing"
-echo -e " - deploys MongoDB 4.4.16 into /opt/Thinkbos/DeadlineDatabase10"
-echo -e " - deploys Samba file server, 10.10.0.1"
-echo -e " - maximizes network security (firewalld)"
+echo -e " - deploys MongoDB 4.4.16 into /opt/Thinkbox/DeadlineDatabase10"
+echo -e " - maximizes network security (firewalld) ( blockades non-oomerfarm ports) "
 echo -e " - maximizes OS security (selinux)"
 echo -e " - Only runs on /RHEL/Alma/Rocky 8.x Linux"
 echo -e " - You agree to the AWS Thinkbox EULA by installing Deadline"
 echo -e " - Optionally mounts /mnt/s3"
+echo -e " - Optionally installs Houdini"
 echo -e "Continue on $(hostname)?"
+
 read -p "    (Enter Yes) " accept
 if [ "$accept" != "Yes" ]; then
-	echo -e "\nScript aborted because Yes was not entered"
-	exit
+        echo -e "\nScript aborted because Yes was not entered"
+        exit
 fi
 
-
-dnf -qy install tar
-dnf -qy install fuse
-
-
 nebula_name_default="i_agree_this_is_unsafe"
-echo -e "\nTESTDRIVE: \"${nebula_name_default}\" keybundle is a public set of keys with a knowable passphrase in this source code. Use this keybundle only for testing. You acknowledge that anybody with these keys can join your Nebula network without your knowledge or consent. The situation is analogous to losing your house keys on the subway, an intruder would need to know where you live giving you a modicum of security. Choose default below to use the public keybundle for testing."
-echo -e "\nSECURE METHOD: For a long term use, generate a custom cryptographic keys ( on a trusted computer not this one ) using keyoomerfarm.sh. Authorize each machine on your Nebula network your own certificate signing authority. Type \"hub\" below to use the secure method which requires following the instructions in \"keyoomerfarm.sh\""
+
+echo -e "\nSECURE METHOD: Generate cryptographic keys ( on a trusted computer, not this one ) using keyoomerfarm.sh. Authorize each machine on your Nebula network with your own certificate signing authority for zero trust credentials. Type \"hub\" below to use the secure method"
+
+echo -e "\nTESTDRIVE: \"${nebula_name_default}\" keybundle is a public set of keys with a knowable passphrase in this source code. You acknowledge that anybody with these keys can join your Nebula network without your knowledge or consent. The situation is analogous to losing your house keys on the subway, an intruder would need to know where you live giving you at least security by obscurity. Hit enter below to use \"i_agree_this_is_unsafe\" for testing"
+
 echo -e "\nENTER hub name"
 read -p "    (default: $nebula_name_default:) " nebula_name
 if [ -z "$nebula_name" ]; then
@@ -125,53 +126,20 @@ if ! ( curl -s --head --fail -o /dev/null ${mongourl}${mongotar} ); then
 fi
 
 if ! [ "$nebula_name" = "i_agree_this_is_unsafe" ]; then
-	echo -e "\nENTER encryption passphrase set in \"keyoomerfarm.sh\"  ( keystrokes hidden )"
-	echo -e "If you don't know what this is, run \"keyoomerfarm.sh\" on a trusted computer"
+	echo -e "\nENTER passphrase to decode hub.keybundle.enc YOU set in \"keyoomerfarm.sh\"  ( keystrokes hidden )"
+        echo -e "If you don't understand, then you did not follow the instructions"
 	IFS= read -rs encryption_passphrase < /dev/tty
 	if [ -z "$encryption_passphrase" ]; then
 		echo -e "\nFAIL: Invalid empty passphrase"
 		exit
 	fi
 
-	#echo -e "\nENTER Nebula private IP address IPV4"
-	#echo -e "Customize Nebula network addresses using keyoomerfarm.sh"
-	#read -p "    (default: $nebula_ip_default): " nebula_ip
-	#if [ -z "$nebula_ip" ]; then
-	#    nebula_ip=$nebula_ip_default
-	#fi
-
-	#echo -e "\nEnter Nebula internet port"
-	#read -p "    (default: $nebula_public_port_default): " nebula_public_port
-	#if [ -z "$nebula_public_port" ]; then
-	#    nebula_public_port=$nebula_public_port_default
-	#fi
-
-	#echo -e "\nENTER Nebula version"
-	#read -p "    (default: $nebula_version_default): " nebula_version
-	#if [ -z "$nebula_version" ]; then
-	#    nebula_version=$nebula_version_default
-	#fi
-
-	#echo -e "\nEnter user name"
-	#read -p "    (default: $smb_user_default): " deadline_user
-	#if [ -z "$smb_user" ]; then
-	#    smb_user=$deadline_user_default
-	#fi
-
-	echo -e "\nENTER URL to hub keybundle"
-	read -p "    (keyoomerfarm.sh required you to write down this hub URL): " keybundle_url
+	echo -e "\nENTER URL to hub.keybundle.enc"
+        read -p "    (keyoomerfarm.sh required saving hub.keybundle.enc to Google Drive and to get URL link): " keybundle_url
 	if [ -z "$keybundle_url" ]; then
-		echo "FAIL: URL is empty, run keyoomerfarm.sh and follow instructions"
+		echo "FAIL: URL cannot be blank"
 		exit
-	    	#keybundle_url=$keybundle_url_default
 	fi
-
-	#echo -e "\nCreate password for oomerfarm user ( keystrokes hidden )"
-	#IFS= read -rs linux_password < /dev/tty
-	#if [ -z "$linux_password" ]; then
-	#    echo -e "\nFAIL: invalid empty password"
-	#    exit
-	#fi
 
         echo -e "\nSkip advanced setup:"
         read -p "(default: $skip_advanced_default): " skip_advanced
@@ -179,7 +147,7 @@ if ! [ "$nebula_name" = "i_agree_this_is_unsafe" ]; then
             skip_advanced=$skip_advanced_default
         fi
 
-	if ! [ $skip_advanced -eq "yes" ]; then
+	if ! [[ $skip_advanced == "yes" ]]; then
 		echo -e "\nEnter URL"
 		read -p "S3 Endpoint:" s3_endpoint
 		if [ -z  $s3_endpoint ]; then
@@ -245,6 +213,9 @@ EOF
 else
 	keybundle_url=$keybundle_url_default
 fi
+
+dnf -qy install tar
+dnf -qy install fuse
 
 # Ensure max security
 # ===================
@@ -315,11 +286,12 @@ if ! ( test -f /usr/local/bin/goofys ); then
         fi
 fi
 
-if ! [ $skip_advanced -eq "yes" ]; then
+if ! [[ $skip_advanced == "yes" ]]; then
         # s3 goofys
         # =========
         grep -qxF "goofys#oomerfarm /mnt/s3 fuse ro,_netdev,allow_other,--file-mode=0666,--dir-mode=0777,--endpoint=$s3_endpoint 0 0" /etc/fstab || echo "goofys#oomerfarm /mnt/s3 fuse ro,_netdev,allow_other,--file-mode=0666,--dir-mode=0777,--endpoint=$s3_endpoint 0 0" >> /etc/fstab
         systemctl daemon-reload
+        mkdir -p /mnt/s3
         mount /mnt/s3
 	mkdir -p /etc/deadline
 	cp -n /mnt/s3/houdini/mantra.pfx /etc/deadline
@@ -508,54 +480,6 @@ EOF
 
 systemctl enable --now nebula
 
-
-cat <<EOF > /var/lib/Thinkbox/Deadline10/licenseforwarder.ini
-[Deadline]
-LicenseForwarderProcessID=92562
-LicenseForwarderMessagingPort=40635
-EOF
-chown oomerfarm.oomerfarm /var/lib/Thinkbox/Deadline10/licenseforwarder.ini
-
-cat <<EOF > /var/lib/Thinkbox/Deadline10/deadline.ini
-[Deadline]
-LicenseMode=LicenseFree
-Region=
-LauncherListeningPort=17000
-LauncherServiceStartupDelay=60
-AutoConfigurationPort=17001
-SlaveStartupPort=17003
-SlaveDataRoot=
-RestartStalledSlave=false
-NoGuiMode=true
-LaunchSlaveAtStartup=0
-AutoUpdateOverride=
-ConnectionType=Repository
-NetworkRoot=/mnt/DeadlineRepository10
-DbSSLCertificate=
-NetworkRoot0=/mnt/DeadlineRepository10
-LicenseForwarderSSLPath=/etc/deadline
-EOF
-
-cat <<EOF > /etc/systemd/system/deadlinelicenseforwarder.service
-[Unit]
-Description=Deadline 10 License Forwarder
-After= nebula.service
-
-[Service]
-Type=simple
-Restart=always
-RestartSec=5
-User=oomerfarm
-ExecStart=/usr/bin/bash -l -c "/opt/Thinkbox/Deadline10/bin/deadlinelicenseforwarder --sslpath /etc/deadline"
-ExecStop=/opt/Thinkbox/Deadline10/bin/deadlinelauncher -shutdownall
-SuccessExitStatus=143
-
-[Install]
-WantedBy=multi-user.target
-EOF
-
-systemctl enable --now deadlinelicenseforwarder
-
 # Install Samba
 # =============
 echo -e "\nInstalling Samba..."
@@ -579,7 +503,9 @@ smb ports = 445
    directory mask = 0777
 
 [oomerfarm]
-   path = /mnt/oomerfarm browseable = yes read only = no
+   path = /mnt/oomerfarm 
+   browseable = yes 
+   read only = no
    guest ok = no
    create mask = 0777
    directory mask = 0777
@@ -700,6 +626,7 @@ if ! test -d /opt/Thinkbox/DeadlineDatabase10/mongo/application/mongodb-linux-x8
 			tar --skip-old-files -xf ${mongotar}
 			mv mongodb-linux-x86_64-rhel80-4.4.16 application
 			rm ${mongotar}
+			chcon -t bin_t /opt/Thinkbox/DeadlineDatabase10/mongo/application/bin/mongod
 		else
 			echo -e "\nChecksum for MongoDB does not match"
 			echo -e "\nABORTING: The mongodb download url is compromised"
@@ -835,6 +762,52 @@ if ! test -f /mnt/DeadlineRepository10/ThinkboxEULA.txt ; then
 	./DeadlineClient-${thinkboxversion_2}-linux-x64-installer.run --mode unattended --unattendedmodeui minimal --repositorydir /mnt/DeadlineRepository10  --connectiontype Direct --noguimode true
         rm DeadlineClient-${thinkboxversion_2}-linux-x64-installer.run
 
+cat <<EOF > /var/lib/Thinkbox/Deadline10/licenseforwarder.ini
+[Deadline]
+LicenseForwarderProcessID=92562
+LicenseForwarderMessagingPort=40635
+EOF
+	chown oomerfarm.oomerfarm /var/lib/Thinkbox/Deadline10/licenseforwarder.ini
+
+cat <<EOF > /var/lib/Thinkbox/Deadline10/deadline.ini
+[Deadline]
+LicenseMode=LicenseFree
+Region=
+LauncherListeningPort=17000
+LauncherServiceStartupDelay=60
+AutoConfigurationPort=17001
+SlaveStartupPort=17003
+SlaveDataRoot=
+RestartStalledSlave=false
+NoGuiMode=true
+LaunchSlaveAtStartup=0
+AutoUpdateOverride=
+ConnectionType=Repository
+NetworkRoot=/mnt/DeadlineRepository10
+DbSSLCertificate=
+NetworkRoot0=/mnt/DeadlineRepository10
+LicenseForwarderSSLPath=/etc/deadline
+EOF
+
+cat <<EOF > /etc/systemd/system/deadlinelicenseforwarder.service
+[Unit]
+Description=Deadline 10 License Forwarder
+After= nebula.service
+
+[Service]
+Type=simple
+Restart=always
+RestartSec=5
+User=oomerfarm
+ExecStart=/usr/bin/bash -l -c "/opt/Thinkbox/Deadline10/bin/deadlinelicenseforwarder --sslpath /etc/deadline"
+ExecStop=/opt/Thinkbox/Deadline10/bin/deadlinelauncher -shutdownall
+SuccessExitStatus=143
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+	systemctl enable --now deadlinelicenseforwarder
 
 else
 	echo "Deadline Repository exists...skipping installation"
@@ -866,33 +839,42 @@ curl -L https://bellarender.com/doc/scenes/orange-juice/orange-juice.bsz -o /mnt
 chown oomerfarm.oomerfarm /mnt/oomerfarm/bella/orange-juice.bsz
 
 if [ "$nebula_name" == "i_agree_this_is_unsafe" ]; then
-	echo -e "\n==================================================================="
-	echo -e "The Nebula Lighthouse and Deadline Repository succesfully installed"
-	echo -e "The oomerfarm hub is ready to accept job submissions"
-	echo -e "Write down ${public_ip} ( internet ip address of this hub )"
-	echo -e "Next...on a Windows/MacOS/Linux desktop run \"bash joinoomerfarm.sh\""
-	echo -e "and enter hub address ${public ip} when prompted"
-	echo -e "Submit a render job from a Windows/MacOS/Linux desktop by installing"
-	echo -e "Deadline Client software from https://www.awsthinkbox.com"
-	echo -e "==================================================================="
-	echo -e "\n************************************************************"
-	echo -ne "By choosing the \"${nebula_name}\" keybundle, you acknowledge that anybody can"
-	echo -ne "connect to this machine via ${public_ip} on port ${nebula_public_port} because"
-	echo -ne "the decryption passphrase is in this script." 
-	echo -e " Only use the \"${nebula_name}\" keybundle for testing purposes."
-	echo 
-	echo -ne "Significantly augment security by creating a certificate-authority allowing"
-	echo -ne "the signing of custom certificates and keys"
-	echo 
-	echo -ne "Run \"bash keyoomerfarm.sh\" on a TRUSTED COMPUTER to learn how" 
-	echo -ne "then come back and rerun this script on $(hostname) at ${public_ip}"
-	echo -e " using a private keybundle NOT \"${nebula_name}\""
-	echo -e "************************************************************"
+        echo -e "\nFINISHED oomerfarm TESTDRIVE hub setup. READY to distribute renderfarm work"
+        echo -e "As a reminder the steps are: ( TESTDRIVE )"
+        echo -e "1. [YOU ARE HERE] on a CHEAP Linux computer run \"bash bootstraphub.sh\""
+        echo -e "2. On a FAST Linux computer:"
+        echo -e "\t - run \"bash bootstrapworker.sh\", enter ${public_ip} when asked for \"hub\" address"
+        echo -e "3. On a desktop/laptop:"
+        echo -e "\t - run \"bash joinoomerfarm.sh\", enter ${public_ip} when asked for \"hub\" address"
+        echo -e "\t - with username \"oomerfarm\" password \"oomerfarm\""
+        echo -e "\t\t - mount network share smb://10.10.0.1/DeadlineRepository10 ( Windows //10.10.0.1/DeadlineRespository ) "
+        echo -e "\t\t - mount network share smb://10.10.0.1/oomerfarm ( Windows //10.10.0.1/oomerfarm ) "
+        echo -e "\t - install Deadline Client software from https://www.awsthinkbox.com"
+        echo -e "4. Test with included https://bellarender.com path tracer demo"
+        echo -e "\t - start Deadline Monitor"
+        echo -e "\t - menu select Submit / BellaRender"
+        echo -e "\t - file select orange-juice.bsz"
+        echo -e "\t - set image output directory"
+        echo -e "\t - Hit Submit button"
+        echo -e "Because this TESTDRIVE uses public credentials ONLY use for testing"
+        echo -e "Deploy a secure renderfarm by following instructions at https://github.com/oomer/oomerfarm"
 else
-	echo -e "\n==================================================================="
-	echo -e "Finished oomerfarm hub setup. Ready to distribute renderfarm work"
-	echo -e "Next step...start a fast linux computer and run \"bash bootstrapworker.sh\""
-	echo -e "Finally...on a Windows/MacOS/Linux desktop run \"bash joinoomerfarm,sh\""
-	echo -e "and install Deadline Client software from https://www.awsthinkbox.com"
-	echo -e "==================================================================="
+        echo -e "\nFINISHED oomerfarm hub setup. READY to distribute renderfarm work"
+        echo -e "As a reminder the steps are: ( see github for detailed instructions )"
+        echo -e "1. Generate VPN credentials on a desktop/laptop run \"bash keyoomerfarm.sh\""
+        echo -e "2. [YOU ARE HERE] on a CHEAP Linux computer run \"bash bootstraphub.sh\""
+        echo -e "2. On a FAST Linux computer:"
+        echo -e "\t - run \"bash bootstrapworker.sh\", enter ${public_ip} when asked for hub address"
+        echo -e "4. On desktop/laptop used in step#1:"
+        echo -e "\t - running \"bash joinoomerfarm.sh\" connects with your step#1 credentials to oomerfarm"
+        echo -e "\t - enter ${public_ip} when asked for \"hub\" address"
+        echo -e "\t - with username \"oomerfarm\" password ${linux_password}:"
+        echo -e "\t\t - mount network share smb://10.10.0.1/DeadlineRepository10 ( Windows //10.10.0.1/DeadlineRepository ) "
+        echo -e "\t\t - mount network share smb://10.10.0.1/oomerfarm ( Windows //10.10.0.1/oomerfarm ) "
+        echo -e "\t - install Deadline Client software from https://www.awsthinkbox.com"
+        echo -e "4. Test with included https://bellarender.com path tracer demo"
+        echo -e "\t - start Deadline Monitor"
+        echo -e "\t - menu select Submit / BellaRender"
+        echo -e "\t - file select orange-juice.bsz"
+        echo -e "\t - set image output directory"
 fi
