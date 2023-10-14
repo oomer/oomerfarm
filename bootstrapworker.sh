@@ -14,8 +14,7 @@ if ! [[ "$OSTYPE" == "linux-gnu"* ]]; then
         exit
 fi
 
-
-thinkboxversion="10.2.1.1"
+thinkboxversion="10.3.0.13"
 
 keybundle_url_default="https://drive.google.com/file/d/13xH4vNrr6DSocD9Bhi1cEKl8FU_QIi5K/view?usp=share_link"
 
@@ -154,18 +153,18 @@ if ! [ "$hub_name" = "i_agree_this_is_unsafe" ]; then
 	    echo "Passwords do not match! Try again."
 	done
 
-	echo -e "\nSkip advanced setup:"
-	read -p "(default: $skip_advanced_default): " skip_advanced
-	if [ -z "$skip_advanced" ]; then
-	    skip_advanced=$skip_advanced_default
-	fi
-
-
 else
 	keybundle_url=$keybundle_url_default
 fi
 
-if ! [ $skip_advanced == "yes" ]; then
+echo -e "\nSkip advanced setup:"
+read -p "(default: $skip_advanced_default): " skip_advanced
+if [ -z "$skip_advanced" ]; then
+    skip_advanced=$skip_advanced_default
+fi
+
+
+if ! [[ $skip_advanced == "yes" ]]; then
 	echo -e "\nEnter URL"
 	read -p "S3 Endpoint:" s3_endpoint
 	if [ -z  $s3_endpoint ]; then
@@ -292,7 +291,7 @@ domain=WORKGROUP
 EOF
 chmod go-rwx /etc/nebula/smb_credentials
 
-if ! [ $skip_advanced = "yes" ]; then
+if ! [[ $skip_advanced == "yes" ]]; then
 	# aws_credentials
 	# ===============
 	mkdir /root/.aws
@@ -528,7 +527,7 @@ mount /mnt/DeadlineRepository10
 grep -qxF "//$lighthouse_nebula_ip/oomerfarm /mnt/oomerfarm cifs rw,noauto,x-systemd.automount,x-systemd.device-timeout=45,nobrl,uid=3000,gid=3000,file_mode=0664,credentials=/etc/nebula/smb_credentials 0 0" /etc/fstab || echo "//$lighthouse_nebula_ip/oomerfarm /mnt/oomerfarm cifs rw,noauto,x-systemd.automount,x-systemd.device-timeout=45,nobrl,uid=3000,gid=3000,file_mode=0664,credentials=/etc/nebula/smb_credentials 0 0" >> /etc/fstab
 mount /mnt/oomerfarm
 
-if ! [ $skip_advanced = "yes" ]; then
+if ! [[ $skip_advanced == "yes" ]]; then
 	# s3 goofys
 	# =========
 	grep -qxF "goofys#oomerfarm /mnt/s3 fuse ro,_netdev,allow_other,--file-mode=0666,--dir-mode=0777,--endpoint=$s3_endpoint 0 0" /etc/fstab || echo "goofys#oomerfarm /mnt/s3 fuse ro,_netdev,allow_other,--file-mode=0666,--dir-mode=0777,--endpoint=$s3_endpoint 0 0" >> /etc/fstab
@@ -571,6 +570,9 @@ chmod +x bella_cli
 mv bella_cli /usr/local/bin
 rm bella_cli-23.4.0.tar.gz
 
-# Install Houdini
-# ===============
-bash /mnt/s3/houdini/houdini-py3-18.5.759-linux_x86_64_gcc6.3/houdini.install --install-houdini --install-license --auto-install --make-dir --no-root-check --no-menus --accept-EULA 2021-10-13 /opt/hfs18.5.759
+if ! [[ $skip_advanced == "yes" ]]; then
+	# Install Houdini
+	# ===============
+	bash /mnt/s3/houdini/houdini-py3-18.5.759-linux_x86_64_gcc6.3/houdini.install --install-houdini --install-license --auto-install --make-dir --no-root-check --no-menus --accept-EULA 2021-10-13 /opt/hfs18.5.759
+
+fi
