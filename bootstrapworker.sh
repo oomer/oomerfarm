@@ -2,10 +2,11 @@
 
 # bootstrapworker.sh
 
-# Bootstrap a Deadline renderfarm worker on AlmaLinux 8.x
+# Turns this machine into a renderfarm worker 
 # - join existing Nebula virtual private network 
 # - with Deadline client software
 # - with Bella render plugin
+# - optionally with Houdini
 
 # Tested on AWS, Azure, Google, Oracle, Vultr, Digital Ocaan, Linode, Heztner, Server-Factory, Crunchbits
 
@@ -55,9 +56,17 @@ hub_name_default="i_agree_this_is_unsafe"
 # [ ] avoid passing password in command line args which are viewable inside /proc
 # [TODO] add a force option to overwrite existing credential, otherwise delete /etc/nebula/smb_credentials to reset
 
-echo -e "\nMake this machine an oomerfarm worker, automatically joining renderfarm"
-echo -e "\tMajor changes WILL occur"
-echo -e "\tYou agree to AWS Thinkbox EULA"
+echo -e "\nTurns this machine into a renderfarm worker, automatically joining vpn"
+echo -e "WARNING: Major system changes will occur"
+echo -e "DO NOT run on a production machine, or an existing server"
+echo -e " - becomes Nebula VPN node with address in 10.10.0.0/16 subnet"
+echo -e " - deploys Deadline Client software into /opt/Thinkbox/Deadline10"
+echo -e " - maximizes network security (firewalld) ( blockades non-oomerfarm ports) "
+echo -e " - maximizes OS security (selinux)"
+echo -e " - You agree to the AWS Thinkbox EULA by installing Deadline"
+echo -e " - Optionally mounts /mnt/s3"
+echo -e " - Optionally installs Houdini"
+echo -e "Continue on $(hostname)?"
 read -p "(Enter Yes) " accept
 if [ "$accept" != "Yes" ]; then
         echo -e "\nScript aborted because Yes was not entered"
@@ -90,12 +99,11 @@ if [ -z  $lighthouse_internet_ip ]; then
         exit
 fi
 
+echo -e "\nSECURE METHOD: Generate cryptographic keys ( on a trusted computer, not this one ) using keyoomerfarm.sh. Authorize each machine on your Nebula network with your own certificate signing authority for zero trust credentials. Type \"hub\" below to use the secure method"
 
+echo -e "\nTESTDRIVE: \"${hub_name_default}\" keybundle is a public set of keys with a knowable passphrase in this source code. You acknowledge that anybody with these keys can join your Nebula network without your knowledge or consent. The situation is analogous to losing your house keys on the subway, an intruder would need to know where you live giving you at least security by obscurity. Hit enter below to use \"i_agree_this_is_unsafe\" for testing"
 
-echo -e "\n\tTESTDRIVE: Using \"${hub_name_default}\" keybundle is insecure because it is a public set of keys with a knowable passphrase in this source code, by using these keys you acknowledge that anybody else with these same keys can enter your Nebula network. It provides a modicum of security because they would also have to know your server's public internet address"
-echo -e "This methods allows rapid deployment to kick the tires and use 100% defaults and 98% fewer challenge questions compared to the \"CORRECT WAY\""
-echo -e "\n\tCORRECT WAY: Generate keys on a trusted computer using keyoomerfarm.sh where you personally authorize each and every machine on your network and you control the certificate-authority. Store the encrypted files on Google Drive, shared with \"Anyone with the Link\", hit \"copy link\" button"
-echo -e "\nhub name ( return for \"TESTDRIVE\", or type \"hub\" for \"CORRECT WAY\")"
+echo -e "\nENTER hub name ..."
 read -p "(default: $hub_name_default:) " hub_name
 if [ -z "$hub_name" ]; then
 	hub_name=$hub_name_default
@@ -103,89 +111,96 @@ fi
 
 if ! [ "$hub_name" = "i_agree_this_is_unsafe" ]; then
 
-	echo -e "\nworker keybundle url:"
-	read -p "(URL): " keybundle_url
-	if [ -z "$keybundle_url" ]; then
-		echo "FAIL: Cannot continue, a keybundle url is required"
-		exit
-	fi
+        echo -e "\nENTER URL to worker.keybundle.enc ..."
+        read -p "    (keyoomerfarm.sh required saving worker.keybundle.enc to Google Drive and to get URL link): " keybundle_url
+        if [ -z "$keybundle_url" ]; then
+                echo "FAIL: URL cannot be blank, read instructions"
+                exit
+        fi
 
-	echo -e "\nworker keybundle passphrase? ( typing is ghosted )"
-	IFS= read -rs encryption_passphrase < /dev/tty
-	if [ -z "$encryption_passphrase" ]; then
-		echo -e "\nFAIL: Invalid empty passphrase"
-		exit
-	fi
+        echo -e "\nENTER passphrase to decode worker.keybundle.enc YOU set in \"keyoomerfarm.sh\"  ( keystrokes hidden )"
+        echo -e "If you don't understand, then you did not follow the instructions"
+        IFS= read -rs encryption_passphrase < /dev/tty
+        if [ -z "$encryption_passphrase" ]; then
+                echo -e "\nFAIL: Invalid empty passphrase"
+                exit
+        fi
 
-	echo -e "\nhub's VPN ip:"
-	read -p "(default: $lighthouse_nebula_ip_default): " lighthouse_nebula_ip
-	if [ -z "$lighthouse_nebula_ip" ]; then
-	    lighthouse_nebula_ip=$lighthouse_nebula_ip_default
-	fi
+        echo -e "\nSkip advanced setup:"
+        read -p "(default: $skip_advanced_default): " skip_advanced
+        if [ -z "$skip_advanced" ]; then
+            skip_advanced=$skip_advanced_default
+        fi
 
-	echo -e "\nNebula version:"
-	read -p "(default: $nebula_version_default): " nebula_version
-	if [ -z "$nebula_version" ]; then
-	    nebula_version=$nebula_version_default
-	fi
+        if ! [[ $skip_advanced == "yes" ]]; then
+                echo -e "\nEnter URL"
+                read -p "S3 Endpoint:" s3_endpoint
+                if [ -z  $s3_endpoint ]; then
+                        echo "FAIL: s3_endpoint url must be set"
+                        exit
+                fi
 
-	echo -e "\nhub's public internet port:"
-	read -p "(default: $lighthouse_internet_port_default): " lighthouse_internet_port
-	if [ -z "$lighthouse_internet_port" ]; then
-	    lighthouse_internet_port=$lighthouse_internet_port_default
-	fi
+                echo -e "\nEnter"
+                read -p "S3 Access Key Id:" s3_access_key_id
+                if [ -z  $s3_access_key_id ]; then
+                        echo "FAIL: s3_access_key_id must be set"
+                        exit
+                fi
 
-	echo -e "\nSamba username:"
-	read -p "(default: $deadline_user_default): " deadline_user
-	if [ -z "$deadline_user" ]; then
-	    deadline_user=$deadline_user_default
-	fi
+                echo -e "\nEnter"
+                read -p "S3 Secret Access Key:" s3_secret_access_key
+                if [ -z  $s3_secret_access_key ]; then
+                        echo "FAIL: s3_secret_access_key must be set"
+                        exit
+                fi
 
-	while :
-	do
-	    echo "Samba password, hit return when done"
-	    IFS= read -rs smb_credentials < /dev/tty
-	    echo "Verifying: re-enter password"
-	    IFS= read -rs smb_check_credentials < /dev/tty
-	    if [[ "$smb_credentials" == "$smb_check_credentials" ]]; then
-	        break
-	    fi
-	    echo "Passwords do not match! Try again."
-	done
+                echo -e "\nEnter file server username ..."
+		read -p "(default: $deadline_user_default): " deadline_user
+		if [ -z "$deadline_user" ]; then
+		    deadline_user=$deadline_user_default
+		fi
+
+		while :
+		do
+		    echo "Enter file server password ( keystrokes hidden, hit enter to use default )"
+		    IFS= read -rs smb_credentials < /dev/tty
+		    if [ -z "$smb_credentials" ]; then
+			$smb_credentials = $smb_credentials_default
+			break
+		    else
+		        echo "Verifying: re-enter password"
+		        IFS= read -rs smb_check_credentials < /dev/tty
+		        if [[ "$smb_credentials" == "$smb_check_credentials" ]]; then
+			    break
+		        fi
+		        echo "Passwords do not match! Try again."
+		    fi
+		done
+
+                echo -e "\nENTER oomerfarm hub VPN address"
+                echo -e "Customize Nebula network addresses using keyoomerfarm.sh"
+		read -p "(default: $lighthouse_nebula_ip_default): " lighthouse_nebula_ip
+		if [ -z "$lighthouse_nebula_ip" ]; then
+		    lighthouse_nebula_ip=$lighthouse_nebula_ip_default
+		fi
+
+		echo -e "\nEnter oomerfarm hub's internet port:"
+		read -p "(default: $lighthouse_internet_port_default): " lighthouse_internet_port
+		if [ -z "$lighthouse_internet_port" ]; then
+		    lighthouse_internet_port=$lighthouse_internet_port_default
+		fi
+
+		echo -e "\nNebula version:"
+		read -p "(default: $nebula_version_default): " nebula_version
+		if [ -z "$nebula_version" ]; then
+		    nebula_version=$nebula_version_default
+		fi
+	fi
 
 else
 	keybundle_url=$keybundle_url_default
 fi
 
-echo -e "\nSkip advanced setup:"
-read -p "(default: $skip_advanced_default): " skip_advanced
-if [ -z "$skip_advanced" ]; then
-    skip_advanced=$skip_advanced_default
-fi
-
-
-if ! [[ $skip_advanced == "yes" ]]; then
-	echo -e "\nEnter URL"
-	read -p "S3 Endpoint:" s3_endpoint
-	if [ -z  $s3_endpoint ]; then
-		echo "FAIL: s3_endpoint url must be set"
-		exit
-	fi
-
-	echo -e "\nEnter"
-	read -p "S3 Access Key Id:" s3_access_key_id
-	if [ -z  $s3_access_key_id ]; then
-		echo "FAIL: s3_access_key_id must be set"
-		exit
-	fi
-
-	echo -e "\nEnter"
-	read -p "S3 Secret Access Key:" s3_secret_access_key
-	if [ -z  $s3_secret_access_key ]; then
-		echo "FAIL: s3_secret_access_key must be set"
-		exit
-	fi
-fi
 
 firewalld_status=$(systemctl status firewalld)
 
@@ -275,7 +290,7 @@ done
 # nebula credentials
 # ==================
 if ! test -d /etc/nebula; then
-	mkdir /etc/nebula
+	mkdir -p /etc/nebula
 fi
 tar --strip-components 1 -xvf ${worker_prefix}.keybundle -C /etc/nebula
 chown root.root /etc/nebula/*.crt
@@ -294,7 +309,7 @@ chmod go-rwx /etc/nebula/smb_credentials
 if ! [[ $skip_advanced == "yes" ]]; then
 	# aws_credentials
 	# ===============
-	mkdir /root/.aws
+	mkdir -p /root/.aws
 cat <<EOF > /root/.aws/credentials
 [default]
 aws_access_key_id=${s3_access_key_id}
