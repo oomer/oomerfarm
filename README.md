@@ -1,15 +1,74 @@
 # oomerfarm
 
 [ DO NOT USE IN PRODUCTION -- WORK IN PROGRESS ]
+[ ALPHA release v0.2 , only for the technically curious]
 
-[ ALPHA release v0.1 , only for the technically curious]
+### Simple bash scripts to deploy a personal renderfarm
 
-[ BellaRender plugin is janky, animation support temporarily removed ]
+>A renderfarm takes a workload, distributes it over a network and provides these benefits.
+  1. Frees up desktop/laptop cpu
+  2. Wedge testing simplified with queueing
+  3. As needed cloud computers scale to:
 
-### Disposable personal renderfarm
->Set up a renderfarm with rented cloud or in-house computers and security bundled in a VPN.
+        Reduce render time
 
-***Requirements:***
+        Reduce capital costs via hourly rentals
+
+Oomerfarm deploys in 3 ways
+
+1. In the home
+
+    ![image](./img/deployhome.png )
+
+2. Full road warrior in the cloud
+
+    ![image](./img/deploycloud.png )
+
+3. Combine home computers with hourly rentals
+
+    ![image](./img/deploymixed.png )
+
+In all cases you need:
+
+1. A central job dispatcher called the hub ( aka renderfarm manager ) and file server. 
+
+2. one+ worker(s) asking for work and getting scenes from the hub.
+
+3. one boss ( green dude ) sending jobs and downloading rendered images from the hub.
+
+
+>A renderfarm manager ( ie AWSThinkbox's Deadline ) marshalls job submissions, monitoring, errors, license tracking, job priorities, time sharing with others and a whole host of other value added features. 
+
+Even before launching a render managers, there is a complex weave of networking, security and dependencies that need fulfilling before the farm **just works**. Oomerfarm TRYS to wrangle these threads of complexity so that even AWS Thinkbox's Deadline ( typically used in large studios )becomes useful for a single artist with 2-10 render workers.
+
+[ Initially AWS Thinkbox Deadline will be the render manager but Sony's open source OpenCue could be an option in the future.]
+
+
+### FAQ
+How are final rendered images retrieved?
+- connect to oomerfarm VPN
+-  mount **//10.10.0.1/oomerfarm/renders**  (win)
+-  or **smb://10.10.0.1/oomerfarm/renders** network  folder (**smb/cifs**) using drag&drop in Explorer/Finder 
+
+>Is oomerfarm useful for a lone artist?
+- Yes, renting cloud computers by the hour is less capital cost intensive than buying another computer just to do renders. I am currently tracking a benchmark scene that renders for $0.04/frame using a rented cloud computer and $0.005-$0.01/frame in electrical costs using on-premise hardware based on similar cpu resources.  Renderfarm queues are also a better way to keep track of rendering different looks.
+
+>Is oomerfarm useful for a team of artists?
+- Yes, within the oomerfarm VPN, all artists can submit jobs to the renderfarm to share resources across multiple locations including multiple on-premise workers. 
+
+>Can I use oomerfarm without the cloud?
+- Yes, grab a bunch of brand new Threadrippers or 10 year old Xeon's along with a single ebay computer acting as a hub, install Linux on all of them and plug in the ethernet cables and run the oomerfarm bash scripts.
+
+>Can I use oomerfarm on the road with a laptop and cloud render workers?
+- Yes, the VPN works anywhere you have internet access to connect fully to all parts of your renderfarm. I use it daily in my car.
+
+>Can I use a mix of computers I own and the cloud and a laptop?
+- Yes, blend existing hardware and add a rental computer with the oomerfarm scripts in less than 5 minutes. Shut down rentals after your
+
+> Can I use Windows or MacOS computers as the hub or as workers?
+- No, while Deadline supports running on Windows , MacOS and Linux, oomerfarm limits  **workers** and **hub** to running Linux because it is already insanely complex.
+
+### Requirements ###
 
 **Cloud**<sup>worker(s)</sup>
 - 1+ server(s) with LOTSA<sup>TM</sup> cores
