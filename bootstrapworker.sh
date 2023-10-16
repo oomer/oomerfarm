@@ -30,6 +30,7 @@ lighthouse_internet_port_default="42042"
 lighthouse_nebula_ip="10.10.0.1"
 lighthouse_nebula_ip_default="10.10.0.1"
 
+skip_advanced="yes"
 skip_advanced_default="yes"
 
 nebula_version="v1.7.2"
