@@ -34,6 +34,7 @@ if [ "$test_selinux" == "Disabled" ] || [ "$test_selinux" == "Permissive" ];  th
         exit
 fi
 
+skip_advanced="yes"
 skip_advanced_default="yes"
 
 # deadline
@@ -269,24 +270,24 @@ chmod +x /usr/local/bin/nebula-cert
 chcon -t bin_t /usr/local/bin/nebula # SELinux security clearance
 rm -f nebula-linux-amd64.tar.gz
 
-# Install goofys after sha256 checksum security check
-# ===================================================
-if ! ( test -f /usr/local/bin/goofys ); then
-        curl -L -o /usr/local/bin/goofys https://github.com/kahing/goofys/releases/download/v0.24.0/goofys
-        MatchFile="$(echo "${goofyssha256} /usr/local/bin/goofys" | sha256sum --check)"
-        if [ "$MatchFile" = "/usr/local/bin/goofys: OK" ] ; then
-                chmod +x /usr/local/bin/goofys
-		mkdir -p /mnt/s3
-                chown root.root /usr/local/bin/goofys
-                chcon -t bin_t /usr/local/bin/goofys # SELinux security clearance
-        else
-                echo "FAIL"
-                echo "goofys checksum is wrong, may indicate download failure of malicious alteration"
-                exit
-        fi
-fi
-
 if ! [[ $skip_advanced == "yes" ]]; then
+	# Install goofys after sha256 checksum security check
+	# ===================================================
+	if ! ( test -f /usr/local/bin/goofys ); then
+		curl -L -o /usr/local/bin/goofys https://github.com/kahing/goofys/releases/download/v0.24.0/goofys
+		MatchFile="$(echo "${goofyssha256} /usr/local/bin/goofys" | sha256sum --check)"
+		if [ "$MatchFile" = "/usr/local/bin/goofys: OK" ] ; then
+			chmod +x /usr/local/bin/goofys
+			mkdir -p /mnt/s3
+			chown root.root /usr/local/bin/goofys
+			chcon -t bin_t /usr/local/bin/goofys # SELinux security clearance
+		else
+			echo "FAIL"
+			echo "goofys checksum is wrong, may indicate download failure of malicious alteration"
+			exit
+		fi
+	fi
+
         # s3 goofys
         # =========
         grep -qxF "goofys#oomerfarm /mnt/s3 fuse ro,_netdev,allow_other,--file-mode=0666,--dir-mode=0777,--endpoint=$s3_endpoint 0 0" /etc/fstab || echo "goofys#oomerfarm /mnt/s3 fuse ro,_netdev,allow_other,--file-mode=0666,--dir-mode=0777,--endpoint=$s3_endpoint 0 0" >> /etc/fstab
@@ -483,9 +484,9 @@ systemctl enable --now nebula
 # Install Samba
 # =============
 echo -e "\nInstalling Samba..."
-dnf -qy install cifs-utils
-dnf -qy install kernel-modules
-dnf -qy install samba
+dnf -y install cifs-utils
+dnf -y install kernel-modules
+dnf -y install samba
 
 cat <<EOF > /etc/samba/smb.conf
 ntlm auth = mschapv2-and-ntlmv2-only
@@ -712,13 +713,23 @@ if ! test -f /mnt/DeadlineRepository10/ThinkboxEULA.txt ; then
 	    exit
 	fi
 	mkdir -p /mnt/oomerfarm/installers
+        cp DeadlineClient-${thinkboxversion}-linux-x64-installer.run /mnt/oomerfarm/installers
 	rm DeadlineClient-${thinkboxversion}-linux-x64-installer.run
 	rm DeadlineClient-${thinkboxversion}-linux-x64-installer.run.sig
 	rm DeadlineRepository-${thinkboxversion}-linux-x64-installer.run.sig
 	rm AWSPortalLink-*-linux-x64-installer.run
 	rm AWSPortalLink-*-linux-x64-installer.run.sig
+	echo ${thinkboxrun} --mode unattended --unattendedmodeui none --prefix /mnt/DeadlineRepository10 --dbLicenseAcceptance accept --dbhost ${nebula_ip}
+	${thinkboxrun} --mode unattended --unattendedmodeui minimal --prefix /mnt/DeadlineRepository10 --dbLicenseAcceptance accept --dbhost ${nebula_ip}
+	echo -e "\n\nYou accept AWS Thinkbox Deadline EULA when installing:"
+	echo -e "========================================================"
+	cat /mnt/DeadlineRepository10/ThinkboxEULA.txt
+	chmod +x DeadlineClient-${thinkboxversion}-linux-x64-installer.run
+	./DeadlineClient-${thinkboxversion}-linux-x64-installer.run --mode unattended --unattendedmodeui minimal --repositorydir /mnt/DeadlineRepository10  --connectiontype Direct --noguimode true --binariesonly true
 
 
+
+if ! [ "$nebula_name" = "i_agree_this_is_unsafe" ]; then
         echo -e "\nChecking existence of ${thinkboxurl_2}${thinkboxtar_2}"
         if ! (curl -s --head --fail -o /dev/null "${thinkboxurl_2}${thinkboxtar_2}" ); then
                 echo -e "FAIL: no Thinkbox Software at ${thinkboxurl_2}${thinkboxtar_2}"
@@ -728,7 +739,7 @@ if ! test -f /mnt/DeadlineRepository10/ThinkboxEULA.txt ; then
         cd ${orig_dir}
         if ! ( test -f "${thinkboxtar_2}" ); then
                 echo -e "\nDownloading AWS Thinkbox Deadline Software 900MB+ ..."
-                curl -sL -O ${thinkboxurl_2}${thinkboxtar_2}
+                curl -L -O ${thinkboxurl_2}${thinkboxtar_2}
         fi
         MatchFile="$(echo "${thinkboxsha256_2} ${thinkboxtar_2}" | sha256sum --check)"
         if [ "$MatchFile" == "${thinkboxtar_2}: OK" ] ; then
@@ -745,14 +756,6 @@ if ! test -f /mnt/DeadlineRepository10/ThinkboxEULA.txt ; then
         rm AWSPortalLink-*-linux-x64-installer.run
         rm AWSPortalLink-*-linux-x64-installer.run.sig
 
-	echo ${thinkboxrun} --mode unattended --unattendedmodeui none --prefix /mnt/DeadlineRepository10 --dbLicenseAcceptance accept --dbhost ${nebula_ip}
-	${thinkboxrun} --mode unattended --unattendedmodeui none --prefix /mnt/DeadlineRepository10 --dbLicenseAcceptance accept --dbhost ${nebula_ip}
-	echo -e "\n\nYou accept AWS Thinkbox Deadline EULA when installing:"
-	echo -e "========================================================"
-	cat /mnt/DeadlineRepository10/ThinkboxEULA.txt
-	chmod +x DeadlineClient-${thinkboxversion}-linux-x64-installer.run
-	./DeadlineClient-${thinkboxversion}-linux-x64-installer.run --mode unattended --unattendedmodeui minimal --repositorydir /mnt/DeadlineRepository10  --connectiontype Direct --noguimode true --binariesonly true
-
         echo ${thinkboxrun_2} --mode unattended --unattendedmodeui none --prefix /mnt/DeadlineRepository10 --dbLicenseAcceptance accept --dbhost ${nebula_ip}
         ${thinkboxrun_2} --mode unattended --unattendedmodeui none --prefix /mnt/DeadlineRepository10 --dbLicenseAcceptance accept --dbhost ${nebula_ip}
         echo -e "\n\nYou accept AWS Thinkbox Deadline EULA when installing:"
@@ -761,6 +764,7 @@ if ! test -f /mnt/DeadlineRepository10/ThinkboxEULA.txt ; then
 
 	./DeadlineClient-${thinkboxversion_2}-linux-x64-installer.run --mode unattended --unattendedmodeui minimal --repositorydir /mnt/DeadlineRepository10  --connectiontype Direct --noguimode true
         rm DeadlineClient-${thinkboxversion_2}-linux-x64-installer.run
+fi
 
 cat <<EOF > /var/lib/Thinkbox/Deadline10/licenseforwarder.ini
 [Deadline]
