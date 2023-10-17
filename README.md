@@ -16,17 +16,22 @@
 
 ### run scripts ... render images  ###
 
-1. Here is the actual time it takes to run the script on a Linux computer (**hub**) and set up the renderfarm manager and file server. 
+1. ssh'ing into a cloud computer, run a script to set up the renderfarm and file server. This machine is the **hub**
 
-![image](./img/bootstraphub.gif )
+![image](./img/bootstraphub.svg )
 
-2. Here I connect 2 network folders on my laptop and launch the **Deadline monitor**. 
+2. On my laptop with a bash script I join the **VPN**, mount 2 network drives over **VPN** then launch the **Deadline monitor**. 
+
+![image](./img/joinoomerfarm.gif )
+
+3. After spinning up a Google 60 core spot instanceas worker**worker0005**, I ssh into it and run a bash script to set it up as render worker. 
 
 ![image](./img/bootstrapworker.gif )
 
-3. Here I run bootstrap script on an Google t2d-standard-60 AMD Epyc 60 core instance for $0.47/hr, clone the instance a few times.
+4. Returning to my laptop, **worker0005** appears in **Deadline monitor** , I submit a 8 frame animation using the BellaRender plugin 
 
-4. Returning to my laptop, the workers start appearing in **Deadline monitor** , I submit a 8 frame animation using the BellaRender plugin 
+
+5. Returning to the **Google** cloud console, I create an image of **worker0005** and use it as a template to spin up 3 more instances, **worker0001**  **worker0004**
 
 ### The VPN makes these scenarios easy ###
 
