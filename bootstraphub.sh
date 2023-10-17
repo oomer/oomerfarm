@@ -722,7 +722,7 @@ if ! test -f /mnt/DeadlineRepository10/ThinkboxEULA.txt ; then
 
 
 
-if ! [ "$nebula_name" = "i_agree_this_is_unsafe" ]; then
+if ! [[ $skip_advanced == "yes" ]]; then
         echo -e "\nChecking existence of ${thinkboxurl_2}${thinkboxtar_2}"
         if ! (curl -s --head --fail -o /dev/null "${thinkboxurl_2}${thinkboxtar_2}" ); then
                 echo -e "\e[31mFAIL:\e[0m no Thinkbox Software at ${thinkboxurl_2}${thinkboxtar_2}"
