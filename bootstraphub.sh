@@ -17,7 +17,7 @@ smb_user="oomerfarm"
 smb_user_default="oomerfarm"
 
 if ! [[ "$OSTYPE" == "linux-gnu"* ]]; then
-	echo -e "FAIL: This can only be installed on Alma or Rocky Linux 8.x"
+	echo -e "\e[31mFAIL:\e[0m This can only be installed on \e[5mAlma or Rocky Linux 8.x\e[0m"
 	exit
 fi
 
@@ -26,10 +26,10 @@ fi
 # especially important since renderfarm jobs can included arbitrary code execution on the workers
 test_selinux=$( getenforce )
 if [ "$test_selinux" == "Disabled" ] || [ "$test_selinux" == "Permissive" ];  then
-        echo -e "\nFAIL: Selinux is disabled, edit /etc/selinux/config"
+        echo -e "\n\e[31mFAIL:\e[0m Selinux is disabled, edit /etc/selinux/config"
         echo "==================================================="
         echo "Change SELINUX=disabled to SELINUX=enforcing"
-        echo "then REBOOT ( SELinux chcon on boot drive takes awhile)"
+        echo -e "then \e[5mREBOOT\e[0m ( SELinux chcon on boot drive takes awhile)"
         echo "=================================================="
         exit
 fi
@@ -73,38 +73,38 @@ nebulasha256="4600c23344a07c9eda7da4b844730d2e5eb6c36b806eb0e54e4833971f336f70"
 # Use AWS service to get public ip
 public_ip=$(curl -s https://checkip.amazonaws.com)
 
-echo -e "\nTurns this machine into a renderfarm \"hub\""
-echo -e "=========================================="
-echo -e "WARNING: Major system changes will occur"
-echo -e "DO NOT run on a production machine, or an existing server"
-echo -e " - becomes Nebula VPN node at 10.10.0.1/16"
-echo -e " - deploys Nebula lighthouse at ${public_ip} allowing node discovery over internet"
-echo -e " - deploys Samba file server, reachable within VPN at //10.10.0.1 (win) and smb://10.10.0.1"
-echo -e " - deploys Deadline Client software into /opt/Thinkbox/Deadline10"
-echo -e " - starts Deadline License Forwarder required for Usage Based Licensing"
-echo -e " - deploys MongoDB 4.4.16 into /opt/Thinkbox/DeadlineDatabase10"
-echo -e " - maximizes network security (firewalld) ( blockades non-oomerfarm ports) "
-echo -e " - maximizes OS security (selinux)"
-echo -e " - Only runs on /RHEL/Alma/Rocky 8.x Linux"
-echo -e " - You agree to the AWS Thinkbox EULA by installing Deadline"
-echo -e " - Optionally mounts /mnt/s3"
-echo -e " - Optionally installs Houdini"
-echo -e "Continue on $(hostname)?"
+echo -e "\n\e[32mTurns this machine into a renderfarm\e[0m \e[36m\e[5mhub\e[0m\e[0m"
+#echo -e "=========================================="
+echo -e "\e[31mWARNING:\e[0m Security changes will break any existing server"
+echo -e " - become VPN node at \e[36m10.10.0.1/16\e[0m"
+echo -e " - deploy VPN lighthouse at \e[36m${public_ip}\e[0m for internet-wide network"
+echo -e " - deploy VPN file server, at \e[36msmb://hub.oomer.org\e[0m, \e[36m//hub.oomer.org\e[0m (win)"
+echo -e " - install MongoDB 4.4.16 \e[37m/opt/Thinkbox/DeadlineDatabase10\e[0m"
+echo -e " - install Deadline Repository \e[37m/mnt/DeadlineRepository10\e[0m"
+echo -e " - install Deadline Client \e[37m/opt/Thinkbox/Deadline10\e[0m"
+echo -e " - run License Forwarder for \e[37mUsage Based Licensing\e[0m"
+echo -e " - \e[37mfirewall\e[0m blocks ALL non-oomerfarm ports"
+echo -e " - enforce \e[37mselinux\e[0m for maximal security"
+echo -e " - Only runs on RHEL/Alma/Rocky 8.x Linux"
+echo -e " - You agree to the \e[37mAWS Thinkbox EULA\e[0m by installing Deadline"
+echo -e " - Optionally mounts \e[37m/mnt/s3\e[0m"
+echo -e " - Optionally installs \e[37mHoudini\e[0m"
+echo -e "\e[32mContinue on\e[0m \e[37m$(hostname)?\e[0m"
 
-read -p "    (Enter Yes) " accept
+read -p "(Enter Yes) " accept
 if [ "$accept" != "Yes" ]; then
-        echo -e "\nScript aborted because Yes was not entered"
+        echo -e "\n\e[31mFAIL:\e[0m Script aborted because Yes was not entered"
         exit
 fi
 
 nebula_name_default="i_agree_this_is_unsafe"
 
-echo -e "\nSECURE METHOD: Generate cryptographic keys ( on a trusted computer, not this one ) using keyoomerfarm.sh. Authorize each machine on your Nebula network with your own certificate signing authority for zero trust credentials. Type \"hub\" below to use the secure method"
+echo -e "\n\e[32mSecure Method:\e[0m On a trusted computer, generate secret keys ( not this computer ) using \e[36mkeyoomerfarm.sh\e[0m BEFORE running this script. Type \e[36mhub\e[0m below for the secure method"
 
-echo -e "\nTESTDRIVE: \"${nebula_name_default}\" keybundle is a public set of keys with a knowable passphrase in this source code. You acknowledge that anybody with these keys can join your Nebula network without your knowledge or consent. The situation is analogous to losing your house keys on the subway, an intruder would need to know where you live giving you at least security by obscurity. Hit enter below to use \"i_agree_this_is_unsafe\" for testing"
+echo -e "\n\e[32mTest Drive:\e[0m \e[36m${nebula_name_default}\e[0m are not-so-secret keys securing oomerfarm with a VPN. Since they allow intrusion without your knowledge only use them to test oomerfarm. Analogy: house keys can be lost and your locks continue to work, BUT a stranger who finds your keys AND knows where you live can easily enter. Hit enter below to use \e[36mi_agree_this_is_unsafe\e[0m with security by obscurity"
 
-echo -e "\nENTER hub name"
-read -p "    (default: $nebula_name_default:) " nebula_name
+echo -e "\nENTER \e[36m\e[5mhub\e[0m\e[0m or \e[36m\e[5m${nebula_name_default}\e[0m\e[0m"
+read -p "(default: $nebula_name_default:) " nebula_name
 if [ -z "$nebula_name" ]; then
 	nebula_name=$nebula_name_default
 fi
@@ -112,7 +112,7 @@ fi
 # probe to see if downloadable depenencies exist
 # ==============================================
 if ! ( curl -s --head --fail -o /dev/null ${thinkboxurl}${thinkboxtar} ); then
-	echo -e "FAIL: No file found at ${thinkboxurl}${thinkboxtar}"
+	echo -e "\e[31mFAIL:\e[0m No file found at ${thinkboxurl}${thinkboxtar}"
 	echo -e "Usually means Amazon has releases a new version"
 	echo -e "and removed the old link"
 	echo -e "This script needs updating but until then you can"
@@ -127,44 +127,43 @@ if ! ( curl -s --head --fail -o /dev/null ${mongourl}${mongotar} ); then
 fi
 
 if ! [ "$nebula_name" = "i_agree_this_is_unsafe" ]; then
-	echo -e "\nENTER passphrase to decode hub.keybundle.enc YOU set in \"keyoomerfarm.sh\"  ( keystrokes hidden )"
-        echo -e "If you don't understand, then you did not follow the instructions"
+	echo -e "\nENTER \e[36m\e[5mpassphrase\e[0m\e[0m to decode \e[32mhub.keybundle.enc\e[0m YOU set in \"keyoomerfarm.sh\"  ( keystrokes hidden )"
 	IFS= read -rs encryption_passphrase < /dev/tty
 	if [ -z "$encryption_passphrase" ]; then
-		echo -e "\nFAIL: Invalid empty passphrase"
+		echo -e "\n\e[31mFAIL:\e[0m Invalid empty passphrase"
 		exit
 	fi
 
-	echo -e "\nENTER URL to hub.keybundle.enc"
-        read -p "    (keyoomerfarm.sh required saving hub.keybundle.enc to Google Drive and to get URL link): " keybundle_url
+	echo -e "\n\e[36m\e[5mURL\e[0m\e[0m to \e[32mhub.keybundle.enc\e[0m"
+        read -p "Enter: " keybundle_url
 	if [ -z "$keybundle_url" ]; then
-		echo "FAIL: URL cannot be blank"
+		echo -e "\e[31mFAIL:\e[0m URL cannot be blank"
 		exit
 	fi
 
-        echo -e "\nSkip advanced setup:"
+        echo -e "\n\e[36m\e[5mSkip\e[0m\e[0m advanced setup:"
         read -p "(default: $skip_advanced_default): " skip_advanced
         if [ -z "$skip_advanced" ]; then
             skip_advanced=$skip_advanced_default
         fi
 
 	if ! [[ $skip_advanced == "yes" ]]; then
-		echo -e "\nEnter URL"
-		read -p "S3 Endpoint:" s3_endpoint
+		echo -e "\n\e[36m\e[5mS3 Endpoint URL\e[0m\e[0m"
+		read -p "Enter:" s3_endpoint
 		if [ -z  $s3_endpoint ]; then
 			echo "FAIL: s3_endpoint url must be set"
 			exit
 		fi
 
-		echo -e "\nEnter"
-		read -p "S3 Access Key Id:" s3_access_key_id
+		echo -e "\n\e[36m\e[5mS3 Access Key Id\e[0m\e[0m"
+		read -p "Enter:" s3_access_key_id
 		if [ -z  $s3_access_key_id ]; then
 			echo "FAIL: s3_access_key_id must be set"
 			exit
 		fi
 
-		echo -e "\nEnter"
-		read -p "S3 Secret Access Key:" s3_secret_access_key
+		echo -e "\n\e[36m\e[5mS3 Secret Access Key\e[0m\e[0m"
+		read -p "Enter:" s3_secret_access_key
 		if [ -z  $s3_secret_access_key ]; then
 			echo "FAIL: s3_secret_access_key must be set"
 			exit
@@ -177,37 +176,31 @@ aws_secret_access_key=${s3_secret_access_key}
 EOF
         	chmod go-rwx /root/.aws/credentials
 
-		echo -e "\nCreate smb file server password ( keystrokes hidden )"
+		echo -e "\n\e[36m\e[5mSet password\e[0m\e[0m to access hub file server ( keystrokes hidden )"
 		IFS= read -rs linux_password < /dev/tty
 		if [ -z "$linux_password" ]; then
-		    echo -e "\nFAIL: invalid empty password"
+		    echo -e "\n\e[31mFAIL:\e[0m invalid empty password"
 		    exit
 		fi
 
-		echo -e "\nENTER Nebula private IP address IPV4"
-		echo -e "Customize Nebula network addresses using keyoomerfarm.sh"
-		read -p "    (default: $nebula_ip_default): " nebula_ip
+		echo -e "\nSet VPN \e[36m\e[5mIP address\e[0m\e[0m"
+		read -p "(default: $nebula_ip_default): " nebula_ip
 		if [ -z "$nebula_ip" ]; then
 		    nebula_ip=$nebula_ip_default
 		fi
 
-		echo -e "\nEnter Nebula internet port"
-		read -p "    (default: $nebula_public_port_default): " nebula_public_port
+		echo -e "\nSet VPN public \e[36m\e[5mudp port\e[0m\e[0m"
+		read -p "(default: $nebula_public_port_default): " nebula_public_port
 		if [ -z "$nebula_public_port" ]; then
 		    nebula_public_port=$nebula_public_port_default
 		fi
 
-		echo -e "\nENTER Nebula version"
-		read -p "    (default: $nebula_version_default): " nebula_version
-		if [ -z "$nebula_version" ]; then
-		    nebula_version=$nebula_version_default
-		fi
-
-		echo -e "\nEnter user name"
-		read -p "    (default: $smb_user_default): " deadline_user
+		echo -e "\nSet \e[36m\e[5musername\e[0m\e[0m"
+		read -p "(default: $smb_user_default): " deadline_user
 		if [ -z "$smb_user" ]; then
 		    smb_user=$deadline_user_default
 		fi
+		dnf -y install fuse
 
 	fi
 
@@ -215,8 +208,7 @@ else
 	keybundle_url=$keybundle_url_default
 fi
 
-dnf -qy install tar
-dnf -qy install fuse
+dnf -y install tar
 
 # Ensure max security
 # ===================
@@ -230,8 +222,8 @@ sed -i -E 's/#?PasswordAuthentication yes/PasswordAuthentication no/' /etc/ssh/s
 firewalld_status=$(systemctl status firewalld)
 
 if [ -z "$firewalld_status" ]; then
-	echo "INSTALL firewald"
-	dnf -qy install firewalld
+	echo -e "\e[32mInstalling firewalld...\e[0m"
+	dnf -y install firewalld
 	systemctl enable --now firewalld
 fi
 
@@ -242,7 +234,7 @@ fi
 test_user=$( id "${smb_user}" )
 # id will return blank if no user is found
 if [ -z "$test_user" ]; then
-	echo "CREATE USER:${smb_user}"
+	echo -e "\e[32mCreating user:\e[0m ${smb_user}"
 	groupadd -g 3000 ${smb_user}
         useradd -g 3000 -u 3000 -m ${smb_user}
 fi
@@ -253,14 +245,14 @@ echo "${smb_user}:${linux_password}" | chpasswd
 
 mkdir -p /etc/nebula
 mkdir -p /etc/deadline
-
-curl -s -L -O https://github.com/slackhq/nebula/releases/download/${nebula_version}/nebula-linux-amd64.tar.gz
+echo -e "\e[32mDownloading Nebula VPN\e[0m"
+curl -L -O https://github.com/slackhq/nebula/releases/download/${nebula_version}/nebula-linux-amd64.tar.gz
 MatchFile="$(echo "${nebulasha256} nebula-linux-amd64.tar.gz" | sha256sum --check)"
 if [ "$MatchFile" = "nebula-linux-amd64.tar.gz: OK" ] ; then
-    echo -e "Extracting https://github.com/slackhq/nebula/releases/download/${nebula_version}/nebula-linux-amd64.tar.gz\n===="
+    echo -e "Extracting https://github.com/slackhq/nebula/releases/download/${nebula_version}/nebula-linux-amd64.tar.gz\n"
     tar --skip-old-files -xzf nebula-linux-amd64.tar.gz
 else
-    echo "FAIL: nebula-linux-amd64.tar.gz checksum failed, file possibly maliciously altered on github"
+    echo -e "\e[31mFAIL:\e[0m nebula-linux-amd64.tar.gz checksum failed, file possibly maliciously altered on github"
     exit
 fi
 mv nebula /usr/local/bin/nebula
@@ -313,19 +305,23 @@ if [[ "$keybundle_url" == *"https://drive.google.com/file/d"* ]]; then
 		googlefileid=$(echo $keybundle_url | egrep -o '(\w|-){26,}')
 		head2=$(curl -s --head -L "https://drive.google.com/uc?export=download&id=${googlefileid}" | grep "content-length")
 		if [[ "$head2" == *"content-length"* ]]; then
-			echo "Downloading https://drive.google.com/uc?export=download&id=${googlefileid}"
+			echo -e "\e[32mDownloading secret keys https://drive.google.com/uc?export=download&id=${googlefileid}\e[0m"
 			curl -L "https://drive.google.com/uc?export=download&id=${googlefileid}" -o ${nebula_name}.keybundle.enc
 		else
-			echo "FAIL: ${keybundle_url} is not public, Set General Access to Anyone with Link"
+			echo -e "\e[31mFAIL:\e[0m ${keybundle_url} is not public, Set General Access to Anyone with Link"
 			exit
 		fi
 	else
-		echo "FAIL: ${keybundle_url} is not a valid Google Drive link"
+		echo -e "\e[31mFAIL:\e[0m ${keybundle_url} is not a valid Google Drive link"
 		exit
 	fi
 # This should work with URL's pointing to normal website locations or public S3 storage 
 else
 	curl -s -L -O "${keybundle_url}" 
+	if ! ( test -f hub.keybundle.enc ) ; then
+		echo -e "\e[31mFAIL:\e[0m hub.keybundle.enc URL you entered \e[31m${keybundle_url}\e[0m does not exist"
+		exit
+	fi
 fi
 
 # encrypted keybundles need decryption
@@ -362,8 +358,7 @@ if ! [[ "${testkeybundle}" == *"Not found"* ]]; then
 	    rm ${nebula_name}.keybundle
 	fi 
 else
-        echo -e "=========="
-        echo -e "FAIL: ${nebula_name}.keybundle missing"
+        echo -e "\e[31mFAIL:\e[0m ${nebula_name}.keybundle missing"
 	echo  "${keybundle_url} might be corrupted or not shared publicly"
 	echo  "Use keyoomerfarm.sh to generate correct name in credential, reupload"
 	echo  "Check your Google Drive file link is \"Anyone who has link\""
@@ -483,7 +478,7 @@ systemctl enable --now nebula
 
 # Install Samba
 # =============
-echo -e "\nInstalling Samba..."
+echo -e "\n\e[32mInstalling File Server ( Samba )...\e[0m"
 dnf -y install cifs-utils
 dnf -y install kernel-modules
 dnf -y install samba
@@ -517,6 +512,7 @@ systemctl enable --now smb
 # ***FIREWALL rules***
 # adopting highly restrictive rules to protect network
 # ====================================================
+echo -e "\n\e[32mTurning up Firewall security...\e[0m"
 
 # Wipe all services and ports except ssh and 22/tcp, may break system
 # ===================================================================
@@ -591,19 +587,18 @@ fi
 # ===============
 orig_dir=$(pwd)
 if ! test -d /opt/Thinkbox/DeadlineDatabase10/mongo/application/mongodb-linux-x86_64-rhel80-4.4.16 ; then
-	echo -e "\nInstalling MongoDB"
-	echo -e "=================="
+	echo -e "\n\e[32mInstalling Database (MongoDB)...\e[0m"
 	# group 3001 and userid 3001 is legacy choice
 	test_group=$( getent group mongod )
 	if [ -z "${test_group}" ]; then
-		echo "CREATE GROUP: mongod"
+		echo "Creating group: mongod"
 		groupadd -g 3001 mongod
 	fi
 
 	test_user=$( id mongod )
 	# id will return blank if no user is found
 	if [ -z "${test_user}" ]; then
-		echo "CREATE USER: mongod"
+		echo "Creating user: mongod"
 		useradd -g 3001 -u 3001 -r mongod
 	fi
 
@@ -620,8 +615,8 @@ if ! test -d /opt/Thinkbox/DeadlineDatabase10/mongo/application/mongodb-linux-x8
 
 	cd /opt/Thinkbox/DeadlineDatabase10/mongo
 	if ! ( test -d application/mongodb-linux-x86_64-rhel80-4.4.16 ); then
-		echo -e "Downloading ${mongourl}${mongotar}"
-		curl -s -O ${mongourl}${mongotar}
+		echo -e "\e[32mDownloading ${mongourl}${mongotar}\e[0m"
+		curl -O ${mongourl}${mongotar}
 		MatchFile="$(echo "${mongosha256} ${mongotar}" | sha256sum --check)"
 		if [ "$MatchFile" = "${mongotar}: OK" ] ; then
 			tar --skip-old-files -xf ${mongotar}
@@ -690,26 +685,25 @@ fi
 
 # Get Thinkbox software
 # =====================
-echo -e "\nInstalling Deadline Renderfarm Software"
-echo -e "========================================"
+echo -e "\n\e[32mInstalling Deadline Renderfarm Software ...\e[0m"
 if ! test -f /mnt/DeadlineRepository10/ThinkboxEULA.txt ; then
 	echo -e "\nChecking existence of ${thinkboxurl}${thinkboxtar}" 
 	if ! (curl -s --head --fail -o /dev/null "${thinkboxurl}${thinkboxtar}" ); then
-		echo -e "FAIL: no Thinkbox Software at ${thinkboxurl}${thinkboxtar}"
+		echo -e "\e[31mFAIL:\e[0m no Thinkbox Software at ${thinkboxurl}${thinkboxtar}"
 		exit
 	fi
 
 	cd ${orig_dir}
 	if ! ( test -f "${thinkboxtar}" ); then
-		echo -e "\nDownloading AWS Thinkbox Deadline Software 900MB+ ..."
+		echo -e "\n\e[32mDownloading AWS Thinkbox Deadline Software 900MB+ ...\e[0m"
 		curl -O ${thinkboxurl}${thinkboxtar}
 	fi
 	MatchFile="$(echo "${thinkboxsha256} ${thinkboxtar}" | sha256sum --check)"
 	if [ "$MatchFile" == "${thinkboxtar}: OK" ] ; then
-	    echo -e "Extracting ${thinkboxurl}${thinkboxtar}\n===="
+	    echo -e "\e[32mExtracting ${thinkboxurl}${thinkboxtar}\e[0m\n"
 	    tar --skip-old-files -xzf ${thinkboxtar}
 	else
-	    echo "FAIL: ${thinkboxtar} checksum failed, file possibly maliciously altered on AWS"
+	    echo "\e[31mFAIL:\e[0m ${thinkboxtar} checksum failed, file possibly maliciously altered on AWS"
 	    exit
 	fi
 	mkdir -p /mnt/oomerfarm/installers
@@ -719,34 +713,33 @@ if ! test -f /mnt/DeadlineRepository10/ThinkboxEULA.txt ; then
 	rm DeadlineRepository-${thinkboxversion}-linux-x64-installer.run.sig
 	rm AWSPortalLink-*-linux-x64-installer.run
 	rm AWSPortalLink-*-linux-x64-installer.run.sig
-	echo ${thinkboxrun} --mode unattended --unattendedmodeui none --prefix /mnt/DeadlineRepository10 --dbLicenseAcceptance accept --dbhost ${nebula_ip}
+	echo -e "\e[32m${thinkboxrun} --mode unattended --unattendedmodeui none --prefix /mnt/DeadlineRepository10 --dbLicenseAcceptance accept --dbhost ${nebula_ip}\e[0m"
 	${thinkboxrun} --mode unattended --unattendedmodeui minimal --prefix /mnt/DeadlineRepository10 --dbLicenseAcceptance accept --dbhost ${nebula_ip}
-	echo -e "\n\nYou accept AWS Thinkbox Deadline EULA when installing:"
-	echo -e "========================================================"
+	echo -e "\n\n\e[31mYou accept AWS Thinkbox Deadline EULA when installing:\e[0m"
 	cat /mnt/DeadlineRepository10/ThinkboxEULA.txt
 	chmod +x DeadlineClient-${thinkboxversion}-linux-x64-installer.run
-	./DeadlineClient-${thinkboxversion}-linux-x64-installer.run --mode unattended --unattendedmodeui minimal --repositorydir /mnt/DeadlineRepository10  --connectiontype Direct --noguimode true --binariesonly true
+	./DeadlineClient-${thinkboxversion}-linux-x64-installer.run --mode unattended --unattendedmodeui none --repositorydir /mnt/DeadlineRepository10  --connectiontype Direct --noguimode true --binariesonly true
 
 
 
 if ! [ "$nebula_name" = "i_agree_this_is_unsafe" ]; then
         echo -e "\nChecking existence of ${thinkboxurl_2}${thinkboxtar_2}"
         if ! (curl -s --head --fail -o /dev/null "${thinkboxurl_2}${thinkboxtar_2}" ); then
-                echo -e "FAIL: no Thinkbox Software at ${thinkboxurl_2}${thinkboxtar_2}"
+                echo -e "\e[31mFAIL:\e[0m no Thinkbox Software at ${thinkboxurl_2}${thinkboxtar_2}"
                 exit
         fi
 
         cd ${orig_dir}
         if ! ( test -f "${thinkboxtar_2}" ); then
-                echo -e "\nDownloading AWS Thinkbox Deadline Software 900MB+ ..."
+                echo -e "\n\e[32mDownloading AWS Thinkbox Deadline Software 900MB+ ...\e[0m"
                 curl -L -O ${thinkboxurl_2}${thinkboxtar_2}
         fi
         MatchFile="$(echo "${thinkboxsha256_2} ${thinkboxtar_2}" | sha256sum --check)"
         if [ "$MatchFile" == "${thinkboxtar_2}: OK" ] ; then
-            echo -e "Extracting ${thinkboxurl_2}${thinkboxtar_2}\n===="
+            echo -e "\e[32mExtracting ${thinkboxurl_2}${thinkboxtar_2}\n\e[0m"
             tar --skip-old-files -xzf ${thinkboxtar_2}
         else
-            echo "FAIL: ${thinkboxtar_2} checksum failed, file possibly maliciously altered on AWS"
+            echo "\e[31mFAIL:\e[0m ${thinkboxtar_2} checksum failed, file possibly maliciously altered on AWS"
             exit
         fi
         cp DeadlineClient-${thinkboxversion_2}-linux-x64-installer.run /mnt/oomerfarm/installers
@@ -758,10 +751,10 @@ if ! [ "$nebula_name" = "i_agree_this_is_unsafe" ]; then
 
         echo ${thinkboxrun_2} --mode unattended --unattendedmodeui none --prefix /mnt/DeadlineRepository10 --dbLicenseAcceptance accept --dbhost ${nebula_ip}
         ${thinkboxrun_2} --mode unattended --unattendedmodeui none --prefix /mnt/DeadlineRepository10 --dbLicenseAcceptance accept --dbhost ${nebula_ip}
-        echo -e "\n\nYou accept AWS Thinkbox Deadline EULA when installing:"
-        echo -e "========================================================"
+        echo -e "\n\n\e[31mYou accept AWS Thinkbox Deadline EULA when installing:\e[0m"
         cat /mnt/DeadlineRepository10/ThinkboxEULA.txt
 
+	echo -e "\e[32m./DeadlineClient-${thinkboxversion_2}-linux-x64-installer.run --mode unattended --unattendedmodeui minimal --repositorydir /mnt/DeadlineRepository10  --connectiontype Direct --noguimode true\e[0m"
 	./DeadlineClient-${thinkboxversion_2}-linux-x64-installer.run --mode unattended --unattendedmodeui minimal --repositorydir /mnt/DeadlineRepository10  --connectiontype Direct --noguimode true
         rm DeadlineClient-${thinkboxversion_2}-linux-x64-installer.run
 fi
@@ -814,7 +807,7 @@ EOF
 	systemctl enable --now deadlinelicenseforwarder
 
 else
-	echo "Deadline Repository exists...skipping installation"
+	echo -e "\e[35mDeadline Repository exists...skipping installation\e[0m"
 fi
 
 mkdir -p /mnt/DeadlineRepository10/custom/plugins/BellaRender
@@ -827,6 +820,7 @@ cp DeadlineRepository10/custom/scripts/Submission/BellaRender.py /mnt/DeadlineRe
 # [TODO] switch to ssl for better security
 sed -i "s/Authenticate=.*/Authenticate=False/g" /mnt/DeadlineRepository10/settings/connection.ini
 
+echo -e "\e[32mDownloading Bella path tracer ...\e[0m"
 curl -O https://downloads.bellarender.com/bella_cli-${bella_version}.tar.gz
 MatchFile="$(echo "${bellasha256} bella_cli-${bella_version}.tar.gz" | sha256sum --check)"
 mkdir -p /mnt/oomerfarm/installers
@@ -835,7 +829,7 @@ if [ "$MatchFile" = "bella_cli-${bella_version}.tar.gz: OK" ] ; then
 	rm bella_cli-${bella_version}.tar.gz 
 else
 	rm bella_cli-${bella_version}.tar.gz 
-	echo "FAIL: bella checksum failed, may be corrupted or malware"
+	echo "\e[31mFAIL:\e[0m bella checksum failed, may be corrupted or malware"
 	exit
 fi
 
@@ -843,42 +837,34 @@ curl -L https://bellarender.com/doc/scenes/orange-juice/orange-juice.bsz -o /mnt
 chown oomerfarm.oomerfarm /mnt/oomerfarm/bella/orange-juice.bsz
 
 if [ "$nebula_name" == "i_agree_this_is_unsafe" ]; then
-        echo -e "\nFINISHED oomerfarm TESTDRIVE hub setup. READY to distribute renderfarm work"
-        echo -e "As a reminder the steps are: ( TESTDRIVE )"
-        echo -e "1. [YOU ARE HERE] on a CHEAP Linux computer run \"bash bootstraphub.sh\""
-        echo -e "2. On a FAST Linux computer:"
-        echo -e "\t - run \"bash bootstrapworker.sh\", enter ${public_ip} when asked for \"hub\" address"
-        echo -e "3. On a desktop/laptop:"
-        echo -e "\t - run \"bash joinoomerfarm.sh\", enter ${public_ip} when asked for \"hub\" address"
-        echo -e "\t - with username \"oomerfarm\" password \"oomerfarm\""
-        echo -e "\t\t - mount network share smb://10.10.0.1/DeadlineRepository10 ( Windows //10.10.0.1/DeadlineRespository ) "
-        echo -e "\t\t - mount network share smb://10.10.0.1/oomerfarm ( Windows //10.10.0.1/oomerfarm ) "
-        echo -e "\t - install Deadline Client software from https://www.awsthinkbox.com"
-        echo -e "4. Test with included https://bellarender.com path tracer demo"
-        echo -e "\t - start Deadline Monitor"
-        echo -e "\t - menu select Submit / BellaRender"
-        echo -e "\t - file select orange-juice.bsz"
-        echo -e "\t - set image output directory"
-        echo -e "\t - Hit Submit button"
-        echo -e "Because this TESTDRIVE uses public credentials ONLY use for testing"
-        echo -e "Deploy a secure renderfarm by following instructions at https://github.com/oomer/oomerfarm"
+        echo -e "\n\e[32mFinished oomerfarm hub setup. Ready to distribute renderfarm work\e[0m"
+        echo -e "Enter \e[36m${public_ip}\e[0m when asked for \e[32mhub\e[0m ip address"
+        echo -e "The \e[32mhub\e[0m only tracks jobs and servers files"
+        echo -e "\e[36mNow you need some powerful Linux machines to do rendering\e[0m"
+        echo -e " - ssh and run \e[32mbash bootstrapworker.sh\e[0m"
+        echo -e "To submit jobs, from desktop/laptop, join the VPN by running \e[36mbash joinoomerfarm.sh\e[0m" 
+	echo -e "\e[5mKeep window open to keep VPN alive\e[0m"
+        echo -e " - with username \e[36moomerfarm\e[0m password \e[36moomerfarm\e[0m"
+        echo -e " - mount folder \e[36msmb://hub.oomer.org/DeadlineRepository10\e[0m ( Windows //hub.oomer.org/DeadlineRespository )"
+        echo -e " - mount folder \e[36msmb://hub.oomer.org/oomerfarm\e[0m ( Windows //hub.oomer.org/oomerfarm )"
+        echo -e " - install Deadline Client software \e[36mhttps://www.awsthinkbox.com\e[0m"
+        echo -e "You are on the \e[31mnot-so-secret keys\e[0m. Deploy a \e[32msecure renderfarm\e[0m by following instructions at https://github.com/oomer/oomerfarm"
 else
-        echo -e "\nFINISHED oomerfarm hub setup. READY to distribute renderfarm work"
-        echo -e "As a reminder the steps are: ( see github for detailed instructions )"
-        echo -e "1. Generate VPN credentials on a desktop/laptop run \"bash keyoomerfarm.sh\""
-        echo -e "2. [YOU ARE HERE] on a CHEAP Linux computer run \"bash bootstraphub.sh\""
-        echo -e "2. On a FAST Linux computer:"
-        echo -e "\t - run \"bash bootstrapworker.sh\", enter ${public_ip} when asked for hub address"
-        echo -e "4. On desktop/laptop used in step#1:"
-        echo -e "\t - running \"bash joinoomerfarm.sh\" connects with your step#1 credentials to oomerfarm"
-        echo -e "\t - enter ${public_ip} when asked for \"hub\" address"
-        echo -e "\t - with username \"oomerfarm\" password ${linux_password}:"
-        echo -e "\t\t - mount network share smb://10.10.0.1/DeadlineRepository10 ( Windows //10.10.0.1/DeadlineRepository ) "
-        echo -e "\t\t - mount network share smb://10.10.0.1/oomerfarm ( Windows //10.10.0.1/oomerfarm ) "
-        echo -e "\t - install Deadline Client software from https://www.awsthinkbox.com"
-        echo -e "4. Test with included https://bellarender.com path tracer demo"
-        echo -e "\t - start Deadline Monitor"
-        echo -e "\t - menu select Submit / BellaRender"
-        echo -e "\t - file select orange-juice.bsz"
-        echo -e "\t - set image output directory"
+        echo -e "\n\e[32mOomerfarm hub setup completed. Ready to distribute renderfarm work\e[0m"
+        echo -e "Remaining steps:"
+        echo -e "Enter \e[36m${public_ip}\e[0m when asked for \e[32mhub\e[0m address"
+        echo -e "1. \e[32m[DONE]\e[0m Made secret keys on a trusted desktop/laptop"
+        echo -e "2. \e[32m[YOU ARE HERE]\e[0m on this computer you ran \e[36mbash bootstraphub.sh\e[0m"
+        echo -e "\e[36mNow you need some powerful Linux machines to do rendering\e[0m"
+        echo -e "3. ssh and run \e[32mbash bootstrapworker.sh\e[0m"
+        echo -e "4. To submit jobs, from desktop/laptop, run \e[36mbash joinoomerfarm.sh\e[0m to join VPN"
+	echo -e "\e[5mKeep window open to keep VPN alive\e[0m"
+	if [ "$linux_password" == "oomerfarm" ]; then
+        	echo -e " - with username \e[36moomerfarm\e[0m password \e[36moomerfarm\e[0m"
+	else
+        	echo -e " - with username \e[36moomerfarm\e[0m password \e[36mYOU\e[0m set above"
+	fi
+        echo -e " - mount folder \e[36msmb://hub.oomer.org/DeadlineRepository10\e[0m ( Windows //hub.oomer.org/DeadlineRepository ) "
+        echo -e " - mount folder \e[36msmb://hub.oomer.org/oomerfarm\e[0m ( Windows //hub.oomer.org/oomerfarm )"
+        echo -e " - install Deadline Client software \e[36mhttps://www.awsthinkbox.com\e[0m"
 fi
