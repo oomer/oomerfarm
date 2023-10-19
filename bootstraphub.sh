@@ -6,7 +6,6 @@
 # ========================================
 
 encryption_passphrase="oomerfarm"	
-linux_password="oomerfarm"	
 nebula_ip="10.10.0.1"
 nebula_ip_default="10.10.0.1"
 nebula_public_port="42042"
@@ -15,23 +14,11 @@ nebula_version="v1.7.2"
 nebula_version_default="v1.7.2"
 smb_user="oomerfarm"
 smb_user_default="oomerfarm"
+linux_password="oomerfarm"	
 
 if ! [[ "$OSTYPE" == "linux-gnu"* ]]; then
 	echo -e "\e[31mFAIL:\e[0m This can only be installed on \e[5mAlma or Rocky Linux 8.x\e[0m"
 	exit
-fi
-
-# abort if selinux is not enforced
-# selinux provides a os level security sandbox and is very restrictive
-# especially important since renderfarm jobs can included arbitrary code execution on the workers
-test_selinux=$( getenforce )
-if [ "$test_selinux" == "Disabled" ] || [ "$test_selinux" == "Permissive" ];  then
-        echo -e "\n\e[31mFAIL:\e[0m Selinux is disabled, edit /etc/selinux/config"
-        echo "==================================================="
-        echo "Change SELINUX=disabled to SELINUX=enforcing"
-        echo -e "then \e[5mREBOOT\e[0m ( SELinux chcon on boot drive takes awhile)"
-        echo "=================================================="
-        exit
 fi
 
 skip_advanced="yes"
@@ -39,16 +26,10 @@ skip_advanced_default="yes"
 
 # deadline
 # ======== 
-#thinkboxversion="10.1.23.6"
-#thinkboxsha256="e0ca90bd089d702908577ea97d0ecf8ebd20d1c547db075f2c6f9e248409efe1"
-#thinkboxurl="https://thinkbox-installers.s3.us-west-2.amazonaws.com/Releases/Deadline/10.1/36_${thinkboxversion}/"
-#thinkboxtar="Deadline-${thinkboxversion}-linux-installers.tar"
-#thinkboxrun="./DeadlineRepository-${thinkboxversion}-linux-x64-installer.run"
-#
 thinkboxversion="10.3.0.13"
-thinkboxsha256="ee7835233f3f15f25bea818962e90a4edf12d432092ea56ad135a5f480f282d8"
 thinkboxurl="https://thinkbox-installers.s3.us-west-2.amazonaws.com/Releases/Deadline/10.3/3_${thinkboxversion}/"
 thinkboxtar="Deadline-${thinkboxversion}-linux-installers.tar"
+thinkboxsha256="ee7835233f3f15f25bea818962e90a4edf12d432092ea56ad135a5f480f282d8"
 thinkboxrun="./DeadlineRepository-${thinkboxversion}-linux-x64-installer.run"
 
 # s3 fuse filesystem
@@ -62,11 +43,13 @@ bella_version="23.4.0"
 bellasha256="afb15d150fc086709cc726c052dd40cd115eb8b32060c7a82bdba4f6d9cebd3d"
 
 # mongodb
+# =======
 mongourl="https://fastdl.mongodb.org/linux/"
 mongotar="mongodb-linux-x86_64-rhel80-4.4.16.tgz"
 mongosha256="78c3283bd570c7c88ac466aa6cc6e93486e061c28a37790e0eebf722ae19a0cb"
 
-# public hub keybundle
+# no-so-secret hub.keybundle.enc
+# ==============================
 keybundle_url_default="https://drive.google.com/file/d/1a98gFtDRyF_Bs3MkgoAvxOoMio3RDCN6/view?usp=share_link"
 nebulasha256="4600c23344a07c9eda7da4b844730d2e5eb6c36b806eb0e54e4833971f336f70"
 
@@ -74,7 +57,6 @@ nebulasha256="4600c23344a07c9eda7da4b844730d2e5eb6c36b806eb0e54e4833971f336f70"
 public_ip=$(curl -s https://checkip.amazonaws.com)
 
 echo -e "\n\e[32mTurns this machine into a renderfarm\e[0m \e[36m\e[5mhub\e[0m\e[0m"
-#echo -e "=========================================="
 echo -e "\e[31mWARNING:\e[0m Security changes will break any existing server"
 echo -e " - become VPN node at \e[36m10.10.0.1/16\e[0m"
 echo -e " - deploy VPN lighthouse at \e[36m${public_ip}\e[0m for internet-wide network"
@@ -127,6 +109,19 @@ if ! ( curl -s --head --fail -o /dev/null ${mongourl}${mongotar} ); then
 fi
 
 if ! [ "$nebula_name" = "i_agree_this_is_unsafe" ]; then
+	# abort if selinux is not enforced
+	# selinux provides a os level security sandbox and is very restrictive
+	# especially important since renderfarm jobs can included arbitrary code execution on the workers
+	test_selinux=$( getenforce )
+	if [ "$test_selinux" == "Disabled" ] || [ "$test_selinux" == "Permissive" ];  then
+		echo -e "\n\e[31mFAIL:\e[0m Selinux is disabled, edit /etc/selinux/config"
+		echo "==================================================="
+		echo "Change SELINUX=disabled to SELINUX=enforcing"
+		echo -e "then \e[5mREBOOT\e[0m ( SELinux chcon on boot drive takes awhile)"
+		echo "=================================================="
+		exit
+	fi
+
 	echo -e "\nENTER \e[36m\e[5mpassphrase\e[0m\e[0m to decode \e[32mhub.keybundle.enc\e[0m YOU set in \"keyoomerfarm.sh\"  ( keystrokes hidden )"
 	IFS= read -rs encryption_passphrase < /dev/tty
 	if [ -z "$encryption_passphrase" ]; then
@@ -214,11 +209,9 @@ dnf -y install tar
 # ===================
 
 # disallow ssh password authentication
-# ------------------------------------
 sed -i -E 's/#?PasswordAuthentication yes/PasswordAuthentication no/' /etc/ssh/sshd_config 
 
 # enable firewalld
-# ---------------- 
 firewalld_status=$(systemctl status firewalld)
 
 if [ -z "$firewalld_status" ]; then
@@ -262,9 +255,8 @@ chmod +x /usr/local/bin/nebula-cert
 chcon -t bin_t /usr/local/bin/nebula # SELinux security clearance
 rm -f nebula-linux-amd64.tar.gz
 
+# Install goofys needed for Houdini and UBL
 if ! [[ $skip_advanced == "yes" ]]; then
-	# Install goofys after sha256 checksum security check
-	# ===================================================
 	if ! ( test -f /usr/local/bin/goofys ); then
 		curl -L -o /usr/local/bin/goofys https://github.com/kahing/goofys/releases/download/v0.24.0/goofys
 		MatchFile="$(echo "${goofyssha256} /usr/local/bin/goofys" | sha256sum --check)"
@@ -280,8 +272,6 @@ if ! [[ $skip_advanced == "yes" ]]; then
 		fi
 	fi
 
-        # s3 goofys
-        # =========
         grep -qxF "goofys#oomerfarm /mnt/s3 fuse ro,_netdev,allow_other,--file-mode=0666,--dir-mode=0777,--endpoint=$s3_endpoint 0 0" /etc/fstab || echo "goofys#oomerfarm /mnt/s3 fuse ro,_netdev,allow_other,--file-mode=0666,--dir-mode=0777,--endpoint=$s3_endpoint 0 0" >> /etc/fstab
         systemctl daemon-reload
         mkdir -p /mnt/s3
@@ -292,8 +282,8 @@ if ! [[ $skip_advanced == "yes" ]]; then
 fi
 
 
-# Get credentials from public url
-# -------------------------------
+# Get hub.keybundle.enc from public url
+# =====================================
 
 # Google drive links require complicated traveral
 # Google cannot direct share large files or else this would be abused
@@ -324,7 +314,8 @@ else
 	fi
 fi
 
-# encrypted keybundles need decryption
+# decrypt hub.keybundle.enc
+# =========================
 while :
 do
     if openssl enc -aes-256-cbc -pbkdf2 -d -in ${nebula_name}.keybundle.enc -out ${nebula_name}.keybundle -pass file:<( echo -n "$encryption_passphrase" ) ; then
@@ -338,9 +329,8 @@ do
     fi 
 done  
 
-# unencrypted keybundles are simple tar archives
+# hub.keybundle is tar archive
 testkeybundle=$( tar -tf ${nebula_name}.keybundle ./${nebula_name}/${nebula_name}.key 2>&1 )
-echo $testkeybundle
 if ! [[ "${testkeybundle}" == *"Not found"* ]]; then
 	tar --to-stdout -xvf ${nebula_name}.keybundle ./${nebula_name}/ca.crt > ca.crt
 	tar --to-stdout -xvf ${nebula_name}.keybundle ./${nebula_name}/${nebula_name}.crt > ${nebula_name}.crt
@@ -511,11 +501,9 @@ systemctl enable --now smb
 
 # ***FIREWALL rules***
 # adopting highly restrictive rules to protect network
-# ====================================================
 echo -e "\n\e[32mTurning up Firewall security...\e[0m"
 
 # Wipe all services and ports except ssh and 22/tcp, may break system
-# ===================================================================
 for systemdservice in $(firewall-cmd --list-services --zone public);
 do 
 	if ! [[ "$systemdservice" == "ssh" ]]; then
@@ -532,41 +520,33 @@ firewall-cmd -q --reload
 
 
 # Allow Nebula VPN connections over internet
-# ==========================================
 firewall-cmd -q --zone=public --add-port=${nebula_public_port}/udp --permanent
 
 # Add Nebula zone on "nebula_tun"
-# ===============================
 firewall-cmd -q --new-zone nebula --permanent
 firewall-cmd -q --zone nebula --add-interface nebula_tun --permanent
 
 # Allow ssh connections over VPN
-# ==============================
 firewall-cmd -q --zone nebula --add-service ssh --permanent
 
 # Allow smb/cifs connections over VPN
-# ===================================
 firewall-cmd -q --zone nebula --add-port 445/tcp --permanent
 
 # Allow MongoDB connections over VPN
-# ==================================
 firewall-cmd -q --zone nebula --add-port 27100/tcp --permanent
 
-# ses
+# deadline license forwarder for Usage Based Licensing
+firewall-cmd -q --zone nebula --add-port 17004/tcp --permanent
+firewall-cmd -q --zone nebula --add-port 40645/tcp --permanent
+
+# houdini UBL passthrough
 firewall-cmd -q --zone nebula --add-port 1714/tcp --permanent
 firewall-cmd -q --zone nebula --add-port 1715/tcp --permanent
 firewall-cmd -q --zone nebula --add-port 1716/tcp --permanent
 
-# Deadline Usage Based Licensing
-# ==============================
-firewall-cmd -q --zone nebula --add-port 17004/tcp --permanent
-firewall-cmd -q --zone nebula --add-port 40645/tcp --permanent
-
 firewall-cmd -q --reload
 
-
-# If /mnt/DeadlineRepsoitory10 has not been created
-# =================================================
+# Prep Deadline Repo
 if ! ( test -d /mnt/DeadlineRepository10 ); then
 	mkdir -p /mnt/DeadlineRepository10
 	mkdir -p /mnt/oomerfarm
@@ -588,109 +568,9 @@ curl -O ${mongourl}${mongotar}
 MatchFile="$(echo "${mongosha256} ${mongotar}" | sha256sum --check)"
 if ! [[ "$MatchFile" == "${mongotar}: OK" ]] ; then
 	echo -e "\nChecksum for MongoDB does not match"
-	echo -e "\nABORTING: The mongodb download url is compromised"
+	echo -e "\nABORTING: The mongodb download failed is corrupted or has been maliciously modified"
 	exit
 fi
-#
-# Install MongoDB
-# ===============
-#orig_dir=$(pwd)
-#if ! test -d /opt/Thinkbox/DeadlineDatabase10/mongo/application/mongodb-linux-x86_64-rhel80-4.4.16 ; then
-#	echo -e "\n\e[32mInstalling Database (MongoDB)...\e[0m"
-#	# group 3001 and userid 3001 is legacy choice
-#	test_group=$( getent group mongod )
-#	if [ -z "${test_group}" ]; then
-#		echo "Creating group: mongod"
-#		groupadd -g 3001 mongod
-#	fi
-#
-#	test_user=$( id mongod )
-#	# id will return blank if no user is found
-#	if [ -z "${test_user}" ]; then
-#		echo "Creating user: mongod"
-#		useradd -g 3001 -u 3001 -r mongod
-#	fi
-#
-#	if ! ( test -d /opt/Thinkbox/DeadlineDatabase10/mongo ); then
-#		mkdir -p /opt/Thinkbox/DeadlineDatabase10/mongo
-#	fi
-#
-#	if ! ( test -d /opt/Thinkbox/DeadlineDatabase10/mongo/log ); then
-#		mkdir -p /opt/Thinkbox/DeadlineDatabase10/mongo/log
-#	fi 
-#
-#	chown mongod.mongod /opt/Thinkbox/DeadlineDatabase10/mongo
-#	chown mongod.mongod /opt/Thinkbox/DeadlineDatabase10/mongo/log
-#
-#	cd /opt/Thinkbox/DeadlineDatabase10/mongo
-#	if ! ( test -d application/mongodb-linux-x86_64-rhel80-4.4.16 ); then
-#		echo -e "\e[32mDownloading ${mongourl}${mongotar}\e[0m"
-#		curl -O ${mongourl}${mongotar}
-#		MatchFile="$(echo "${mongosha256} ${mongotar}" | sha256sum --check)"
-#		if [ "$MatchFile" = "${mongotar}: OK" ] ; then
-#			tar --skip-old-files -xf ${mongotar}
-#			mv mongodb-linux-x86_64-rhel80-4.4.16 application
-#			rm ${mongotar}
-#			chcon -t bin_t /opt/Thinkbox/DeadlineDatabase10/mongo/application/bin/mongod
-#		else
-#			echo -e "\nChecksum for MongoDB does not match"
-#			echo -e "\nABORTING: The mongodb download url is compromised"
-#			exit
-#		fi
-#	fi
-#
-#Assumes Deadline version 10
-#cat <<EOF > /etc/systemd/system/mongod.service
-#[Unit]
-#Description=Mongod Launcher Service
-#After=network.target
-#Requires=nebula.service
-#
-#[Service]
-#Type=simple
-#Restart=always
-#RestartSec=35
-#User=mongod
-#Group=mongod
-#Environment="OPTIONS=-f /opt/Thinkbox/DeadlineDatabase10/mongo/mongod.conf"
-#ExecStart=/opt/Thinkbox/DeadlineDatabase10/mongo/application/bin/mongod \$OPTIONS
-#ExecStartPre=/usr/bin/mkdir -p /var/run/mongodb /var/lib/mongo
-#ExecStartPre=/usr/bin/chown mongod:mongod /var/run/mongodb /var/lib/mongo
-#ExecStartPre=/usr/bin/chmod 0755 /var/run/mongodb
-#ExecStartPre=/usr/bin/chmod 0700 /var/lib/mongo
-#PermissionsStartOnly=true
-#PIDFile=/var/run/mongodb/mongod.pid
-#
-#[Install]
-#WantedBy=multi-user.target
-#EOF
-
-#cat <<EOF > /opt/Thinkbox/DeadlineDatabase10/mongo/mongod.conf
-#net:
-#  bindIp: ${nebula_ip} 
-#  port: 27100
-#  ipv6: false
-#  ssl:
-#    mode: disabled
-#
-#storage:
-#  # Database files will be stored here
-#  dbPath: /opt/Thinkbox/DeadlineDatabase10/mongo/
-#  engine: wiredTiger
-#
-#systemLog:
-#  destination: file
-#  path: /opt/Thinkbox/DeadlineDatabase10/mongo/log/mongod.log
-#
-#security:
-#  authorization: disabled
-#EOF
-#
-#	systemctl enable --now mongod.service
-#else
-#	echo -e "MongoDB already installed...installation skipped"
-#fi
-
 
 # Get Thinkbox software
 # =====================
@@ -702,7 +582,6 @@ if ! test -f /mnt/DeadlineRepository10/ThinkboxEULA.txt ; then
 		exit
 	fi
 
-	#cd ${orig_dir}
 	echo $thinkboxtar
 	if ! ( test -f "${thinkboxtar}" ); then
 		echo -e "\n\e[32mDownloading AWS Thinkbox Deadline Software 900MB+ ...\e[0m"
@@ -717,23 +596,34 @@ if ! test -f /mnt/DeadlineRepository10/ThinkboxEULA.txt ; then
 	    echo "\e[31mFAIL:\e[0m ${thinkboxtar} checksum failed, file possibly maliciously altered on AWS"
 	    exit
 	fi
+
+	# Installers for workers
 	mkdir -p /mnt/oomerfarm/installers
         cp DeadlineClient-${thinkboxversion}-linux-x64-installer.run /mnt/oomerfarm/installers
+
+	# Cleanup
 	rm DeadlineClient-${thinkboxversion}-linux-x64-installer.run.sig
 	rm DeadlineRepository-${thinkboxversion}-linux-x64-installer.run.sig
 	rm AWSPortalLink-*-linux-x64-installer.run
 	rm AWSPortalLink-*-linux-x64-installer.run.sig
-	echo -e "\e[32m${thinkboxrun} --mode unattended --unattendedmodeui none --prefix /mnt/DeadlineRepository10 --dbLicenseAcceptance accept --dbhost ${nebula_ip}\e[0m"
-	#${thinkboxrun} --mode unattended --unattendedmodeui minimal --prefix /mnt/DeadlineRepository10 --dbLicenseAcceptance accept --dbhost ${nebula_ip}
-	#${thinkboxrun} --mode unattended --requireSSL false --debuglevel 4 --unattendedmodeui none --prefix /mnt/DeadlineRepository10 --dbLicenseAcceptance accept --dbhost ${nebula_ip}
-	${thinkboxrun} --mode unattended --requireSSL false --dbLicenseAcceptance accept --unattendedmodeui none --prefix /mnt/DeadlineRepository10 --dbhost 10.10.0.1 --prepackagedDB mongodb-linux-x86_64-rhel80-4.4.16.tgz --dbInstallationType prepackagedDB --installmongodb true --dbOverwrite true
+	echo -e "\e[32m${thinkboxrun} --mode unattended --requireSSL false --dbLicenseAcceptance accept --unattendedmodeui none --prefix /mnt/DeadlineRepository10 --dbhost 10.10.0.1 --prepackagedDB ${mongotar} --dbInstallationType prepackagedDB --installmongodb true --dbOverwrite true\e[0m"
+	${thinkboxrun} --mode unattended --requireSSL false --dbLicenseAcceptance accept --unattendedmodeui none --prefix /mnt/DeadlineRepository10 --dbhost 10.10.0.1 --prepackagedDB ${mongotar} --dbInstallationType prepackagedDB --installmongodb true --dbOverwrite true
 	echo -e "\n\n\e[31mYou accept AWS Thinkbox Deadline EULA when installing:\e[0m"
 	cat /mnt/DeadlineRepository10/ThinkboxEULA.txt
-	chmod +x DeadlineClient-${thinkboxversion}-linux-x64-installer.run
-	./DeadlineClient-${thinkboxversion}-linux-x64-installer.run --mode unattended --unattendedmodeui none --repositorydir /mnt/DeadlineRepository10  --connectiontype Direct --noguimode true --binariesonly true
-	rm DeadlineClient-${thinkboxversion}-linux-x64-installer.run
-	#/opt/Thinkbox/Deadline10/bin/deadlinecommand UpdateEnvironmentSettings /mnt/DeadlineRepository10/settings/Environments
-	#/opt/Thinkbox/Deadline10/bin/deadlinecommand UpdateEnvironmentSettings /mnt/DeadlineRepository10/settings/Environments2 --second	
+else
+	echo -e "\e[35mDeadline Repository exists...skipping installation\e[0m"
+fi
+
+
+# Install Deadline license forwarder, forced to install all client software
+if ! [[ $skip_advanced == "yes" ]]; then
+	if ! test -d /opt/Thinkbox/Deadline10/bin ; then
+		echo -e "\e[32mInstalling DeadlineClient-${thinkboxversion}-linux-x64-installer.run\e[0m"
+		chmod +x /mnt/oomerfarm/installers/DeadlineClient-${thinkboxversion}-linux-x64-installer.run
+		echo -e \e[32m/mnt/oomerfarm/installers/DeadlineClient-${thinkboxversion}-linux-x64-installer.run --mode unattended --unattendedmodeui none --repositorydir /mnt/DeadlineRepository10  --connectiontype Direct --noguimode true --binariesonly true\e[0m"
+		/mnt/oomerfarm/installers/DeadlineClient-${thinkboxversion}-linux-x64-installer.run --mode unattended --unattendedmodeui none --repositorydir /mnt/DeadlineRepository10  --connectiontype Direct --noguimode true --binariesonly true
+		rm DeadlineClient-${thinkboxversion}-linux-x64-installer.run
+
 
 cat <<EOF > /var/lib/Thinkbox/Deadline10/licenseforwarder.ini
 [Deadline]
@@ -779,11 +669,8 @@ SuccessExitStatus=143
 [Install]
 WantedBy=multi-user.target
 EOF
-
-	systemctl enable --now deadlinelicenseforwarder
-
-else
-	echo -e "\e[35mDeadline Repository exists...skipping installation\e[0m"
+		systemctl enable --now deadlinelicenseforwarder
+	fi
 fi
 
 mkdir -p /mnt/DeadlineRepository10/custom/plugins/BellaRender
@@ -794,7 +681,7 @@ cp DeadlineRepository10/custom/plugins/BellaRender/bella.ico /mnt/DeadlineReposi
 cp DeadlineRepository10/custom/scripts/Submission/BellaRender.py /mnt/DeadlineRepository10/custom/scripts/Submission/BellaRender.py
 
 # [TODO] switch to ssl for better security
-sed -i "s/Authenticate=.*/Authenticate=False/g" /mnt/DeadlineRepository10/settings/connection.ini
+#sed -i "s/Authenticate=.*/Authenticate=False/g" /mnt/DeadlineRepository10/settings/connection.ini
 
 echo -e "\e[32mDownloading Bella path tracer ...\e[0m"
 curl -O https://downloads.bellarender.com/bella_cli-${bella_version}.tar.gz
