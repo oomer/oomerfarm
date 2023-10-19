@@ -11,11 +11,11 @@
 # Tested on AWS, Azure, Google, Oracle, Vultr, Digital Ocaan, Linode, Heztner, Server-Factory, Crunchbits
 
 if ! [[ "$OSTYPE" == "linux-gnu"* ]]; then
-        echo -e "FAIL: Run this on Alma or Rocky Linux 8.x"
+        echo -e "FAIL: Run this on Linux preferably AlmaLinux 8.x"
         exit
 fi
 
-thinkboxversion="10.1.23.6"
+thinkboxversion="10.3.0.13"
 
 keybundle_url_default="https://drive.google.com/file/d/13xH4vNrr6DSocD9Bhi1cEKl8FU_QIi5K/view?usp=share_link"
 
@@ -25,24 +25,24 @@ goofyssha256="729688b6bc283653ea70f1b2b6406409ec1460065161c680f3b98b185d4bf364"
 worker_prefix=worker
 encryption_passphrase="oomerfarm"
 
-lighthouse_internet_port="42042"
 lighthouse_internet_port_default="42042"
-lighthouse_nebula_ip="10.10.0.1"
+lighthouse_internet_port=$lighthouse_internet_port_default
 lighthouse_nebula_ip_default="10.10.0.1"
+lighthouse_nebula_ip=$lighthouse_nebula_ip_default
 
-skip_advanced="yes"
 skip_advanced_default="yes"
+skip_advanced=$skip_advanced_default
 
-nebula_version="v1.7.2"
 nebula_version_default="v1.7.2"
+nebula_version=$nebula_version_default
 nebulasha256="4600c23344a07c9eda7da4b844730d2e5eb6c36b806eb0e54e4833971f336f70"
 
 # Linux and smb user
 # ==================
-deadline_user="oomerfarm"
 deadline_user_default="oomerfarm"
-smb_credentials="oomerfarm"
+deadline_user=$deadline_user_default
 smb_credentials_default="oomerfarm"
+smb_credentials=$smb_credentials_default
 
 worker_auto_shutdown=0
 worker_name_default=$(hostname)
@@ -57,105 +57,117 @@ hub_name_default="i_agree_this_is_unsafe"
 # [ ] avoid passing password in command line args which are viewable inside /proc
 # [TODO] add a force option to overwrite existing credential, otherwise delete /etc/nebula/smb_credentials to reset
 
-echo -e "\nTurns this machine into a renderfarm worker, automatically joining vpn"
-echo -e "WARNING: Major system changes will occur"
-echo -e "DO NOT run on a production machine, or an existing server"
-echo -e " - becomes Nebula VPN node with address in 10.10.0.0/16 subnet"
-echo -e " - deploys Deadline Client software into /opt/Thinkbox/Deadline10"
-echo -e " - maximizes network security (firewalld) ( blockades non-oomerfarm ports) "
-echo -e " - maximizes OS security (selinux)"
-echo -e " - You agree to the AWS Thinkbox EULA by installing Deadline"
-echo -e " - Optionally mounts /mnt/s3"
-echo -e " - Optionally installs Houdini"
-echo -e "Continue on $(hostname)?"
+echo -e "\n\e[32mTurns this machine into a renderfarm worker\e[0m, polls \e[32mhub\e[0m for render jobs"
+echo -e "\e[31mWARNING:\e[0m Security changes will break any existing services"
+echo -e " - becomes VPN node with address in \e[36m10.10.0.0/16\e[0m subnet"
+echo -e " - install Deadline Client \e[37m/opt/Thinkbox/Deadline10\e[0m"
+echo -e " - \e[37mfirewall\e[0m blocks ALL non-oomerfarm ports"
+echo -e " - enforce \e[37mselinux\e[0m for maximal security"
+echo -e " - You agree to the \e[37mAWS Thinkbox EULA\e[0m by installing Deadline"
+echo -e " - Optionally mounts \e[37m/mnt/s3\e[0m"
+echo -e " - Optionally installs \e[37mHoudini\e[0m"
+echo -e "\e[32mContinue on\e[0m \e[37m$(hostname)?\e[0m"
+
 read -p "(Enter Yes) " accept
 if [ "$accept" != "Yes" ]; then
-        echo -e "\nScript aborted because Yes was not entered"
+        echo -e "\n\e[31mFAIL:\e[0m Script aborted because Yes was not entered"
         exit
 fi
 
-# Ensure SElinux enforcing is on
-# ==============================
-test_selinux=$( getenforce )
-if [ "$test_selinux" == "Disabled" ] || [ "$test_selinux" == "Permissive" ];  then
-	selinux-config-enforcing
-	echo "SELinux activated, ( file protection on reboot may take a while )"
-	echo "Please reboot machine and re-run this script"
+echo -e "\e[36m\e[5moomerfarm worker id\e[0m\e[0m"
+read -p "Enter number between 1-9999:" worker_id
+if (( $worker_id >= 1 && $worker_id <= 9999 )) ; then
+	worker_name=$(printf "worker%04d" $worker_id)
+	echo ${worker_name}
+	hostnamectl --static --transient set-hostname ${worker_name}
+	echo ${worker_name}
+else
+	echo -e "\e[31mFAIL:\e[0m worker id need to be between 1 and 9999 inclusive"
 	exit
 fi
 
-echo -e "\nWorker name ( return for default, \"worker\" suffix is required for VPN)"
-read -p "( default: $worker_name_default ): " worker_name
-if [ -z $worker_name ]; then
-    hostnamectl set-hostname "$worker_name_default"
-    worker_name="$worker_name_default"
-else
-    hostnamectl set-hostname "$worker_name"
-fi
-
-echo -e "\nhub's public ip address"
-read -p "x.x.x.x:" lighthouse_internet_ip
+echo -e "\n\e[36m\e[5mhub internet address\e[0m\e[0m"
+read -p "Enter: x.x.x.x:" lighthouse_internet_ip
 if [ -z  $lighthouse_internet_ip ]; then
         echo "Cannot continue without public ip address of hub"
         exit
 fi
 
-echo -e "\nSECURE METHOD: Generate cryptographic keys ( on a trusted computer, not this one ) using keyoomerfarm.sh. Authorize each machine on your Nebula network with your own certificate signing authority for zero trust credentials. Type \"hub\" below to use the secure method"
+echo -e "\n\e[32mSecure Method:\e[0m On a trusted computer, generate secret keys ( not this computer ) using \e[36mkeyoomerfarm.sh\e[0m BEFORE running this script. Type \e[36mhub\e[0m below for the secure method"
 
-echo -e "\nTESTDRIVE: \"${hub_name_default}\" keybundle is a public set of keys with a knowable passphrase in this source code. You acknowledge that anybody with these keys can join your Nebula network without your knowledge or consent. The situation is analogous to losing your house keys on the subway, an intruder would need to know where you live giving you at least security by obscurity. Hit enter below to use \"i_agree_this_is_unsafe\" for testing"
+echo -e "\n\e[32mTest Drive:\e[0m \e[36m${hub_name_default}\e[0m are not-so-secret keys securing oomerfarm with a VPN. Since they allow intrusion without your knowledge only use them to test oomerfarm. Analogy: house keys can be lost and your locks continue to work, BUT a stranger who finds your keys AND knows where you live can easily enter. Hit enter below to use \e[36mi_agree_this_is_unsafe\e[0m with security by obscurity"
 
-echo -e "\nENTER hub name ..."
+echo -e "\nENTER \e[36m\e[5mhub\e[0m\e[0m or \e[36m\e[5m${hub_name_default}\e[0m\e[0m"
 read -p "(default: $hub_name_default:) " hub_name
 if [ -z "$hub_name" ]; then
 	hub_name=$hub_name_default
 fi
 
 if ! [ "$hub_name" = "i_agree_this_is_unsafe" ]; then
-
-        echo -e "\nENTER URL to worker.keybundle.enc ..."
-        read -p "    (keyoomerfarm.sh required saving worker.keybundle.enc to Google Drive and to get URL link): " keybundle_url
-        if [ -z "$keybundle_url" ]; then
-                echo "FAIL: URL cannot be blank, read instructions"
+        # abort if selinux is not enforced
+        # selinux provides a os level security sandbox and is very restrictive
+        # especially important since renderfarm jobs can included arbitrary code execution on the workers
+        test_selinux=$( getenforce )
+        if [ "$test_selinux" == "Disabled" ] || [ "$test_selinux" == "Permissive" ];  then
+                echo -e "\n\e[31mFAIL:\e[0m Selinux is disabled, edit /etc/selinux/config"
+                echo "==================================================="
+                echo "Change SELINUX=disabled to SELINUX=enforcing"
+                echo -e "then \e[5mREBOOT\e[0m ( SELinux chcon on boot drive takes awhile)"
+                echo "=================================================="
                 exit
         fi
 
-        echo -e "\nENTER passphrase to decode worker.keybundle.enc YOU set in \"keyoomerfarm.sh\"  ( keystrokes hidden )"
-        echo -e "If you don't understand, then you did not follow the instructions"
+
+        echo -e "\nENTER \e[36m\e[5mpassphrase\e[0m\e[0m to decode \e[32mworker.keybundle.enc\e[0m YOU set in \"keyoomerfarm.sh\"  ( keystrokes hidden )"
         IFS= read -rs encryption_passphrase < /dev/tty
         if [ -z "$encryption_passphrase" ]; then
-                echo -e "\nFAIL: Invalid empty passphrase"
+                echo -e "\n\e[31mFAIL:\e[0m Invalid empty passphrase"
                 exit
         fi
 
-        echo -e "\nSkip advanced setup:"
+        echo -e "\n\e[36m\e[5mURL\e[0m\e[0m to \e[32mworker.keybundle.enc\e[0m"
+        read -p "Enter: " keybundle_url
+        if [ -z "$keybundle_url" ]; then
+                echo -e "\e[31mFAIL:\e[0m URL cannot be blank"
+                exit
+        fi
+
+        echo -e "\n\e[36m\e[5mSkip\e[0m\e[0m advanced setup:"
         read -p "(default: $skip_advanced_default): " skip_advanced
         if [ -z "$skip_advanced" ]; then
             skip_advanced=$skip_advanced_default
         fi
 
         if ! [[ $skip_advanced == "yes" ]]; then
-                echo -e "\nEnter URL"
-                read -p "S3 Endpoint:" s3_endpoint
+                echo -e "\n\e[36m\e[5mS3 Endpoint URL\e[0m\e[0m"
+                read -p "Enter:" s3_endpoint
                 if [ -z  $s3_endpoint ]; then
                         echo "FAIL: s3_endpoint url must be set"
                         exit
                 fi
 
-                echo -e "\nEnter"
-                read -p "S3 Access Key Id:" s3_access_key_id
+                echo -e "\n\e[36m\e[5mS3 Access Key Id\e[0m\e[0m"
+                read -p "Enter:" s3_access_key_id
                 if [ -z  $s3_access_key_id ]; then
                         echo "FAIL: s3_access_key_id must be set"
                         exit
                 fi
 
-                echo -e "\nEnter"
-                read -p "S3 Secret Access Key:" s3_secret_access_key
+                echo -e "\n\e[36m\e[5mS3 Secret Access Key\e[0m\e[0m"
+                read -p "Enter:" s3_secret_access_key
                 if [ -z  $s3_secret_access_key ]; then
                         echo "FAIL: s3_secret_access_key must be set"
                         exit
                 fi
+                mkdir -p /root/.aws
+cat <<EOF > /root/.aws/credentials
+[default]
+aws_access_key_id=${s3_access_key_id}
+aws_secret_access_key=${s3_secret_access_key}
+EOF
+                chmod go-rwx /root/.aws/credentials
 
-                echo -e "\nEnter file server username ..."
+                echo -e "\nSet \e[36m\e[5musername\e[0m\e[0m"
 		read -p "(default: $deadline_user_default): " deadline_user
 		if [ -z "$deadline_user" ]; then
 		    deadline_user=$deadline_user_default
@@ -163,8 +175,8 @@ if ! [ "$hub_name" = "i_agree_this_is_unsafe" ]; then
 
 		while :
 		do
-		    echo "Enter file server password ( keystrokes hidden, hit enter to use default )"
-		    IFS= read -rs smb_credentials < /dev/tty
+                    echo -e "\n\e[36m\e[5mpassword\e[0m\e[0m to access hub file server ( keystrokes hidden )"
+		    IFS= read -p "(default: oomerfarm)" -rs smb_credentials < /dev/tty
 		    if [ -z "$smb_credentials" ]; then
 			$smb_credentials = $smb_credentials_default
 			break
@@ -178,26 +190,18 @@ if ! [ "$hub_name" = "i_agree_this_is_unsafe" ]; then
 		    fi
 		done
 
-                echo -e "\nENTER oomerfarm hub VPN address"
-                echo -e "Customize Nebula network addresses using keyoomerfarm.sh"
+                echo -e "\nSet VPN \e[36m\e[5mIP address\e[0m\e[0m"
 		read -p "(default: $lighthouse_nebula_ip_default): " lighthouse_nebula_ip
 		if [ -z "$lighthouse_nebula_ip" ]; then
 		    lighthouse_nebula_ip=$lighthouse_nebula_ip_default
 		fi
 
-		echo -e "\nEnter oomerfarm hub's internet port:"
+                echo -e "\nSet VPN public \e[36m\e[5mudp port\e[0m\e[0m"
 		read -p "(default: $lighthouse_internet_port_default): " lighthouse_internet_port
 		if [ -z "$lighthouse_internet_port" ]; then
 		    lighthouse_internet_port=$lighthouse_internet_port_default
 		fi
-
-		echo -e "\nNebula version:"
-		read -p "(default: $nebula_version_default): " nebula_version
-		if [ -z "$nebula_version" ]; then
-		    nebula_version=$nebula_version_default
-		fi
 	fi
-
 else
 	keybundle_url=$keybundle_url_default
 fi
@@ -207,6 +211,8 @@ firewalld_status=$(systemctl status firewalld)
 
 os_name=$(awk -F= '$1=="NAME" { print $2 ;}' /etc/os-release)
 if [ "$os_name" == "\"Ubuntu\"" ]; then
+	# [ TODO ] switch from apparmor to selinux
+	echo -e "\e[32mDiscovered $os_name\e[0m. Support of Ubuntu is alpha quality"
 	apt -y update
 	#systemctl stop apparmor
 	#systemctl disable apparmor
@@ -223,6 +229,7 @@ if [ "$os_name" == "\"Ubuntu\"" ]; then
 	apt -y install fuse
 	ln -s /usr/lib/x86_64-linux-gnu/libffi.so.7 /usr/lib/libffi.so.6
 elif [ "$os_name" == "\"AlmaLinux\"" ] || [ "$os_name" == "\"Rocky Linux\"" ]; then
+	echo -e "\e[32mDiscovered $os_name\e[0m"
 	dnf -y update
 	dnf -y install tar
 	# needed for /usr/local/bin/oomerfarm_shutdown.sh
@@ -239,13 +246,16 @@ elif [ "$os_name" == "\"AlmaLinux\"" ] || [ "$os_name" == "\"Rocky Linux\"" ]; t
 	dnf install -y libSM
 	dnf install -y libnsl
 else
-	echo "FAIL"
+	echo "\e[31mFAIL:\e[0m Unsupported operating system $os_name"
 	exit
 fi
 
 systemctl enable --now sysstat
 systemctl enable --now firewalld
+echo -e "\e[32mStarting cifs module\e[0m"
 modprobe cifs
+
+echo -e "\e[32mDownloading worker.keybundle.enc\e[0m"
 
 # Get Nebula credentials
 # ======================
@@ -275,14 +285,17 @@ else
 	curl -L -o ${worker_prefix}.keybundle.enc "${keybundle_url}" 
 fi
 
+
+# decrypt worker.keybundle.enc
+# ============================
 while :
 do
-    if openssl enc -aes-256-cbc -pbkdf2 -d -in ${worker_prefix}.keybundle.enc -out ${worker_prefix}.keybundle -pass file:<( echo -n "$encryption_passphrase" ) ; then
-	rm ${worker_prefix}.keybundle.enc
+    if openssl enc -aes-256-cbc -pbkdf2 -d -in worker.keybundle.enc -out worker.keybundle -pass file:<( echo -n "$encryption_passphrase" ) ; then
+	rm worker.keybundle.enc
         break
     else
-        echo "WRONG passphrase entered for ${worker_prefix}.keybundle.enc, try again"
-        echo "Enter passphrase for ${worker_prefix}.keybundle.enc, then hit return"
+        echo "WRONG passphrase entered for worker.keybundle.enc, try again"
+        echo "Enter passphrase for worker.keybundle.enc, then hit return"
         echo "==============================================================="
         IFS= read -rs $encryption_passphrase < /dev/tty
     fi 
@@ -293,10 +306,10 @@ done
 if ! test -d /etc/nebula; then
 	mkdir -p /etc/nebula
 fi
-tar --strip-components 1 -xvf ${worker_prefix}.keybundle -C /etc/nebula
+tar --strip-components 1 -xvf worker.keybundle -C /etc/nebula
 chown root.root /etc/nebula/*.crt
 chown root.root /etc/nebula/*.key
-rm ${worker_prefix}.keybundle
+rm worker.keybundle
 
 # smb_credentials
 # ===============
@@ -319,7 +332,9 @@ EOF
 	chmod go-rwx /root/.aws/credentials
 fi
 
-# Security lockdown with firewalld
+# ***FIREWALL rules***
+# adopting highly restrictive rules to protect network
+echo -e "\n\e[32mTurning up Firewall security...\e[0m"
 # Wipe all services and ports except ssh and 22/tcp, may break your system
 for systemdservice in $(firewall-cmd --list-services);
 do 
@@ -333,14 +348,18 @@ do
 		firewall-cmd -q --remove-port ${systemdport} --permanent
 	fi
 done
-firewall-cmd -q --reload
+firewall-cmd --quiet --zone=public --add-port=42042/udp --permanent
+firewall-cmd -q --new-zone nebula --permanent
+firewall-cmd -q --zone nebula --add-interface nebula_tun --permanent
+firewall-cmd -q --zone nebula --add-service ssh --permanent
+firewall-cmd --quiet --reload
 
 # Create user
 # ===========
 test_user=$( id "${deadline_user}" )
 # id will return blank if no user is found
 if [ -z "$test_user" ]; then
-	echo "CREATE USER:${deadeline_user}"
+	echo "CREATE USER:${deadline_user}"
         groupadd -g 3000 ${deadline_user}
         useradd -g 3000 -u 3000 -m ${deadline_user}
 fi
@@ -350,6 +369,7 @@ echo "${deadline_user}:${smb_credentials}" | chpasswd
 # Install Nebula
 # ==============
 if ! ( test -f /usr/local/bin/nebula ); then
+	echo -e "\e[32mDownloading Nebula VPN\e[0m"
 	curl -s -L -O https://github.com/slackhq/nebula/releases/download/${nebula_version}/nebula-linux-amd64.tar.gz
 	MatchFile="$(echo "${nebulasha256} nebula-linux-amd64.tar.gz" | sha256sum --check)"
 	if [ "$MatchFile" = "nebula-linux-amd64.tar.gz: OK" ] ; then
@@ -367,19 +387,22 @@ if ! ( test -f /usr/local/bin/nebula ); then
 	rm -f nebula-linux-amd64.tar.gz
 fi 
 
-# Install goofys after sha256 checksum security check
-# ===================================================
-if ! ( test -f /usr/local/bin/goofys ); then
-	curl -L -o /usr/local/bin/goofys https://github.com/kahing/goofys/releases/download/v0.24.0/goofys
-	MatchFile="$(echo "${goofyssha256} /usr/local/bin/goofys" | sha256sum --check)"
-	if [ "$MatchFile" = "/usr/local/bin/goofys: OK" ] ; then
-		chmod +x /usr/local/bin/goofys
-		chown root.root /usr/local/bin/goofys
-		chcon -t bin_t /usr/local/bin/goofys # SELinux security clearance
-	else
-		echo "FAIL"
-		echo "goofys checksum is wrong, may indicate download failure of malicious alteration"
-		exit
+
+# Install goofys needed for Houdini and UBL
+if ! [[ $skip_advanced == "yes" ]]; then
+	if ! ( test -f /usr/local/bin/goofys ); then
+		curl -L -o /usr/local/bin/goofys https://github.com/kahing/goofys/releases/download/v0.24.0/goofys
+		MatchFile="$(echo "${goofyssha256} /usr/local/bin/goofys" | sha256sum --check)"
+		if [ "$MatchFile" = "/usr/local/bin/goofys: OK" ] ; then
+			chmod +x /usr/local/bin/goofys
+			mkdir -p /mnt/s3
+			chown root.root /usr/local/bin/goofys
+			chcon -t bin_t /usr/local/bin/goofys # SELinux security clearance
+		else
+			echo "FAIL"
+			echo "goofys checksum is wrong, may indicate download failure of malicious alteration"
+			exit
+		fi
 	fi
 fi
 
@@ -481,8 +504,10 @@ firewall:
         - oomerfarm
 EOF
 chmod go-rwx /etc/nebula/config.yml
+systemctl enable nebula.service
+systemctl restart nebula.service
 
-
+# [ TODO ] timers are in but broken
 cat <<EOF > /etc/systemd/system/oomerfarm-shutdown.timer
 [Unit]
 Description=oomerfarm worker idle check timer
@@ -519,19 +544,12 @@ fi
 EOF
 chmod +x /usr/local/bin/oomerfarm_shutdown.sh
 
-firewall-cmd --quiet --zone=public --add-port=42042/udp --permanent
-firewall-cmd -q --new-zone nebula --permanent
-firewall-cmd -q --zone nebula --add-interface nebula_tun --permanent
-firewall-cmd -q --zone nebula --add-service ssh --permanent
-firewall-cmd --quiet --reload
-systemctl enable --now nebula.service
-
 # Setup Deadline cifs/smb mount point in /etc/fstab ONLY if it isn't there already
 # needs sophisticated grep discovery with echo
 # ====
 mkdir -p /mnt/DeadlineRepository10
 mkdir -p /mnt/oomerfarm
-mkdir -p /mnt/s3
+#mkdir -p /mnt/s3
 
 # DeadlineRepository10
 # ====================
