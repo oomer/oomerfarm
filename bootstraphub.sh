@@ -608,6 +608,9 @@ if ! test -f /mnt/DeadlineRepository10/ThinkboxEULA.txt ; then
 	rm AWSPortalLink-*-linux-x64-installer.run.sig
 	echo -e "\e[32m${thinkboxrun} --mode unattended --requireSSL false --dbLicenseAcceptance accept --unattendedmodeui none --prefix /mnt/DeadlineRepository10 --dbhost 10.10.0.1 --prepackagedDB ${mongotar} --dbInstallationType prepackagedDB --installmongodb true --dbOverwrite true\e[0m"
 	${thinkboxrun} --mode unattended --requireSSL false --dbLicenseAcceptance accept --unattendedmodeui none --prefix /mnt/DeadlineRepository10 --dbhost 10.10.0.1 --prepackagedDB ${mongotar} --dbInstallationType prepackagedDB --installmongodb true --dbOverwrite true
+	sed -i "s/bindIpAll: true/bindIp: 10.10.0.1/g" /opt/Thinkbox/DeadlineDatabase10/mongo/data/config.conf
+	/etc/init.d/Deadline10db restart
+
 	echo -e "\n\n\e[31mYou accept AWS Thinkbox Deadline EULA when installing:\e[0m"
 	cat /mnt/DeadlineRepository10/ThinkboxEULA.txt
 else
