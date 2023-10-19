@@ -583,104 +583,113 @@ fi
 # Set password, confirm password
 (echo ${linux_password}; echo ${linux_password}) | smbpasswd -a oomerfarm -s
 
+echo -e "\e[32mDownloading ${mongourl}${mongotar}\e[0m"
+curl -O ${mongourl}${mongotar}
+MatchFile="$(echo "${mongosha256} ${mongotar}" | sha256sum --check)"
+if ! [[ "$MatchFile" == "${mongotar}: OK" ]] ; then
+	echo -e "\nChecksum for MongoDB does not match"
+	echo -e "\nABORTING: The mongodb download url is compromised"
+	exit
+fi
+#
 # Install MongoDB
 # ===============
-orig_dir=$(pwd)
-if ! test -d /opt/Thinkbox/DeadlineDatabase10/mongo/application/mongodb-linux-x86_64-rhel80-4.4.16 ; then
-	echo -e "\n\e[32mInstalling Database (MongoDB)...\e[0m"
-	# group 3001 and userid 3001 is legacy choice
-	test_group=$( getent group mongod )
-	if [ -z "${test_group}" ]; then
-		echo "Creating group: mongod"
-		groupadd -g 3001 mongod
-	fi
-
-	test_user=$( id mongod )
-	# id will return blank if no user is found
-	if [ -z "${test_user}" ]; then
-		echo "Creating user: mongod"
-		useradd -g 3001 -u 3001 -r mongod
-	fi
-
-	if ! ( test -d /opt/Thinkbox/DeadlineDatabase10/mongo ); then
-		mkdir -p /opt/Thinkbox/DeadlineDatabase10/mongo
-	fi
-
-	if ! ( test -d /opt/Thinkbox/DeadlineDatabase10/mongo/log ); then
-		mkdir -p /opt/Thinkbox/DeadlineDatabase10/mongo/log
-	fi 
-
-	chown mongod.mongod /opt/Thinkbox/DeadlineDatabase10/mongo
-	chown mongod.mongod /opt/Thinkbox/DeadlineDatabase10/mongo/log
-
-	cd /opt/Thinkbox/DeadlineDatabase10/mongo
-	if ! ( test -d application/mongodb-linux-x86_64-rhel80-4.4.16 ); then
-		echo -e "\e[32mDownloading ${mongourl}${mongotar}\e[0m"
-		curl -O ${mongourl}${mongotar}
-		MatchFile="$(echo "${mongosha256} ${mongotar}" | sha256sum --check)"
-		if [ "$MatchFile" = "${mongotar}: OK" ] ; then
-			tar --skip-old-files -xf ${mongotar}
-			mv mongodb-linux-x86_64-rhel80-4.4.16 application
-			rm ${mongotar}
-			chcon -t bin_t /opt/Thinkbox/DeadlineDatabase10/mongo/application/bin/mongod
-		else
-			echo -e "\nChecksum for MongoDB does not match"
-			echo -e "\nABORTING: The mongodb download url is compromised"
-			exit
-		fi
-	fi
-
+#orig_dir=$(pwd)
+#if ! test -d /opt/Thinkbox/DeadlineDatabase10/mongo/application/mongodb-linux-x86_64-rhel80-4.4.16 ; then
+#	echo -e "\n\e[32mInstalling Database (MongoDB)...\e[0m"
+#	# group 3001 and userid 3001 is legacy choice
+#	test_group=$( getent group mongod )
+#	if [ -z "${test_group}" ]; then
+#		echo "Creating group: mongod"
+#		groupadd -g 3001 mongod
+#	fi
+#
+#	test_user=$( id mongod )
+#	# id will return blank if no user is found
+#	if [ -z "${test_user}" ]; then
+#		echo "Creating user: mongod"
+#		useradd -g 3001 -u 3001 -r mongod
+#	fi
+#
+#	if ! ( test -d /opt/Thinkbox/DeadlineDatabase10/mongo ); then
+#		mkdir -p /opt/Thinkbox/DeadlineDatabase10/mongo
+#	fi
+#
+#	if ! ( test -d /opt/Thinkbox/DeadlineDatabase10/mongo/log ); then
+#		mkdir -p /opt/Thinkbox/DeadlineDatabase10/mongo/log
+#	fi 
+#
+#	chown mongod.mongod /opt/Thinkbox/DeadlineDatabase10/mongo
+#	chown mongod.mongod /opt/Thinkbox/DeadlineDatabase10/mongo/log
+#
+#	cd /opt/Thinkbox/DeadlineDatabase10/mongo
+#	if ! ( test -d application/mongodb-linux-x86_64-rhel80-4.4.16 ); then
+#		echo -e "\e[32mDownloading ${mongourl}${mongotar}\e[0m"
+#		curl -O ${mongourl}${mongotar}
+#		MatchFile="$(echo "${mongosha256} ${mongotar}" | sha256sum --check)"
+#		if [ "$MatchFile" = "${mongotar}: OK" ] ; then
+#			tar --skip-old-files -xf ${mongotar}
+#			mv mongodb-linux-x86_64-rhel80-4.4.16 application
+#			rm ${mongotar}
+#			chcon -t bin_t /opt/Thinkbox/DeadlineDatabase10/mongo/application/bin/mongod
+#		else
+#			echo -e "\nChecksum for MongoDB does not match"
+#			echo -e "\nABORTING: The mongodb download url is compromised"
+#			exit
+#		fi
+#	fi
+#
 #Assumes Deadline version 10
-cat <<EOF > /etc/systemd/system/mongod.service
-[Unit]
-Description=Mongod Launcher Service
-After=network.target
-Requires=nebula.service
+#cat <<EOF > /etc/systemd/system/mongod.service
+#[Unit]
+#Description=Mongod Launcher Service
+#After=network.target
+#Requires=nebula.service
+#
+#[Service]
+#Type=simple
+#Restart=always
+#RestartSec=35
+#User=mongod
+#Group=mongod
+#Environment="OPTIONS=-f /opt/Thinkbox/DeadlineDatabase10/mongo/mongod.conf"
+#ExecStart=/opt/Thinkbox/DeadlineDatabase10/mongo/application/bin/mongod \$OPTIONS
+#ExecStartPre=/usr/bin/mkdir -p /var/run/mongodb /var/lib/mongo
+#ExecStartPre=/usr/bin/chown mongod:mongod /var/run/mongodb /var/lib/mongo
+#ExecStartPre=/usr/bin/chmod 0755 /var/run/mongodb
+#ExecStartPre=/usr/bin/chmod 0700 /var/lib/mongo
+#PermissionsStartOnly=true
+#PIDFile=/var/run/mongodb/mongod.pid
+#
+#[Install]
+#WantedBy=multi-user.target
+#EOF
 
-[Service]
-Type=simple
-Restart=always
-RestartSec=35
-User=mongod
-Group=mongod
-Environment="OPTIONS=-f /opt/Thinkbox/DeadlineDatabase10/mongo/mongod.conf"
-ExecStart=/opt/Thinkbox/DeadlineDatabase10/mongo/application/bin/mongod \$OPTIONS
-ExecStartPre=/usr/bin/mkdir -p /var/run/mongodb /var/lib/mongo
-ExecStartPre=/usr/bin/chown mongod:mongod /var/run/mongodb /var/lib/mongo
-ExecStartPre=/usr/bin/chmod 0755 /var/run/mongodb
-ExecStartPre=/usr/bin/chmod 0700 /var/lib/mongo
-PermissionsStartOnly=true
-PIDFile=/var/run/mongodb/mongod.pid
-
-[Install]
-WantedBy=multi-user.target
-EOF
-
-cat <<EOF > /opt/Thinkbox/DeadlineDatabase10/mongo/mongod.conf
-net:
-  bindIp: ${nebula_ip} 
-  port: 27100
-  ipv6: false
-  ssl:
-    mode: disabled
-
-storage:
-  # Database files will be stored here
-  dbPath: /opt/Thinkbox/DeadlineDatabase10/mongo/
-  engine: wiredTiger
-
-systemLog:
-  destination: file
-  path: /opt/Thinkbox/DeadlineDatabase10/mongo/log/mongod.log
-
-security:
-  authorization: disabled
-EOF
-
-	systemctl enable --now mongod.service
-else
-	echo -e "MongoDB already installed...installation skipped"
-fi
+#cat <<EOF > /opt/Thinkbox/DeadlineDatabase10/mongo/mongod.conf
+#net:
+#  bindIp: ${nebula_ip} 
+#  port: 27100
+#  ipv6: false
+#  ssl:
+#    mode: disabled
+#
+#storage:
+#  # Database files will be stored here
+#  dbPath: /opt/Thinkbox/DeadlineDatabase10/mongo/
+#  engine: wiredTiger
+#
+#systemLog:
+#  destination: file
+#  path: /opt/Thinkbox/DeadlineDatabase10/mongo/log/mongod.log
+#
+#security:
+#  authorization: disabled
+#EOF
+#
+#	systemctl enable --now mongod.service
+#else
+#	echo -e "MongoDB already installed...installation skipped"
+#fi
 
 
 # Get Thinkbox software
@@ -693,12 +702,14 @@ if ! test -f /mnt/DeadlineRepository10/ThinkboxEULA.txt ; then
 		exit
 	fi
 
-	cd ${orig_dir}
+	#cd ${orig_dir}
+	echo $thinkboxtar
 	if ! ( test -f "${thinkboxtar}" ); then
 		echo -e "\n\e[32mDownloading AWS Thinkbox Deadline Software 900MB+ ...\e[0m"
 		curl -O ${thinkboxurl}${thinkboxtar}
 	fi
 	MatchFile="$(echo "${thinkboxsha256} ${thinkboxtar}" | sha256sum --check)"
+	echo $MatchFile
 	if [ "$MatchFile" == "${thinkboxtar}: OK" ] ; then
 	    echo -e "\e[32mExtracting ${thinkboxurl}${thinkboxtar}\e[0m\n"
 	    tar --skip-old-files -xzf ${thinkboxtar}
@@ -714,14 +725,15 @@ if ! test -f /mnt/DeadlineRepository10/ThinkboxEULA.txt ; then
 	rm AWSPortalLink-*-linux-x64-installer.run.sig
 	echo -e "\e[32m${thinkboxrun} --mode unattended --unattendedmodeui none --prefix /mnt/DeadlineRepository10 --dbLicenseAcceptance accept --dbhost ${nebula_ip}\e[0m"
 	#${thinkboxrun} --mode unattended --unattendedmodeui minimal --prefix /mnt/DeadlineRepository10 --dbLicenseAcceptance accept --dbhost ${nebula_ip}
-	${thinkboxrun} --mode unattended --requireSSL false --debuglevel 4 --unattendedmodeui none --prefix /mnt/DeadlineRepository10 --dbLicenseAcceptance accept --dbhost ${nebula_ip}
+	#${thinkboxrun} --mode unattended --requireSSL false --debuglevel 4 --unattendedmodeui none --prefix /mnt/DeadlineRepository10 --dbLicenseAcceptance accept --dbhost ${nebula_ip}
+	${thinkboxrun} --mode unattended --requireSSL false --dbLicenseAcceptance accept --unattendedmodeui none --prefix /mnt/DeadlineRepository10 --dbhost 10.10.0.1 --prepackagedDB mongodb-linux-x86_64-rhel80-4.4.16.tgz --dbInstallationType prepackagedDB --installmongodb true --dbOverwrite true
 	echo -e "\n\n\e[31mYou accept AWS Thinkbox Deadline EULA when installing:\e[0m"
 	cat /mnt/DeadlineRepository10/ThinkboxEULA.txt
 	chmod +x DeadlineClient-${thinkboxversion}-linux-x64-installer.run
 	./DeadlineClient-${thinkboxversion}-linux-x64-installer.run --mode unattended --unattendedmodeui none --repositorydir /mnt/DeadlineRepository10  --connectiontype Direct --noguimode true --binariesonly true
 	rm DeadlineClient-${thinkboxversion}-linux-x64-installer.run
-	/opt/Thinkbox/Deadline10/bin/deadlinecommand UpdateEnvironmentSettings /mnt/DeadlineRepository10/settings/Environments
-	/opt/Thinkbox/Deadline10/bin/deadlinecommand UpdateEnvironmentSettings /mnt/DeadlineRepository10/settings/Environments2 --second	
+	#/opt/Thinkbox/Deadline10/bin/deadlinecommand UpdateEnvironmentSettings /mnt/DeadlineRepository10/settings/Environments
+	#/opt/Thinkbox/Deadline10/bin/deadlinecommand UpdateEnvironmentSettings /mnt/DeadlineRepository10/settings/Environments2 --second	
 
 cat <<EOF > /var/lib/Thinkbox/Deadline10/licenseforwarder.ini
 [Deadline]
