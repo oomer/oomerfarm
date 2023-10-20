@@ -383,7 +383,9 @@ if ! ( test -f /usr/local/bin/nebula ); then
 	chmod +x /usr/local/bin/
 	mv nebula-cert /usr/local/bin/
 	chmod +x /usr/local/bin/nebula-cert
-	chcon -t bin_t /usr/local/bin/nebula # SELinux security clearance
+	if ! [ "$hub_name" = "i_agree_this_is_unsafe" ]; then
+		chcon -t bin_t /usr/local/bin/nebula # SELinux security clearance
+	fi
 	rm -f nebula-linux-amd64.tar.gz
 fi 
 
@@ -397,7 +399,9 @@ if ! [[ $skip_advanced == "yes" ]]; then
 			chmod +x /usr/local/bin/goofys
 			mkdir -p /mnt/s3
 			chown root.root /usr/local/bin/goofys
-			chcon -t bin_t /usr/local/bin/goofys # SELinux security clearance
+			if ! [ "$hub_name" = "i_agree_this_is_unsafe" ]; then
+				chcon -t bin_t /usr/local/bin/goofys # SELinux security clearance
+			fi
 		else
 			echo "FAIL"
 			echo "goofys checksum is wrong, may indicate download failure of malicious alteration"
