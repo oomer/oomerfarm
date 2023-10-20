@@ -178,7 +178,7 @@ EOF
                     echo -e "\n\e[36m\e[5mpassword\e[0m\e[0m to access hub file server ( keystrokes hidden )"
 		    IFS= read -p "(default: oomerfarm)" -rs smb_credentials < /dev/tty
 		    if [ -z "$smb_credentials" ]; then
-			$smb_credentials = $smb_credentials_default
+			smb_credentials=$smb_credentials_default
 			break
 		    else
 		        echo "Verifying: re-enter password"
