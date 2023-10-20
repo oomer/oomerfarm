@@ -617,13 +617,12 @@ else
 	echo -e "\e[35mDeadline Repository exists...skipping installation\e[0m"
 fi
 
-
 # Install Deadline license forwarder, forced to install all client software
 if ! [[ $skip_advanced == "yes" ]]; then
 	if ! test -d /opt/Thinkbox/Deadline10/bin ; then
 		echo -e "\e[32mInstalling DeadlineClient-${thinkboxversion}-linux-x64-installer.run\e[0m"
 		chmod +x /mnt/oomerfarm/installers/DeadlineClient-${thinkboxversion}-linux-x64-installer.run
-		echo -e \e[32m/mnt/oomerfarm/installers/DeadlineClient-${thinkboxversion}-linux-x64-installer.run --mode unattended --unattendedmodeui none --repositorydir /mnt/DeadlineRepository10  --connectiontype Direct --noguimode true --binariesonly true\e[0m"
+		echo -e "\e[32m/mnt/oomerfarm/installers/DeadlineClient-${thinkboxversion}-linux-x64-installer.run --mode unattended --unattendedmodeui none --repositorydir /mnt/DeadlineRepository10  --connectiontype Direct --noguimode true --binariesonly true\e[0m"
 		/mnt/oomerfarm/installers/DeadlineClient-${thinkboxversion}-linux-x64-installer.run --mode unattended --unattendedmodeui none --repositorydir /mnt/DeadlineRepository10  --connectiontype Direct --noguimode true --binariesonly true
 		rm DeadlineClient-${thinkboxversion}-linux-x64-installer.run
 
@@ -673,6 +672,8 @@ SuccessExitStatus=143
 WantedBy=multi-user.target
 EOF
 		systemctl enable --now deadlinelicenseforwarder
+	else
+ 		echo -e "\e[35mDeadline Client software already exists in /opt/Thinkbox/Deadline10/bin ...skipping installation\e[0m"
 	fi
 fi
 
@@ -704,12 +705,12 @@ chown oomerfarm.oomerfarm /mnt/oomerfarm/bella/orange-juice.bsz
 
 if [ "$nebula_name" == "i_agree_this_is_unsafe" ]; then
         echo -e "\n\e[32mFinished oomerfarm hub setup. Ready to distribute renderfarm work\e[0m"
-        echo -e "Enter \e[36m${public_ip}\e[0m when asked for \e[32mhub\e[0m ip address"
+        echo -e "Enter \e[36m\e[5m${public_ip}\e[0m\e[0m when asked for \e[32mhub\e[0m ip address"
         echo -e "The \e[32mhub\e[0m only tracks jobs and servers files"
         echo -e "\e[36mNow you need some powerful Linux machines to do rendering\e[0m"
         echo -e " - ssh and run \e[32mbash bootstrapworker.sh\e[0m"
         echo -e "To submit jobs, from desktop/laptop, join the VPN by running \e[36mbash joinoomerfarm.sh\e[0m" 
-	echo -e "\e[5mKeep window open to keep VPN alive\e[0m"
+	echo -e "\e[34mKeep window open to keep VPN alive\e[0m"
         echo -e " - with username \e[36moomerfarm\e[0m password \e[36moomerfarm\e[0m"
         echo -e " - mount folder \e[36msmb://hub.oomer.org/DeadlineRepository10\e[0m ( Windows //hub.oomer.org/DeadlineRespository )"
         echo -e " - mount folder \e[36msmb://hub.oomer.org/oomerfarm\e[0m ( Windows //hub.oomer.org/oomerfarm )"
@@ -718,13 +719,13 @@ if [ "$nebula_name" == "i_agree_this_is_unsafe" ]; then
 else
         echo -e "\n\e[32mOomerfarm hub setup completed. Ready to distribute renderfarm work\e[0m"
         echo -e "Remaining steps:"
-        echo -e "Enter \e[36m${public_ip}\e[0m when asked for \e[32mhub\e[0m address"
+        echo -e "Enter \e[36m\e[5m${public_ip}\e[0m\e[0m when asked for \e[32mhub\e[0m address"
         echo -e "1. \e[32m[DONE]\e[0m Made secret keys on a trusted desktop/laptop"
         echo -e "2. \e[32m[YOU ARE HERE]\e[0m on this computer you ran \e[36mbash bootstraphub.sh\e[0m"
         echo -e "\e[36mNow you need some powerful Linux machines to do rendering\e[0m"
         echo -e "3. ssh and run \e[32mbash bootstrapworker.sh\e[0m"
         echo -e "4. To submit jobs, from desktop/laptop, run \e[36mbash joinoomerfarm.sh\e[0m to join VPN"
-	echo -e "\e[5mKeep window open to keep VPN alive\e[0m"
+	echo -e "\e[34mKeep window open to keep VPN alive\e[0m"
 	if [ "$linux_password" == "oomerfarm" ]; then
         	echo -e " - with username \e[36moomerfarm\e[0m password \e[36moomerfarm\e[0m"
 	else
