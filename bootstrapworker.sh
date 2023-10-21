@@ -207,9 +207,9 @@ else
 fi
 
 
-$has_getenforce=$(which getenforce)
-if [ -z $has_getenforce]; then
-	$getenforce=$(getenforce)
+has_getenforce=$(which getenforce)
+if ! [ -z $has_getenforce]; then
+	getenforce=$(getenforce)
 	if [[ "$getenforce" == "Enforcing" ]]; then
 		echo -e "SELinux enforcing"	
 	fi
