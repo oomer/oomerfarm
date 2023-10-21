@@ -24,7 +24,7 @@
 
 2. run ***one*** script on ***laptop***,  it connects to your private oomerfarm.  Mount two network folders, run Deadline Monitor from https://awsthinkbox.com to submit jobs.
 
-3. Spin up some fast cloud computers and run ***one*** script on each to get the renderfarm churning.
+3. Spin up some fast cloud computers and run ***one*** script on each to get the renderfarm churning. Here is a [timelapse](https://a4g4.c14.e2-1.dev/public/oomerfarm/Googlet2d-standard-60x3-timelapse.mp4) at 2x speed, starting up 3 Google cloud computers and running bootstrapworker.sh three times.
 
 ---
 
