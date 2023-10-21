@@ -210,9 +210,6 @@ fi
 has_getenforce=$(which getenforce)
 if ! [ -z $has_getenforce]; then
 	getenforce=$(getenforce)
-	if [[ "$getenforce" == "Enforcing" ]]; then
-		echo -e "SELinux enforcing"	
-	fi
 fi
 
 
@@ -377,26 +374,26 @@ echo "${deadline_user}:${smb_credentials}" | chpasswd
 
 # Install Nebula
 # ==============
-if ! ( test -f /usr/local/bin/nebula ); then
-	echo -e "\e[32mDownloading Nebula VPN\e[0m"
-	curl -s -L -O https://github.com/slackhq/nebula/releases/download/${nebula_version}/nebula-linux-amd64.tar.gz
-	MatchFile="$(echo "${nebulasha256} nebula-linux-amd64.tar.gz" | sha256sum --check)"
-	if [ "$MatchFile" = "nebula-linux-amd64.tar.gz: OK" ] ; then
-	    echo -e "Extracting https://github.com/slackhq/nebula/releases/download/${nebula_version}/nebula-linux-amd64.tar.gz\n===="
-	    tar --skip-old-files -xzf nebula-linux-amd64.tar.gz
-	else
-	    echo "FAIL: nebula-linux-amd64.tar.gz checksum failed, incomplete download or maliciously altered on github"
-	    exit
-	fi
-	mv nebula /usr/local/bin/nebula
-	chmod +x /usr/local/bin/
-	mv nebula-cert /usr/local/bin/
-	chmod +x /usr/local/bin/nebula-cert
-	if [ "$getenforce" = "Enforcing" ]; then
-		chcon -t bin_t /usr/local/bin/nebula # SELinux security clearance
-	fi
-	rm -f nebula-linux-amd64.tar.gz
-fi 
+echo -e "\e[32mDownloading Nebula VPN\e[0m"
+curl -s -L -O https://github.com/slackhq/nebula/releases/download/${nebula_version}/nebula-linux-amd64.tar.gz
+MatchFile="$(echo "${nebulasha256} nebula-linux-amd64.tar.gz" | sha256sum --check)"
+if [ "$MatchFile" = "nebula-linux-amd64.tar.gz: OK" ] ; then
+    echo -e "Extracting https://github.com/slackhq/nebula/releases/download/${nebula_version}/nebula-linux-amd64.tar.gz\n===="
+    tar --skip-old-files -xzf nebula-linux-amd64.tar.gz
+else
+    echo "FAIL: nebula-linux-amd64.tar.gz checksum failed, incomplete download or maliciously altered on github"
+    exit
+fi
+mv nebula /usr/local/bin/nebula
+chmod +x /usr/local/bin/
+mv nebula-cert /usr/local/bin/
+chmod +x /usr/local/bin/nebula-cert
+if [[ "$getenforce" == "Enforcing" ]]; then
+	chcon -t bin_t /usr/local/bin/nebula # SELinux security clearance
+fi
+rm -f nebula-linux-amd64.tar.gz
+
+
 
 
 # Install goofys needed for Houdini and UBL
@@ -408,7 +405,7 @@ if ! [[ $skip_advanced == "yes" ]]; then
 			chmod +x /usr/local/bin/goofys
 			mkdir -p /mnt/s3
 			chown root.root /usr/local/bin/goofys
-			if [ "$getenforce" = "Enforcing" ]; then
+			if [[ "$getenforce" == "Enforcing" ]]; then
 				chcon -t bin_t /usr/local/bin/goofys # SELinux security clearance
 			fi
 		else
@@ -585,7 +582,7 @@ fi
 cp /mnt/oomerfarm/installers/DeadlineClient-${thinkboxversion}-linux-x64-installer.run .
 chmod +x DeadlineClient-${thinkboxversion}-linux-x64-installer.run 
 ./DeadlineClient-${thinkboxversion}-linux-x64-installer.run --mode unattended --unattendedmodeui minimal --repositorydir /mnt$optional_subfolder/DeadlineRepository10  --connectiontype Direct --noguimode true
-if [ "$getenforce" = "Enforcing" ]; then
+if [[ "$getenforce" == "Enforcing" ]]; then
 	chcon -t bin_t /opt/Thinkbox/Deadline10/bin/deadlineworker # SELinux security clearance
 fi
 
