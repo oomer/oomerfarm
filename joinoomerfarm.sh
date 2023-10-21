@@ -1,8 +1,8 @@
 #!/bin/bash
 
 # joinoomerfarm.sh
-# Using "boss" credentials created with keyoomerfarm.sh or the unsafe TestDrive credentials embedded below, this script joins a Nebula Virtual Private Network. NOT for hub or worker machines.
-# Tested on MacoOS Ventura
+# Using "boss" credentials created with keyoomerfarm.sh or the not-so-secure test drive keys embedded below, this script joins a Nebula Virtual Private Network. NOT for hub or worker machines.
+# Tested on MacoOS Ventura, Windows 10,11
 
 
 # Check for existing boss credentials only macos and linux
@@ -216,18 +216,21 @@ else
         exit
 fi
 
-echo -e "\n================================================================="
-echo -e "The authenticity of this script cannot be guaranteed unless it comes from github.com/oomer/oomerfarm"
-echo -e "sudo ./_oomerfarm_/bin/nebula is required run a VPN"
-echo "Enter password to elevate the permissions of this scripts"
+if [[ "$OSTYPE" == "linux-gnu"* ]] || [[ "$OSTYPE" == "darwin"* ]] ; then
+	echo -e "\n"
+	echo -e "Do not run this script if it did not come from  https://github.com/oomer/oomerfarm"
+	echo "Current user, must be admin. Enter password to elevate the permissions of this script"
+        sudo ./_oomerfarm_/bin/nebula -config ./_oomerfarm_/testboss/config.yml
+fi
 
 if [[ "$OSTYPE" == "msys"* ]]; then
         echo $(pwd)
+
 cat <<EOF > ~/Desktop/joinoomerfarm.bat
 ${oomerfarm_path}\\_oomerfarm_\\bin\\nebula.exe -config ${oomerfarm_path}\\_oomerfarm_\\testboss\\config.yml
 EOF
 
-else
-        sudo ./_oomerfarm_/bin/nebula -config ./_oomerfarm_/testboss/config.yml
+	echo -e "On \e[32mdesktop\e[0m, right click \e[37m\e[5mjoinoomerfarm.bat\e[0m\e[0m, Run as adminstrator"
+	echo -e "Do not run this script if it did not come from  https://github.com/oomer/oomerfarm"
 fi
 
