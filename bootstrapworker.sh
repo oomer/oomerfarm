@@ -207,6 +207,15 @@ else
 fi
 
 
+$has_getenforce=$(which getenforce)
+if [ -z $has_getenforce]; then
+	$getenforce=$(getenforce)
+	if [[ "$getenforce" == "Enforcing" ]]; then
+		echo -e "SELinux enforcing"	
+	fi
+fi
+
+
 firewalld_status=$(systemctl status firewalld)
 
 os_name=$(awk -F= '$1=="NAME" { print $2 ;}' /etc/os-release)
@@ -383,7 +392,7 @@ if ! ( test -f /usr/local/bin/nebula ); then
 	chmod +x /usr/local/bin/
 	mv nebula-cert /usr/local/bin/
 	chmod +x /usr/local/bin/nebula-cert
-	if ! [ "$hub_name" = "i_agree_this_is_unsafe" ]; then
+	if [ "$getenforce" = "Enforcing" ]; then
 		chcon -t bin_t /usr/local/bin/nebula # SELinux security clearance
 	fi
 	rm -f nebula-linux-amd64.tar.gz
@@ -399,7 +408,7 @@ if ! [[ $skip_advanced == "yes" ]]; then
 			chmod +x /usr/local/bin/goofys
 			mkdir -p /mnt/s3
 			chown root.root /usr/local/bin/goofys
-			if ! [ "$hub_name" = "i_agree_this_is_unsafe" ]; then
+			if [ "$getenforce" = "Enforcing" ]; then
 				chcon -t bin_t /usr/local/bin/goofys # SELinux security clearance
 			fi
 		else
@@ -576,6 +585,9 @@ fi
 cp /mnt/oomerfarm/installers/DeadlineClient-${thinkboxversion}-linux-x64-installer.run .
 chmod +x DeadlineClient-${thinkboxversion}-linux-x64-installer.run 
 ./DeadlineClient-${thinkboxversion}-linux-x64-installer.run --mode unattended --unattendedmodeui minimal --repositorydir /mnt$optional_subfolder/DeadlineRepository10  --connectiontype Direct --noguimode true
+if [ "$getenforce" = "Enforcing" ]; then
+	chcon -t bin_t /opt/Thinkbox/Deadline10/bin/deadlineworker # SELinux security clearance
+fi
 
 cat <<EOF > /etc/systemd/system/deadline.service 
 [Unit]
