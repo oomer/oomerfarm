@@ -663,7 +663,6 @@ After= nebula.service
 Type=simple
 Restart=always
 RestartSec=5
-User=oomerfarm
 ExecStart=/usr/bin/bash -l -c "/opt/Thinkbox/Deadline10/bin/deadlinelicenseforwarder --sslpath /etc/deadline"
 ExecStop=/opt/Thinkbox/Deadline10/bin/deadlinelauncher -shutdownall
 SuccessExitStatus=143
