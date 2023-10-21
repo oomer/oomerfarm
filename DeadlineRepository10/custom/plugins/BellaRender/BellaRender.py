@@ -96,10 +96,12 @@ class BellaRenderPlugin(DeadlinePlugin):
         
         sceneFile = sceneFile.replace( "\\", "/" ) #win
         sceneFile = sceneFile.replace("//10.10.0.1","/mnt") #win
+        sceneFile = sceneFile.replace("//hub.oomer.org","/mnt") #win
         sceneFile = sceneFile.replace("/Volumes","/mnt") #mac
 
         outputDirectory = outputDirectory.replace( "\\", "/" ) #win
         outputDirectory = outputDirectory.replace("//10.10.0.1","/mnt") #win
+        outputDirectory = outputDirectory.replace("//hub.oomer.org","/mnt") #win
         outputDirectory = outputDirectory.replace("/Volumes","/mnt") #mac
         
         self.outputExt = self.GetPluginInfoEntryWithDefault( "outputExt", "").strip()
