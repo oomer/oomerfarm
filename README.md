@@ -7,7 +7,7 @@
 
 - A renderfarm is complicated ..  so simple, in this context, just means wrapping up this complexity by having you systematically run scripts in a certain order. 
 
-- oomerfarm is comprised of 4 scripts run on the command line ( there is no GUI ). This simple script approach allows oomerfarm render nodes to work on Azure, Google, AWS, etc so you can shop for the best hourly price. It also allows the desktop/laptop scripts to run natively on MacOS and Linux and on Windows with [help](https:/git-scm.com)
+- oomerfarm is comprised of 4 scripts run on the command line ( there is no GUI ). This simple script approach allows oomerfarm render nodes to work on Azure, Google, AWS, etc so you can shop for the best hourly price. It also allows the desktop/laptop scripts to run natively on MacOS and Linux and on Windows with [help](https://git-scm.com)
 
 - As an example, this Bella path tracer sample scene [orange-juice-turntable.mp4](https://a4g4.c14.e2-1.dev/public/bella/onehourorange-juiceturntable.mp4) rendered on Google's Cloud in one hour using 3 x 60 core t2d-standard-60 spot instances at $0.47/hr/instance. Setup of each worker took about 5 minutes while the hub server was previously setup on a low-end machine running 24/7. 
 
