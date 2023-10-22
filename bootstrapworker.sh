@@ -16,6 +16,7 @@ if ! [[ "$OSTYPE" == "linux-gnu"* ]]; then
 fi
 
 thinkboxversion="10.3.0.13"
+bellaversion="23.4.0"
 
 keybundle_url_default="https://drive.google.com/file/d/13xH4vNrr6DSocD9Bhi1cEKl8FU_QIi5K/view?usp=share_link"
 
@@ -246,11 +247,6 @@ elif [ "$os_name" == "\"AlmaLinux\"" ] || [ "$os_name" == "\"Rocky Linux\"" ]; t
 	dnf install -y mesa-vulkan-drivers mesa-libGL
 	dnf install -y cifs-utils
 	dnf install -y fuse
-	#Houdini dependencies
-	dnf install -y ncurses-compat-lib
-	dnf install -y mesa-libGLU
-	dnf install -y libSM
-	dnf install -y libnsl
 else
 	echo "\e[31mFAIL:\e[0m Unsupported operating system $os_name"
 	exit
@@ -396,7 +392,7 @@ rm -f nebula-linux-amd64.tar.gz
 
 
 
-# Install goofys needed for Houdini and UBL
+# Install goofys needed for advanced setups
 if ! [[ $skip_advanced == "yes" ]]; then
 	if ! ( test -f /usr/local/bin/goofys ); then
 		curl -L -o /usr/local/bin/goofys https://github.com/kahing/goofys/releases/download/v0.24.0/goofys
@@ -607,19 +603,12 @@ EOF
 
 systemctl enable --now deadline
 
-
 # Install Bella 
 # ====
 echo -e "\nInstalling bella_cli"
-cp /mnt/oomerfarm/installers/bella_cli-23.4.0.tar.gz .
-tar -xvf bella_cli-23.4.0.tar.gz 
+cp /mnt/oomerfarm/installers/bella_cli-${bellaversion}.tar.gz .
+tar -xvf bella_cli-${bellaversion}.tar.gz 
 chmod +x bella_cli
 mv bella_cli /usr/local/bin
-rm bella_cli-23.4.0.tar.gz
+rm bella_cli-${bellaversion}.tar.gz
 
-if ! [[ $skip_advanced == "yes" ]]; then
-	# Install Houdini
-	# ===============
-	bash /mnt/s3/houdini/houdini-py3-18.5.759-linux_x86_64_gcc6.3/houdini.install --install-houdini --install-license --auto-install --make-dir --no-root-check --no-menus --accept-EULA 2021-10-13 /opt/hfs18.5.759
-
-fi
