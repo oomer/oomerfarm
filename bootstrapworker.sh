@@ -36,6 +36,7 @@ skip_advanced=$skip_advanced_default
 
 nebula_version_default="v1.7.2"
 nebula_version=$nebula_version_default
+nebula_tar="nebula-linux-amd64.tar.gz"
 nebulasha256="4600c23344a07c9eda7da4b844730d2e5eb6c36b806eb0e54e4833971f336f70"
 
 # Linux and smb user
@@ -371,13 +372,13 @@ echo "${deadline_user}:${smb_credentials}" | chpasswd
 # Install Nebula
 # ==============
 echo -e "\e[32mDownloading Nebula VPN\e[0m"
-curl -s -L -O https://github.com/slackhq/nebula/releases/download/${nebula_version}/nebula-linux-amd64.tar.gz
-MatchFile="$(echo "${nebulasha256} nebula-linux-amd64.tar.gz" | sha256sum --check)"
-if [ "$MatchFile" = "nebula-linux-amd64.tar.gz: OK" ] ; then
-    echo -e "Extracting https://github.com/slackhq/nebula/releases/download/${nebula_version}/nebula-linux-amd64.tar.gz\n===="
-    tar --skip-old-files -xzf nebula-linux-amd64.tar.gz
+curl -s -L -O https://github.com/slackhq/nebula/releases/download/${nebula_version}/${nebula_tar}
+MatchFile="$(echo "${nebulasha256} ${nebula_tar}" | sha256sum --check)"
+if [ "$MatchFile" = "${nebula_tar}: OK" ] ; then
+    echo -e "Extracting https://github.com/slackhq/nebula/releases/download/${nebula_version}/${nebula_tar}\n"
+    tar --skip-old-files -xzf ${nebula_tar}
 else
-    echo "FAIL: nebula-linux-amd64.tar.gz checksum failed, incomplete download or maliciously altered on github"
+    echo "FAIL: ${nebula_tar} checksum failed, incomplete download or maliciously altered on github"
     exit
 fi
 mv nebula /usr/local/bin/nebula
@@ -387,7 +388,7 @@ chmod +x /usr/local/bin/nebula-cert
 if [[ "$getenforce" == "Enforcing" ]]; then
 	chcon -t bin_t /usr/local/bin/nebula # SELinux security clearance
 fi
-rm -f nebula-linux-amd64.tar.gz
+rm -f ${nebula_tar}
 
 
 
@@ -454,11 +455,11 @@ static_host_map:
 lighthouse:
   am_lighthouse: false
   interval: 60
-host:
+  hosts: 
     - "${lighthouse_nebula_ip}"
 listen:
   host: 0.0.0.0
-  port: 4242
+  port: 42042
 punchy:
   punch: true
 relay:
@@ -490,9 +491,7 @@ firewall:
 
     - port: 22
       proto: tcp
-      groups:
-        - oomerfarm
-        - oomerfarm-admin
+      group: oomerfarm
 
     - port: 1714
       proto: tcp
