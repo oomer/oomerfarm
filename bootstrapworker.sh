@@ -491,22 +491,24 @@ firewall:
 
     - port: 22
       proto: tcp
-      group: oomerfarm
+      groups: 
+	- oomer
+	- person
 
     - port: 1714
       proto: tcp
       groups:
-        - oomerfarm
+        - oomer
 
     - port: 1715
       proto: tcp
       groups:
-        - oomerfarm
+        - oomer
 
     - port: 1716
       proto: tcp
       groups:
-        - oomerfarm
+        - oomer
 EOF
 chmod go-rwx /etc/nebula/config.yml
 systemctl enable nebula.service

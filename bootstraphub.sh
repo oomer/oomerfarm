@@ -414,38 +414,38 @@ firewall:
     - port: 22 
       proto: tcp
       groups:
-        - oomerfarm
-        - oomerfarm-admin
+        - oomer
+        - person
 
     - port: 445
       proto: tcp
       groups:
-        - oomerfarm
+        - oomer
 
     - port: 27100
       proto: tcp
       groups:
-        - oomerfarm
+        - oomer
 
     - port: 17004
       proto: tcp
       groups:
-        - oomerfarm
+        - oomer
 
     - port: 1714
       proto: tcp
       groups:
-        - oomerfarm
+        - oomer
 
     - port: 1715
       proto: tcp
       groups:
-        - oomerfarm
+        - oomer
 
     - port: 1716
       proto: tcp
       groups:
-        - oomerfarm
+        - oomer
 
 EOF
 
