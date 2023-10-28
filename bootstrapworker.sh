@@ -18,8 +18,7 @@ fi
 thinkboxversion="10.3.0.13"
 bellaversion="23.4.0"
 
-keybundle_url_default="https://drive.google.com/file/d/1bAHSKR1zEwcgGqUwOTcjKLHuCGCiIPZE/view?usp=share_link"
-
+keybundle_url_default="https://drive.google.com/file/d/1cEViUBiQFQ5YeTcjO-YptoAohQ1q9ORR/view?usp=sharing"
 
 goofysurl="https://github.com/kahing/goofys/releases/download/v0.24.0/goofys"
 goofyssha256="729688b6bc283653ea70f1b2b6406409ec1460065161c680f3b98b185d4bf364"

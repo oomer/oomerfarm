@@ -133,7 +133,7 @@ do
 		if ! test -f .oomer/.lighthouse_ips; then
 			octet2=0
 			octet3=1
-			lighthouse_name="lighthouse1"
+			lighthouse_name_default="lighthouse1"
 		else
 			# read text list of used ips
 			unset -v lighthouse_ip
@@ -143,7 +143,7 @@ do
 			[[ $REPLY ]] && lighthouse_ip+=("$REPLY")
 			last_used=${lighthouse_ip[$(( ${#lighthouse_ip[@]} - 1)) ]}
 			lighthouse_count=$(( ${#lighthouse_ip[@]} + 1))
-			lighthouse_name="${lighthouse_prefix}${lighthouse_count}"
+			lighthouse_name_default="${lighthouse_prefix}${lighthouse_count}"
 			IFS='.' read -ra octet <<< "$last_used"
 			octet0=${octet[0]}
 			octet1=${octet[1]}
@@ -156,6 +156,21 @@ do
 			fi
 
 		fi
+
+		while :
+		do
+			echo -e "\nEnter lighthouse name ..."
+			read -p "default ( $lighthouse_name_default ): " lighthouse_name
+			if [ -z $lighthouse_name ]; then
+				lighthouse_name=$lighthouse_name_default
+			fi
+			if [ -z $(grep $lighthouse_name .oomer/.lighthouse_names) ]; then
+				break	
+			else
+				echo "${lighthouse_name} name already exists, try again"
+			fi
+		done
+
 
 		lighthouse_nebula_ip="${octet0}.${octet1}.${octet2}.${octet3}"
 
