@@ -6,14 +6,14 @@
 # ========================================
 
 encryption_passphrase="oomerfarm"	
-nebula_ip="10.10.0.1"
-nebula_ip_default="10.10.0.1"
-nebula_public_port="42042"
+nebula_ip_default="10.87.0.1"
+nebula_ip=$nebula_ip_default
 nebula_public_port_default="42042"
-nebula_version="v1.7.2"
+nebula_public_port=$nebula_public_port_default
 nebula_version_default="v1.7.2"
-smb_user="oomerfarm"
+nebula_version=$nebula_version_default
 smb_user_default="oomerfarm"
+smb_user=$smb_user_default
 linux_password="oomerfarm"	
 
 if ! [[ "$OSTYPE" == "linux-gnu"* ]]; then
@@ -48,9 +48,9 @@ mongourl="https://fastdl.mongodb.org/linux/"
 mongotar="mongodb-linux-x86_64-rhel80-4.4.16.tgz"
 mongosha256="78c3283bd570c7c88ac466aa6cc6e93486e061c28a37790e0eebf722ae19a0cb"
 
-# no-so-secret hub.keybundle.enc
-# ==============================
-keybundle_url_default="https://drive.google.com/file/d/1a98gFtDRyF_Bs3MkgoAvxOoMio3RDCN6/view?usp=share_link"
+# no-so-secret i_agree_this_is_unsafe.keys.encrypted
+# ==================================================
+keybundle_url_default=https://drive.google.com/file/d/1Eup6c6-hMLkLTfPVc_uQqkC6YRlcun1a/view?usp=share_link
 nebulasha256="4600c23344a07c9eda7da4b844730d2e5eb6c36b806eb0e54e4833971f336f70"
 
 # Use AWS service to get public ip
@@ -58,7 +58,7 @@ public_ip=$(curl -s https://checkip.amazonaws.com)
 
 echo -e "\n\e[32mTurns this machine into a renderfarm\e[0m \e[36m\e[5mhub\e[0m\e[0m"
 echo -e "\e[31mWARNING:\e[0m Security changes will break any existing server"
-echo -e " - become VPN node at \e[36m10.10.0.1/16\e[0m"
+echo -e " - become VPN node at \e[36m${nebula_ip}/16\e[0m"
 echo -e " - deploy VPN lighthouse at \e[36m${public_ip}\e[0m for internet-wide network"
 echo -e " - deploy VPN file server, at \e[36msmb://hub.oomer.org\e[0m, \e[36m//hub.oomer.org\e[0m (win)"
 echo -e " - install MongoDB 4.4.16 \e[37m/opt/Thinkbox/DeadlineDatabase10\e[0m"
@@ -122,14 +122,14 @@ if ! [ "$nebula_name" = "i_agree_this_is_unsafe" ]; then
 		exit
 	fi
 
-	echo -e "\nENTER \e[36m\e[5mpassphrase\e[0m\e[0m to decode \e[32mhub.keybundle.enc\e[0m YOU set in \"keyoomerfarm.sh\"  ( keystrokes hidden )"
+	echo -e "\nENTER \e[36m\e[5mpassphrase\e[0m\e[0m to decode \e[32mhub.keys.encrypted\e[0m YOU set in \"keyauthority.sh\"  ( keystrokes hidden )"
 	IFS= read -rs encryption_passphrase < /dev/tty
 	if [ -z "$encryption_passphrase" ]; then
 		echo -e "\n\e[31mFAIL:\e[0m Invalid empty passphrase"
 		exit
 	fi
 
-	echo -e "\n\e[36m\e[5mURL\e[0m\e[0m to \e[32mhub.keybundle.enc\e[0m"
+	echo -e "\n\e[36m\e[5mURL\e[0m\e[0m to \e[32mhub.keys.encrypted\e[0m"
         read -p "Enter: " keybundle_url
 	if [ -z "$keybundle_url" ]; then
 		echo -e "\e[31mFAIL:\e[0m URL cannot be blank"
@@ -282,7 +282,7 @@ if ! [[ $skip_advanced == "yes" ]]; then
 fi
 
 
-# Get hub.keybundle.enc from public url
+# Get keys.encrypted from public url
 # =====================================
 
 # Google drive links require complicated traveral
@@ -296,7 +296,7 @@ if [[ "$keybundle_url" == *"https://drive.google.com/file/d"* ]]; then
 		head2=$(curl -s --head -L "https://drive.google.com/uc?export=download&id=${googlefileid}" | grep "content-length")
 		if [[ "$head2" == *"content-length"* ]]; then
 			echo -e "\e[32mDownloading secret keys https://drive.google.com/uc?export=download&id=${googlefileid}\e[0m"
-			curl -L "https://drive.google.com/uc?export=download&id=${googlefileid}" -o ${nebula_name}.keybundle.enc
+			curl -L "https://drive.google.com/uc?export=download&id=${googlefileid}" -o ${nebula_name}.keys.encrypted
 		else
 			echo -e "\e[31mFAIL:\e[0m ${keybundle_url} is not public, Set General Access to Anyone with Link"
 			exit
@@ -308,33 +308,32 @@ if [[ "$keybundle_url" == *"https://drive.google.com/file/d"* ]]; then
 # This should work with URL's pointing to normal website locations or public S3 storage 
 else
 	curl -s -L -O "${keybundle_url}" 
-	if ! ( test -f hub.keybundle.enc ) ; then
-		echo -e "\e[31mFAIL:\e[0m hub.keybundle.enc URL you entered \e[31m${keybundle_url}\e[0m does not exist"
+	if ! ( test -f ${nebula_name}.keys.encrypted ) ; then
+		echo -e "\e[31mFAIL:\e[0m ${nebula_name}.keys.encrypted URL you entered \e[31m${keybundle_url}\e[0m does not exist"
 		exit
 	fi
 fi
 
-# decrypt hub.keybundle.enc
-# =========================
+# decrypt keys.encrypted
+# ======================
 while :
 do
-    if openssl enc -aes-256-cbc -pbkdf2 -d -in ${nebula_name}.keybundle.enc -out ${nebula_name}.keybundle -pass file:<( echo -n "$encryption_passphrase" ) ; then
-	rm ${nebula_name}.keybundle.enc
+    if openssl enc -aes-256-cbc -pbkdf2 -d -in ${nebula_name}.keys.encrypted -out ${nebula_name}.tar -pass file:<( echo -n "$encryption_passphrase" ) ; then
+	rm ${nebula_name}.keys.encrypted
         break
     else
-        echo "WRONG passphrase entered for ${nebula_name}.keybundle.enc, try again"
-        echo "Enter passphrase for ${nebula_name}.keybundle.enc, then hit return"
+        echo "WRONG passphrase entered for ${nebula_name}.keys.encrypted, try again"
+        echo "Enter passphrase for ${nebula_name}.keys.encrypted, then hit return"
         echo "==============================================================="
         IFS= read -rs $encryption_passphrase < /dev/tty
     fi 
 done  
 
-# hub.keybundle is tar archive
-testkeybundle=$( tar -tf ${nebula_name}.keybundle ./${nebula_name}/${nebula_name}.key 2>&1 )
+testkeybundle=$( tar -tf ${nebula_name}.tar ${nebula_name}/${nebula_name}.key 2>&1 )
 if ! [[ "${testkeybundle}" == *"Not found"* ]]; then
-	tar --to-stdout -xvf ${nebula_name}.keybundle ./${nebula_name}/ca.crt > ca.crt
-	tar --to-stdout -xvf ${nebula_name}.keybundle ./${nebula_name}/${nebula_name}.crt > ${nebula_name}.crt
-	ERROR=$( tar --to-stdout -xvf ${nebula_name}.keybundle ./${nebula_name}/${nebula_name}.key > ${nebula_name}.key 2>&1 )
+	tar --to-stdout -xvf ${nebula_name}.tar ${nebula_name}/ca.crt > ca.crt
+	tar --to-stdout -xvf ${nebula_name}.tar ${nebula_name}/${nebula_name}.crt > ${nebula_name}.crt
+	ERROR=$( tar --to-stdout -xvf ${nebula_name}.tar ${nebula_name}/${nebula_name}.key > ${nebula_name}.key 2>&1 )
 	if ! [ "$ERROR" == *"Fail"* ]; then
 	    chown root.root "${nebula_name}.key"
 	    chown root.root "${nebula_name}.crt"
@@ -343,14 +342,14 @@ if ! [[ "${testkeybundle}" == *"Not found"* ]]; then
 	    mv ca.crt /etc/nebula
 	    mv "${nebula_name}.crt" /etc/nebula
 	    mv "${nebula_name}.key" /etc/nebula
-	    rm ${nebula_name}.keybundle
+	    rm ${nebula_name}.tar
 	else
-	    rm ${nebula_name}.keybundle
+	    rm ${nebula_name}.tar
 	fi 
 else
-        echo -e "\e[31mFAIL:\e[0m ${nebula_name}.keybundle missing"
+        echo -e "\e[31mFAIL:\e[0m ${nebula_name}.keys.encrypted missing"
 	echo  "${keybundle_url} might be corrupted or not shared publicly"
-	echo  "Use keyoomerfarm.sh to generate correct name in credential, reupload"
+	echo  "Use keyauthority.sh to generate keys, reupload"
 	echo  "Check your Google Drive file link is \"Anyone who has link\""
 	exit
 fi
@@ -579,7 +578,7 @@ if ! test -f /mnt/DeadlineRepository10/ThinkboxEULA.txt ; then
 	echo -e "\nChecking existence of ${thinkboxurl}${thinkboxtar}" 
 	if ! (curl -s --head --fail -o /dev/null "${thinkboxurl}${thinkboxtar}" ); then
 		echo -e "\e[31mFAIL:\e[0m no Thinkbox Software at ${thinkboxurl}${thinkboxtar}"
-		exit
+			exit
 	fi
 
 	echo $thinkboxtar
@@ -606,9 +605,9 @@ if ! test -f /mnt/DeadlineRepository10/ThinkboxEULA.txt ; then
 	rm DeadlineRepository-${thinkboxversion}-linux-x64-installer.run.sig
 	rm AWSPortalLink-*-linux-x64-installer.run
 	rm AWSPortalLink-*-linux-x64-installer.run.sig
-	echo -e "\e[32m${thinkboxrun} --mode unattended --requireSSL false --dbLicenseAcceptance accept --unattendedmodeui none --prefix /mnt/DeadlineRepository10 --dbhost 10.10.0.1 --prepackagedDB ${mongotar} --dbInstallationType prepackagedDB --installmongodb true --dbOverwrite true\e[0m"
-	${thinkboxrun} --mode unattended --requireSSL false --dbLicenseAcceptance accept --unattendedmodeui none --prefix /mnt/DeadlineRepository10 --dbhost 10.10.0.1 --prepackagedDB ${mongotar} --dbInstallationType prepackagedDB --installmongodb true --dbOverwrite true
-	sed -i "s/bindIpAll: true/bindIp: 10.10.0.1/g" /opt/Thinkbox/DeadlineDatabase10/mongo/data/config.conf
+	echo -e "\e[32m${thinkboxrun} --mode unattended --requireSSL false --dbLicenseAcceptance accept --unattendedmodeui none --prefix /mnt/DeadlineRepository10 --dbhost ${nebula_ip} --prepackagedDB ${mongotar} --dbInstallationType prepackagedDB --installmongodb true --dbOverwrite true\e[0m"
+	${thinkboxrun} --mode unattended --requireSSL false --dbLicenseAcceptance accept --unattendedmodeui none --prefix /mnt/DeadlineRepository10 --dbhost ${nebula_ip} --prepackagedDB ${mongotar} --dbInstallationType prepackagedDB --installmongodb true --dbOverwrite true
+	sed -i "s/bindIpAll: true/bindIp: ${nebula_ip}/g" /opt/Thinkbox/DeadlineDatabase10/mongo/data/config.conf
 	/etc/init.d/Deadline10db restart
 
 	echo -e "\n\n\e[31mYou accept AWS Thinkbox Deadline EULA when installing:\e[0m"

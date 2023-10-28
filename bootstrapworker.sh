@@ -18,7 +18,7 @@ fi
 thinkboxversion="10.3.0.13"
 bellaversion="23.4.0"
 
-keybundle_url_default="https://drive.google.com/file/d/13xH4vNrr6DSocD9Bhi1cEKl8FU_QIi5K/view?usp=share_link"
+keybundle_url_default="https://drive.google.com/file/d/1bAHSKR1zEwcgGqUwOTcjKLHuCGCiIPZE/view?usp=share_link"
 
 goofysurl="https://github.com/kahing/goofys/releases/download/v0.24.0/goofys"
 goofyssha256="729688b6bc283653ea70f1b2b6406409ec1460065161c680f3b98b185d4bf364"
@@ -28,7 +28,7 @@ encryption_passphrase="oomerfarm"
 
 lighthouse_internet_port_default="42042"
 lighthouse_internet_port=$lighthouse_internet_port_default
-lighthouse_nebula_ip_default="10.10.0.1"
+lighthouse_nebula_ip_default="10.87.0.1"
 lighthouse_nebula_ip=$lighthouse_nebula_ip_default
 
 skip_advanced_default="yes"
