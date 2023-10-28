@@ -168,18 +168,24 @@ do
 		echo "${octet0}.${octet1}.${octet2}.${octet3}" > .oomer/lighthouse/${lighthouse_name}/.nebula_ip
 
 		origdir=$(pwd)
-		cd .oomer/lighthouse
-		find "${lighthouse_name}" -type f -exec tar -rvf temp.tar {} \;
-		if [[ ${new_key_type} == "oomerfarm" ]];then
-			echo "${octet0}.${octet1}.${octet2}.${octet3}" > $origdir/.oomer/.oomerfarm_lighthouse_ip
-			# [TODO] support more then one lighthouse
-			keybundle_name="oomerfarmhub"
+		if test -d .oomer/lighthouse; then
+			cd .oomer/lighthouse
+			find "${lighthouse_name}" -type f -exec tar -rvf temp.tar {} \;
+			if [[ ${new_key_type} == "oomerfarm" ]];then
+				echo "${octet0}.${octet1}.${octet2}.${octet3}" > $origdir/.oomer/.oomerfarm_lighthouse_ip
+				# [TODO] support more then one lighthouse
+				keybundle_name="oomerfarmhub"
+			else
+				keybundle_name=${lighthouse_name}
+			fi
+			openssl enc -aes-256-cbc -salt -pbkdf2 -in "temp.tar" -out $origdir/.oomer/keysencrypted/${keybundle_name}.keys.encrypted -pass stdin <<< "$encryption_passphrase"
+			rm temp.tar
+			cd $origdir
 		else
-			keybundle_name=${lighthouse_name}
+			echo "FAIL: Something is wrong with .oomer/lighthouse"
+			exit
 		fi
-		openssl enc -aes-256-cbc -salt -pbkdf2 -in "temp.tar" -out $origdir/.oomer/keysencrypted/${keybundle_name}.keys.encrypted -pass stdin <<< "$encryption_passphrase"
-		rm temp.tar
-		cd $origdir
+
 	fi
 
 	# servers are linux machines with roles like file server, database server
@@ -262,13 +268,16 @@ do
 			# stash used ips
 			echo "${octet0}.${octet1}.${octet2}.${octet3}" >> .oomer/.server_ips
 			echo "$server_name" >> .oomer/.server_names
-
-			cd .oomer/server
-			find "${server_name}" -type f -exec tar -rvf temp.tar {} \;
-			echo openssl enc -aes-256-cbc -salt -pbkdf2 -in "temp.tar" -out $origdir/.oomer/keysencrypted/${server_name}.keys.encrypted -pass stdin <<< "$encryption_passphrase"
-			openssl enc -aes-256-cbc -salt -pbkdf2 -in "temp.tar" -out $origdir/.oomer/keysencrypted/${server_name}.keys.encrypted -pass stdin <<< "$encryption_passphrase"
-			rm temp.tar
-			cd $origdir
+			if test -d .oomer/server; then
+				cd .oomer/server
+				find "${server_name}" -type f -exec tar -rvf temp.tar {} \;
+				echo openssl enc -aes-256-cbc -salt -pbkdf2 -in "temp.tar" -out $origdir/.oomer/keysencrypted/${server_name}.keys.encrypted -pass stdin <<< "$encryption_passphrase"
+				openssl enc -aes-256-cbc -salt -pbkdf2 -in "temp.tar" -out $origdir/.oomer/keysencrypted/${server_name}.keys.encrypted -pass stdin <<< "$encryption_passphrase"
+				rm temp.tar
+				cd $origdir
+			else
+				echo "FAIL: Something is wrong with .oomer/server"
+			fi
 		fi
 
 	fi
@@ -363,11 +372,13 @@ do
 
 		cp .oomer/keyauthority/ca.crt ".oomer/worker"
 		origdir=$(pwd)
-		cd .oomer/workers
-		find "." -type f -exec tar -rvf temp.tar {} \;
-		openssl enc -aes-256-cbc -salt -pbkdf2 -in "temp.tar" -out ${origdir}/.oomer/keysencrypted/workers.keys.encrypted -pass stdin <<< "$encryption_passphrase" 
-		rm temp.tar
-		cd $origdir
+		if test -d .oomer/worker; then
+			cd .oomer/worker
+			find "." -type f -exec tar -rvf temp.tar {} \;
+			openssl enc -aes-256-cbc -salt -pbkdf2 -in "temp.tar" -out ${origdir}/.oomer/keysencrypted/worker.keys.encrypted -pass stdin <<< "$encryption_passphrase" 
+			rm temp.tar
+			cd $origdir
+		fi
 	fi
 
 
