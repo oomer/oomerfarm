@@ -20,6 +20,7 @@ bellaversion="23.4.0"
 
 keybundle_url_default="https://drive.google.com/file/d/1bAHSKR1zEwcgGqUwOTcjKLHuCGCiIPZE/view?usp=share_link"
 
+
 goofysurl="https://github.com/kahing/goofys/releases/download/v0.24.0/goofys"
 goofyssha256="729688b6bc283653ea70f1b2b6406409ec1460065161c680f3b98b185d4bf364"
 
@@ -120,14 +121,14 @@ if ! [ "$hub_name" = "i_agree_this_is_unsafe" ]; then
         fi
 
 
-        echo -e "\nENTER \e[36m\e[5mpassphrase\e[0m\e[0m to decode \e[32mworker.keybundle.enc\e[0m YOU set in \"keyoomerfarm.sh\"  ( keystrokes hidden )"
+        echo -e "\nENTER \e[36m\e[5mpassphrase\e[0m\e[0m to decode \e[32mworker.key.encypted\e[0m YOU set in \"keyauthority.sh\"  ( keystrokes hidden )"
         IFS= read -rs encryption_passphrase < /dev/tty
         if [ -z "$encryption_passphrase" ]; then
                 echo -e "\n\e[31mFAIL:\e[0m Invalid empty passphrase"
                 exit
         fi
 
-        echo -e "\n\e[36m\e[5mURL\e[0m\e[0m to \e[32mworker.keybundle.enc\e[0m"
+        echo -e "\n\e[36m\e[5mURL\e[0m\e[0m to \e[32mworker.keys.encrypted\e[0m"
         read -p "Enter: " keybundle_url
         if [ -z "$keybundle_url" ]; then
                 echo -e "\e[31mFAIL:\e[0m URL cannot be blank"
@@ -258,7 +259,7 @@ systemctl enable --now firewalld
 echo -e "\e[32mStarting cifs module\e[0m"
 modprobe cifs
 
-echo -e "\e[32mDownloading worker.keybundle.enc\e[0m"
+echo -e "\e[32mDownloading worker.keys.encrypted\e[0m"
 
 # Get Nebula credentials
 # ======================
@@ -274,7 +275,7 @@ if [[ "$keybundle_url" == *"https://drive.google.com/file/d"* ]]; then
 			echo "Downloading https://drive.google.com/uc?export=download&id=${googlefileid}"
 			# Hack with set curl fails under ubuntu , not sure how it helps
 			set -x
-			curl -L "https://drive.google.com/uc?export=download&id=$googlefileid" -o ${worker_prefix}.keybundle.enc
+			curl -L "https://drive.google.com/uc?export=download&id=$googlefileid" -o ${worker_prefix}.keys.encrypted
 			set +x
 		else
 			echo "FAIL: ${keybundle_url} is not public, Set General Access to Anyone with Link"
@@ -293,12 +294,12 @@ fi
 # ============================
 while :
 do
-    if openssl enc -aes-256-cbc -pbkdf2 -d -in worker.keybundle.enc -out worker.keybundle -pass file:<( echo -n "$encryption_passphrase" ) ; then
-	rm worker.keybundle.enc
+    if openssl enc -aes-256-cbc -pbkdf2 -d -in worker.keys.encrypted -out worker.tar -pass file:<( echo -n "$encryption_passphrase" ) ; then
+	rm worker.keys.encrypted
         break
     else
-        echo "WRONG passphrase entered for worker.keybundle.enc, try again"
-        echo "Enter passphrase for worker.keybundle.enc, then hit return"
+        echo "WRONG passphrase entered for worker.keys.encrypted, try again"
+        echo "Enter passphrase for worker.keys.encrypted, then hit return"
         echo "==============================================================="
         IFS= read -rs $encryption_passphrase < /dev/tty
     fi 
@@ -309,10 +310,10 @@ done
 if ! test -d /etc/nebula; then
 	mkdir -p /etc/nebula
 fi
-tar --strip-components 1 -xvf worker.keybundle -C /etc/nebula
+tar --strip-components 1 -xvf worker.tar -C /etc/nebula
 chown root.root /etc/nebula/*.crt
 chown root.root /etc/nebula/*.key
-rm worker.keybundle
+rm worker.tar
 
 # smb_credentials
 # ===============
@@ -610,4 +611,3 @@ tar -xvf bella_cli-${bellaversion}.tar.gz
 chmod +x bella_cli
 mv bella_cli /usr/local/bin
 rm bella_cli-${bellaversion}.tar.gz
-
