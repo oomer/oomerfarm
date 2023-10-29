@@ -50,8 +50,7 @@ mongosha256="78c3283bd570c7c88ac466aa6cc6e93486e061c28a37790e0eebf722ae19a0cb"
 
 # no-so-secret i_agree_this_is_unsafe.keys.encrypted
 # ==================================================
-keybundle_url_default="https://drive.google.com/file/d/1l3g7sJo-UZG7ek7xcrNnrSIsTEw2nP9A/view?usp=sharing"
-
+keybundle_url_default="https://drive.google.com/file/d/1uiVSKuzhJ64mlsK0t4xMFYBX2IkQLB0b/view?usp=sharing"
 nebulasha256="4600c23344a07c9eda7da4b844730d2e5eb6c36b806eb0e54e4833971f336f70"
 
 # Use AWS service to get public ip

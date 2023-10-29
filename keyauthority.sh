@@ -176,8 +176,8 @@ do
 
 		mkdir -p ".oomer/lighthouse/${lighthouse_name}"
 
-		echo .oomer/bin/nebula-cert sign -name ${lighthouse_name} -ip "${octet0}.${octet1}.${octet2}.${octet3}/${mask}" -groups "any,lighthouse" -out-crt ".oomer/lighthouse/${lighthouse_name}/${lighthouse_name}.crt" -out-key ".oomer/lighthouse/${lighthouse_name}/${lighthouse_name}.key" -ca-crt ".oomer/keyauthority/ca.crt" -ca-key ".oomer/keyauthority/ca.key"
-		.oomer/bin/nebula-cert sign -name ${lighthouse_name} -ip "${octet0}.${octet1}.${octet2}.${octet3}/${mask}" -groups "any,lighthouse" -out-crt ".oomer/lighthouse/${lighthouse_name}/${lighthouse_name}.crt" -out-key ".oomer/lighthouse/${lighthouse_name}/${lighthouse_name}.key" -ca-crt ".oomer/keyauthority/ca.crt" -ca-key ".oomer/keyauthority/ca.key"
+		echo .oomer/bin/nebula-cert sign -name ${lighthouse_name} -ip "${octet0}.${octet1}.${octet2}.${octet3}/${mask}" -groups "oomer,lighthouse" -out-crt ".oomer/lighthouse/${lighthouse_name}/${lighthouse_name}.crt" -out-key ".oomer/lighthouse/${lighthouse_name}/${lighthouse_name}.key" -ca-crt ".oomer/keyauthority/ca.crt" -ca-key ".oomer/keyauthority/ca.key"
+		.oomer/bin/nebula-cert sign -name ${lighthouse_name} -ip "${octet0}.${octet1}.${octet2}.${octet3}/${mask}" -groups "oomer,lighthouse" -out-crt ".oomer/lighthouse/${lighthouse_name}/${lighthouse_name}.crt" -out-key ".oomer/lighthouse/${lighthouse_name}/${lighthouse_name}.key" -ca-crt ".oomer/keyauthority/ca.crt" -ca-key ".oomer/keyauthority/ca.key"
 		cp .oomer/keyauthority/ca.crt .oomer/lighthouse/${lighthouse_name}
 		echo "${octet0}.${octet1}.${octet2}.${octet3}" >> .oomer/.lighthouse_ips
 		echo "${octet0}.${octet1}.${octet2}.${octet3}" > .oomer/lighthouse/${lighthouse_name}/.nebula_ip
@@ -273,8 +273,8 @@ do
 			echo -e ".oomer/server/${server_name}${server_name}.key exists, skipping"
 		else
 			mkdir -p  ".oomer/server/${server_name}"
-			echo .oomer/bin/nebula-cert sign -name ${server_name} -ip ${octet0}.${octet1}.${octet2}.${octet3}/${mask} -groups "any,server" -out-crt ".oomer/server/${server_name}/${server_name}.crt" -out-key ".oomer/server/${server_name}/${server_name}.key" -ca-crt ".oomer/keyauthority/ca.crt" -ca-key ".oomer/keyauthority/ca.key"
-			.oomer/bin/nebula-cert sign -name ${server_name} -ip ${octet0}.${octet1}.${octet2}.${octet3}/${mask} -groups "any,server" -out-crt ".oomer/server/${server_name}/${server_name}.crt" -out-key ".oomer/server/${server_name}/${server_name}.key" -ca-crt ".oomer/keyauthority/ca.crt" -ca-key ".oomer/keyauthority/ca.key"
+			echo .oomer/bin/nebula-cert sign -name ${server_name} -ip ${octet0}.${octet1}.${octet2}.${octet3}/${mask} -groups "oomer,server" -out-crt ".oomer/server/${server_name}/${server_name}.crt" -out-key ".oomer/server/${server_name}/${server_name}.key" -ca-crt ".oomer/keyauthority/ca.crt" -ca-key ".oomer/keyauthority/ca.key"
+			.oomer/bin/nebula-cert sign -name ${server_name} -ip ${octet0}.${octet1}.${octet2}.${octet3}/${mask} -groups "oomer,server" -out-crt ".oomer/server/${server_name}/${server_name}.crt" -out-key ".oomer/server/${server_name}/${server_name}.key" -ca-crt ".oomer/keyauthority/ca.crt" -ca-key ".oomer/keyauthority/ca.key"
 			cp .oomer/keyauthority/ca.crt .oomer/server/${server_name}
 			echo ${octet0}.${octet1}.${octet2}.${octet3} > .oomer/server/${server_name}/.nebula_ip
 
@@ -364,7 +364,7 @@ do
 		for ((count = 1 ; count <= "${workernum}" ; count++)); do
 			worker_count=$(($worker_last_count + $count))
 			worker_padded=$(printf %04d $worker_count)
-			.oomer/bin/nebula-cert sign -name "${worker_prefix}${worker_padded}" -ip "${octet0}.${octet1}.${octet2}.${octet3}/${mask}" -groups "any" -out-crt ".oomer/worker/${worker_prefix}${worker_padded}.crt" -out-key ".oomer/worker/${worker_prefix}${worker_padded}.key" -ca-crt ".oomer/keyauthority/ca.crt" -ca-key ".oomer/keyauthority/ca.key" 
+			.oomer/bin/nebula-cert sign -name "${worker_prefix}${worker_padded}" -ip "${octet0}.${octet1}.${octet2}.${octet3}/${mask}" -groups "oomer" -out-crt ".oomer/worker/${worker_prefix}${worker_padded}.crt" -out-key ".oomer/worker/${worker_prefix}${worker_padded}.key" -ca-crt ".oomer/keyauthority/ca.crt" -ca-key ".oomer/keyauthority/ca.key" 
 			echo "${octet0}.${octet1}.${octet2}.${octet3}" >> .oomer/.worker_ips
 			
 			# get next unique worker nebula ip
@@ -447,8 +447,8 @@ do
 		done
 
 		mkdir -p .oomer/person/${person_name} 
-		echo .oomer/bin/nebula-cert sign -name "${person_name}" -ip "${octet0}.${octet1}.${octet2}.${octet3}/${mask}" -groups "any,server,person" -out-crt ".oomer/person/${person_name}/${person_name}.crt" -out-key ".oomer/person/${person_name}/${person_name}.key" -ca-crt ".oomer/keyauthority/ca.crt" -ca-key ".oomer/keyauthority/ca.key"
-		.oomer/bin/nebula-cert sign -name "${person_name}" -ip "${octet0}.${octet1}.${octet2}.${octet3}/${mask}" -groups "any,server,person" -out-crt ".oomer/person/${person_name}/${person_name}.crt" -out-key ".oomer/person/${person_name}/${person_name}.key" -ca-crt ".oomer/keyauthority/ca.crt" -ca-key ".oomer/keyauthority/ca.key"
+		echo .oomer/bin/nebula-cert sign -name "${person_name}" -ip "${octet0}.${octet1}.${octet2}.${octet3}/${mask}" -groups "oomer,server,person" -out-crt ".oomer/person/${person_name}/${person_name}.crt" -out-key ".oomer/person/${person_name}/${person_name}.key" -ca-crt ".oomer/keyauthority/ca.crt" -ca-key ".oomer/keyauthority/ca.key"
+		.oomer/bin/nebula-cert sign -name "${person_name}" -ip "${octet0}.${octet1}.${octet2}.${octet3}/${mask}" -groups "oomer,server,person" -out-crt ".oomer/person/${person_name}/${person_name}.crt" -out-key ".oomer/person/${person_name}/${person_name}.key" -ca-crt ".oomer/keyauthority/ca.crt" -ca-key ".oomer/keyauthority/ca.key"
 
 		origdir=$(pwd)
 		cp .oomer/keyauthority/ca.crt .oomer/person/${person_name}
