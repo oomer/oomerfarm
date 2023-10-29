@@ -492,8 +492,8 @@ firewall:
     - port: 22
       proto: tcp
       groups: 
-	- oomer
-	- person
+        - oomer
+        - person
 
     - port: 1714
       proto: tcp
