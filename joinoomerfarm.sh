@@ -8,28 +8,25 @@
 # Check for existing boss credentials only macos and linux
 # ===================================
 if [[ "$OSTYPE" == "linux-gnu"* ]] || [[ "$OSTYPE" == "darwin"* ]] ; then
-        if test -d ./_oomerfarm_/boss; then
+        if test -d .oomer/person/person1; then
                 echo -e "\n================================================================="
                 echo -e "The authenticity of this script cannot be guaranteed unless it comes from https://github.com/oomer/oomerfarm"
                 echo -e "Read the code if you can, or check the md5 hash posted on https://github.com/oomer/oomerfarm"
-                echo -e "sudo ./_oomerfarm_/bin/nebula is required run a VPN"
+                echo -e "sudo .oomer/bin/nebula is required run a VPN"
                 echo "Enter password to elevate the permissions of this scripts"
-                sudo ./_oomerfarm_/bin/nebula -config ./_oomerfarm_/boss/config.yml
+                sudo .oomer/bin/nebula -config .oomer/person/person1/config.yml
                 exit
         fi
 fi
-# Create unsafe TestDrive credentials when they don't exist
 
-#if ! test -d _oomerpath_/testboss; then
-
-mkdir -p _oomerfarm_/testboss
+mkdir -p .oomer/person/i_agree_this_is_unsafe
 nebula_version="v1.7.2"
 
 # Download Nebula from github once
 # Ensure integrity of executables that will run as administrator
 # ==============================================================
-if ! ( test -d "./_oomerfarm_/bin" ); then
-        mkdir -p _oomerfarm_/bin
+if ! ( test -d ".oomer/bin" ); then
+        mkdir -p .oomer/bin
         echo -e "\nDownloading Nebula ${nebula_version} ..."
         if [[ "$OSTYPE" == "linux-gnu"* ]]; then
                 nebularelease="nebula-linux-amd64.tar.gz"
@@ -45,33 +42,33 @@ if ! ( test -d "./_oomerfarm_/bin" ); then
                 exit
         fi
 
-        curl -L https://github.com/slackhq/nebula/releases/download/${nebula_version}/${nebularelease} -o ./_oomerfarm_/bin/${nebularelease}
+        curl -L https://github.com/slackhq/nebula/releases/download/${nebula_version}/${nebularelease} -o .oomer/bin/${nebularelease}
         if [[ "$OSTYPE" == "linux-gnu"* ]]; then
-                MatchFile="$(echo "${nebulasha256} ./_oomerfarm_/bin/${nebularelease}" | sha256sum --check)"
-                if [ "$MatchFile" == "./_oomerfarm_/bin/${nebularelease}: OK" ] ; then
+                MatchFile="$(echo "${nebulasha256} .oomer/bin/${nebularelease}" | sha256sum --check)"
+                if [ "$MatchFile" == ".oomer/bin/${nebularelease}: OK" ] ; then
                         echo -e "Extracting https://github.com/slackhq/nebula/releases/download/${nebula_version}/${nebularelease}"
-                        tar -xvzf ./_oomerfarm_/bin/${nebularelease} --directory ./_oomerfarm_/bin
+                        tar -xvzf .oomer/bin/${nebularelease} --directory .oomer/bin
                 else
-                        echo "FAIL: ./_oomerfarm_/bin/${nebularelease} checksum failed, file possibly maliciously altered on github"
+                        echo "FAIL: .oomer/bin/${nebularelease} checksum failed, file possibly maliciously altered on github"
                         exit
                 fi
 
         elif [[ "$OSTYPE" == "darwin"* ]] || [[ "$OSTYPE" == "msys"* ]]; then
-                MatchFile="$(echo "${nebulasha256}  ./_oomerfarm_/bin/${nebularelease}" | shasum -a 256 --check)"
-                if [ "$MatchFile" == "./_oomerfarm_/bin/${nebularelease}: OK" ] ; then
+                MatchFile="$(echo "${nebulasha256}  .oomer/bin/${nebularelease}" | shasum -a 256 --check)"
+                if [ "$MatchFile" == ".oomer/bin/${nebularelease}: OK" ] ; then
                         echo -e "Extracting https://github.com/slackhq/nebula/releases/download/${nebula_version}/${nebularelease}"
-                        unzip ./_oomerfarm_/bin/${nebularelease} -d ./_oomerfarm_/bin
+                        unzip .oomer/bin/${nebularelease} -d .oomer/bin
                 else
-                        echo "FAIL: ./_oomerfarm_/bin/${nebularelease} checksum failed, file possibly maliciously altered on github"
+                        echo "FAIL: .oomer/bin/${nebularelease} checksum failed, file possibly maliciously altered on github"
                         exit
                 fi
         else
-                echo -e "FAIL: unpacking _oomerfarm_/bin/${nebula-release}"
+                echo -e "FAIL: unpacking .oomer/bin/${nebula-release}"
                 exit
         fi
-        chmod +x ./_oomerfarm_/bin/nebula-cert
-        chmod +x ./_oomerfarm_/bin/nebula
-        rm ./_oomerfarm_/bin/${nebularelease}
+        chmod +x .oomer/bin/nebula-cert
+        chmod +x .oomer/bin/nebula
+        rm .oomer/bin/${nebularelease}
 fi
 
 echo -e "\nWhat is the public ip address of the hub machine"
@@ -88,45 +85,44 @@ fi
 # hub and workers are only in the oomerfarm group which does not permit ssh access to the "boss"
 # all Nebula hosts can ping each other
 
-cat <<EOF > ./_oomerfarm_/testboss/ca.crt
+cat <<EOF > .oomer/person/i_agree_this_is_unsafe/ca.crt
 -----BEGIN NEBULA CERTIFICATE-----
-CjsKCW9vbWVyZmFybSiYiLKoBjD4l7i3BjogjTTL9BqSLvAedIZEKNLoFv/sAGPP
-7h38pKP5uGrtwAhAARJAs7hUYjsuDBrT/NN16a1x82492BkqHvO26nYF5cz8z/Wy
-bQUbvsDgE2HxTKnCSsbyunu/EDnj7193pM4fRSpnCA==
+CjcKBW9vbWVyKKCT96kGMKCWj/UGOiDCsJ2dvXr5msWq8IrIDgi7ZGImzOASL4UG
+ICFwLtM1REABEkBqk1Vrrzk33Vja+UPNyG/TBqn5ZzKV1CUjsH2e1k1mMQxwUUgE
+0bGzMkHAJ6gPfQ3YVHHn6oWk/c4F7Z3u6bQN
 -----END NEBULA CERTIFICATE-----
 EOF
 
-cat <<EOF > ./_oomerfarm_/testboss/testboss.crt
+cat <<EOF > .oomer/person/i_agree_this_is_unsafe/person1.crt
 -----BEGIN NEBULA CERTIFICATE-----
-CowBCgRib3NzEgnkgKhQgID8/w8iCW9vbWVyZmFybSINb29tZXJmYXJtLWh1YiIP
-b29tZXJmYXJtLWFkbWluKNqIsqgGMPeXuLcGOiCdvf91Av3yQ2t8sQAPCfTJbWwQ
-psd73GHJCmbKzqV2Wkog2AVS9DsTXgvOD7SZMZJQnUR0qBC7cTAMaix/b38eGy4S
-QBGBsWZMIkAptW6UK6h+7vhMLwTJoqTgIDZz83pYnNoTHcN6Xn1P3qyfHvbb7K8W
-s8Lz6KKq5XYPW+ODvmrawAQ=
+CnsKB3BlcnNvbjESCYGU3FKAgPz/DyIFb29tZXIiBnNlcnZlciIGcGVyc29uKNCT
+96kGMJ+Wj/UGOiAPDXUGzvQwXHGXQ10GeDvNhQENyf5d8HkJoEHhX+/ZaEog4ZcT
+EoWXlG8TopKaq7X7FVZ/5Pobx2uVfKvJhwAgGaMSQHRilR4jv5xqcWjkOdXjwpVl
+UYLoUk2n9vXCthBoeawpCQvwi+XWFG6QNrPXu8HDviLfDuxgTee+E1WEWcwmYwM=
 -----END NEBULA CERTIFICATE-----
 EOF
 
-cat <<EOF > ./_oomerfarm_/testboss/testboss.key
+cat <<EOF > .oomer/person/i_agree_this_is_unsafe/person1.key
 -----BEGIN NEBULA X25519 PRIVATE KEY-----
-HHBWyFUcD79p+tMCWLeH5ergQ2N92KAItqihloLGoTI=
+eL5x5N4vQkL9xPEJfdcru5InW+Mfmba2HekGX1I0OoU=
 -----END NEBULA X25519 PRIVATE KEY-----
 EOF
 
 
 if [[ "$OSTYPE" == "msys"* ]]; then
         oomerfarm_path=$(cygpath -w -p $(pwd))
-        ca_path="\\_oomerfarm_\\testboss\\ca.crt"
-        crt_path="\\_oomerfarm_\\testboss\\testboss.crt"
-        key_path="\\_oomerfarm_\\testboss\\testboss.key"
+        ca_path="\\.oomer\\person\\i_agree_this_is_unsafe\\ca.crt"
+        crt_path="\\.oomer\\person\\i_agree_this_is_unsafe\\person1.crt"
+        key_path="\\.oomer\\person\\i_agree_this_is_unsafe\\person1.key"
 
 else
         oomerfarm_path="."
-        ca_path="/_oomerfarm_/testboss/ca.crt"
-        crt_path="/_oomerfarm_/testboss/testboss.crt"
-        key_path="/_oomerfarm_/testboss/testboss.key"
+        ca_path="/.oomer/person/i_agree_this_is_unsafe/ca.crt"
+        crt_path="/.oomer/person/i_agree_this_is_unsafe/person1.crt"
+        key_path="/.oomer/person/i_agree_this_is_unsafe/person1.key"
 fi
 
-cat <<EOF > ./_oomerfarm_/testboss/config.yml
+cat <<EOF > .oomer/person/i_agree_this_is_unsafe/config.yml
 pki:
   ca: ${oomerfarm_path}${ca_path}
   cert: ${oomerfarm_path}${crt_path}
@@ -135,7 +131,7 @@ pki:
 # init script should replace the strings with the actual values
 # or can just be done manually by hand
 static_host_map:
-  "10.10.0.1": ["${lighthouse_internet_ip}:42042"]
+  "10.87.0.1": ["${lighthouse_internet_ip}:42042"]
 
 lighthouse:
   am_lighthouse: false
@@ -146,7 +142,7 @@ listen:
   port: 0
 
 host:
-  - "10.10.0.1"
+  - "10.87.0.1"
 
 punchy:
   punch: true
@@ -199,16 +195,16 @@ else
 fi
 
 if [[ "$OSTYPE" == "linux-gnu"* ]]; then
-        MatchFile="$(echo "${nebulasha256}  ./_oomerfarm_/bin/${executable}" | sha256sum --check)"
-        if ! $[ "$MatchFile" == "./_oomerfarm_/bin/${executable}: OK" ] ; then
-                echo -e "\n./_oomerfarm_/bin/${executable} has been tampered with"a
+        MatchFile="$(echo "${nebulasha256}  .oomer/bin/${executable}" | sha256sum --check)"
+        if ! $[ "$MatchFile" == ".oomer/bin/${executable}: OK" ] ; then
+                echo -e "\n.oomer/bin/${executable} has been tampered with"a
                 echo "Aborting"
                 exit
         fi
 elif [[ "$OSTYPE" == "darwin"* ]] || [[ "$OSTYPE" == "msys"* ]]; then
-        MatchFile="$(echo "${nebulasha256}  ./_oomerfarm_/bin/${executable}" | shasum -a 256 --check)"
-        if ! [ "$MatchFile" == "./_oomerfarm_/bin/${executable}: OK" ] ; then
-                echo -e "\n./_oomerfarm_/bin/${executable} has been tampered with"
+        MatchFile="$(echo "${nebulasha256}  .oomer/bin/${executable}" | shasum -a 256 --check)"
+        if ! [ "$MatchFile" == ".oomer/bin/${executable}: OK" ] ; then
+                echo -e "\n.oomer/bin/${executable} has been tampered with"
                 echo "Aborting"
                 exit
         fi
@@ -220,14 +216,14 @@ if [[ "$OSTYPE" == "linux-gnu"* ]] || [[ "$OSTYPE" == "darwin"* ]] ; then
 	echo -e "\n"
 	echo -e "Do not run this script if it did not come from  https://github.com/oomer/oomerfarm"
 	echo "Current user, must be admin. Enter password to elevate the permissions of this script"
-        sudo ./_oomerfarm_/bin/nebula -config ./_oomerfarm_/testboss/config.yml
+        sudo .oomer/bin/nebula -config .oomer/person/i_agree_this_is_unsafe/config.yml
 fi
 
 if [[ "$OSTYPE" == "msys"* ]]; then
         echo $(pwd)
 
 cat <<EOF > ~/Desktop/joinoomerfarm.bat
-${oomerfarm_path}\\_oomerfarm_\\bin\\nebula.exe -config ${oomerfarm_path}\\_oomerfarm_\\testboss\\config.yml
+${oomerfarm_path}\\.oomer\\bin\\nebula.exe -config ${oomerfarm_path}\\.oomer\\person\\i_agree_this_is_unsafe\\config.yml
 EOF
 
 	echo -e "On \e[32mdesktop\e[0m, right click \e[37m\e[5mjoinoomerfarm.bat\e[0m\e[0m, Run as adminstrator"
