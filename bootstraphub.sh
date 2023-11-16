@@ -26,10 +26,10 @@ skip_advanced_default="yes"
 
 # deadline
 # ======== 
-thinkboxversion="10.3.0.13"
-thinkboxurl="https://thinkbox-installers.s3.us-west-2.amazonaws.com/Releases/Deadline/10.3/3_${thinkboxversion}/"
+thinkboxversion="10.3.0.15"
+thinkboxurl="https://thinkbox-installers.s3.us-west-2.amazonaws.com/Releases/Deadline/10.3/4_${thinkboxversion}/"
 thinkboxtar="Deadline-${thinkboxversion}-linux-installers.tar"
-thinkboxsha256="ee7835233f3f15f25bea818962e90a4edf12d432092ea56ad135a5f480f282d8"
+thinkboxsha256="6ada6b2fc222974ae5a64101a01ae9d5ab7a297e8f131b22d8512eb767d3e9be"
 thinkboxrun="./DeadlineRepository-${thinkboxversion}-linux-x64-installer.run"
 
 # s3 fuse filesystem
