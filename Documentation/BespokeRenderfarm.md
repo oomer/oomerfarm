@@ -24,12 +24,12 @@ From folder ***oomerfarm/\_oomerkeys\_/boss***
 
 While a **hub** server can be spun up as needed, just like **workers**, the **hub**'s compute resources needed are minimal that running it 24/7 is a low cost option.
 
-Rent Cloud Linux or get Linux on an old computer<sup>1 core is enough</sup>
+<sup>[hub]</sup> Spin up a cloud computer with Alma/Rocky 8.x Linux or get Linux on an old computer<sup>1 core is enough</sup>
 
 ```sh
 sudo dnf -y install git
 
-git clone -b "v0.3" https://github.com/oomer/oomerfarm.git
+git clone -b "v0.4" https://github.com/oomer/oomerfarm.git
 
 cd oomerfarm 
 
@@ -40,12 +40,12 @@ sudo bash bootstraphub.sh
 
 ## For rendering work, setup one or more Linux machines
 
-4. Rent 1+ servers with LOTSA<sup>TM</sup> cores
+4. <sup>[worker(s)]</sup> Rent 1+ servers with LOTSA<sup>TM</sup> cores
 
 ```sh
 sudo dnf -y install git
 
-git clone -b "v0.3" https://github.com/oomer/oomerfarm.git
+git clone -b "v0.4" https://github.com/oomer/oomerfarm.git
 
 cd oomerfarm 
 
@@ -58,10 +58,12 @@ sudo bash bootstrapworker.sh
 ## Submit jobs from desktop/laptop
 
 #### Connect to private oomerfarm VPN
+
+- From Linux/MacOS shell or [ git-bash ]( https://git-scm.com )<sup>Win</sup>
 ```sh
-bash joinoomerfarm.sh
+bash bridgeoomerfarm.sh
 ```
-* On Windows, right-click joinoomerfarm.bat, run as administrator
+* On Windows, right-click bridgeoomerfarm.bat, run as administrator
 
 #### Mount network folders
 
