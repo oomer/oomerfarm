@@ -15,7 +15,7 @@ if ! [[ "$OSTYPE" == "linux-gnu"* ]]; then
         exit
 fi
 
-thinkboxversion="10.3.0.13"
+thinkboxversion="10.3.0.15"
 bellaversion="23.4.0"
 
 keybundle_url_default="https://drive.google.com/file/d/1p51AmY2BDSsiae-QWx76AxlLCnpi_5xg/view?usp=sharing"
