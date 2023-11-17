@@ -8,24 +8,9 @@ mask=16
 mkdir -p .oomer/keyauthority
 mkdir -p .oomer/keysencrypted
 mkdir -p .oomer/bin
-
-echo "keyoomernet.sh creates credential keys for joining your private vpn"
-
-# short option getopts, use -a to automatically choose oomerfarm
-autochoose=""
-while getopts 'a:bc' OPTION; do
-        case "$OPTION" in
-        a)
-        autochoose="$OPTARG" ;;
-        b)
-        echo "Option b used" ;;
-        c)
-        echo "Option c used" ;;
-        ?)
-        echo "Usage: $(basename $0) [-a] "
-        exit 1 ;;
-        esac
-done
+echo -e "\n==========================================================="
+echo -e "becomesecure.sh signs keys that secure your private network"
+echo "==========================================================="
 
 # Download Nebula from github once
 # ================================
@@ -89,7 +74,7 @@ fi
 # =================================================
 while :
 do
-	echo -e "\nPassphrase to encrypt key bundles...( typing is ghosted )"
+	echo -e "\nEnter passphrase to encrypt keys so they can be distributed securely...( typing is ghosted )"
 	read -rs encryption_passphrase
 	if [ -z "$encryption_passphrase" ]; then
 	    echo "FAIL: invalid empty passphrase"
@@ -113,12 +98,12 @@ do
 	# [simplification] oomerfarm currently can only be invoked once 
 	echo -e "\nCreate new keys:"
 	if test -f .oomer/.oomerfarm_lighthouse_ip; then
-		select new_key_type in person worker server lighthouse quit
+		select new_key_type in user worker server lighthouse quit
 		do
 			break
 		done
 	else
-		select new_key_type in person worker oomerfarm server lighthouse quit
+		select new_key_type in user worker oomerfarm server lighthouse quit
 		do
 			break
 		done
@@ -397,27 +382,27 @@ do
 	fi
 
 
-	# person keys are different than servers, lighthouse and workers which are semi-autonomous linux members of the vpn
-	# person keys are used on desktop/laptop computers
+	# user keys are different than servers, lighthouse and workers which are semi-autonomous linux members of the vpn
+	# user keys are used on desktop/laptop computers
 
-	if [[ ${new_key_type} == "person" ]]; then
+	if [[ ${new_key_type} == "user" ]]; then
 		# [ TODO ] standard users and admins
-		# worker nodes and server nodes cannot ssh to person nodes
+		# worker nodes and server nodes cannot ssh to user nodes
 
-		if ! test -f .oomer/.person_ips; then
+		if ! test -f .oomer/.user_ips; then
 			octet2=10
 			octet3=1
-			person_name_default="person1"
+			user_name_default="person1"
 		else
 			# read text list of used ips
-			unset -v person_ip
+			unset -v user_ip
 			while IFS= read -r; do
-				person_ip+=("$REPLY")
-			done <.oomer/.person_ips
-			[[ $REPLY ]] && person_ip+=("$REPLY")
-			last_used=${person_ip[$(( ${#person_ip[@]} - 1)) ]}
-			person_count=$(( ${#person_ip[@]} + 1))
-			person_name_default="person${person_count}"
+				user_ip+=("$REPLY")
+			done <.oomer/.user_ips
+			[[ $REPLY ]] && user_ip+=("$REPLY")
+			last_used=${user_ip[$(( ${#user_ip[@]} - 1)) ]}
+			user_count=$(( ${#user_ip[@]} + 1))
+			user_name_default="user${user_count}"
 			IFS='.' read -ra octet <<< "$last_used"
 			octet0=${octet[0]}
 			octet1=${octet[1]}
@@ -425,41 +410,41 @@ do
 			octet3=${octet[3]}
 			((octet3++))
 			if [[ octet3 -eq 255 ]]; then
-				echo "only 254 person nodes are supported 10.87.1.1-10.87.1.254"
+				echo "only 254 user nodes are supported 10.87.1.1-10.87.1.254"
 				echo "you are on your own in editing this script"
 				exit
 			fi
 		fi
 
-		# only server/person nodes can be renamed, making the keys easily human readable
+		# only server/user nodes can be renamed, making the keys easily human readable
 		while :
 		do
-			echo -e "\nEnter person name ..."
-			read -p "default ( $person_name_default ): " person_name
-			if [ -z $person_name ]; then
-				person_name=$person_name_default
+			echo -e "\nEnter user name ..."
+			read -p "default ( $user_name_default ): " user_name
+			if [ -z $user_name ]; then
+				user_name=$user_name_default
 			fi
-			if ! test -d .oomer/person/$person_name; then
+			if ! test -d .oomer/user/$user_name; then
 				break	
 			else
-				echo ".oomer/person/${person_name} name already exists, try again"
+				echo ".oomer/user/${user_name} name already exists, try again"
 			fi
 		done
 
-		mkdir -p .oomer/person/${person_name} 
-		echo .oomer/bin/nebula-cert sign -name "${person_name}" -ip "${octet0}.${octet1}.${octet2}.${octet3}/${mask}" -groups "oomer,server,person" -out-crt ".oomer/person/${person_name}/${person_name}.crt" -out-key ".oomer/person/${person_name}/${person_name}.key" -ca-crt ".oomer/keyauthority/ca.crt" -ca-key ".oomer/keyauthority/ca.key"
-		.oomer/bin/nebula-cert sign -name "${person_name}" -ip "${octet0}.${octet1}.${octet2}.${octet3}/${mask}" -groups "oomer,server,person" -out-crt ".oomer/person/${person_name}/${person_name}.crt" -out-key ".oomer/person/${person_name}/${person_name}.key" -ca-crt ".oomer/keyauthority/ca.crt" -ca-key ".oomer/keyauthority/ca.key"
+		mkdir -p .oomer/user/${user_name} 
+		echo .oomer/bin/nebula-cert sign -name "${user_name}" -ip "${octet0}.${octet1}.${octet2}.${octet3}/${mask}" -groups "oomer,server,person" -out-crt ".oomer/user/${user_name}/${user_name}.crt" -out-key ".oomer/user/${user_name}/${user_name}.key" -ca-crt ".oomer/keyauthority/ca.crt" -ca-key ".oomer/keyauthority/ca.key"
+		.oomer/bin/nebula-cert sign -name "${user_name}" -ip "${octet0}.${octet1}.${octet2}.${octet3}/${mask}" -groups "oomer,server,person" -out-crt ".oomer/user/${user_name}/${user_name}.crt" -out-key ".oomer/user/${user_name}/${user_name}.key" -ca-crt ".oomer/keyauthority/ca.crt" -ca-key ".oomer/keyauthority/ca.key"
 
 		origdir=$(pwd)
-		cp .oomer/keyauthority/ca.crt .oomer/person/${person_name}
-		echo ${octet0}.${octet1}.${octet2}.${octet3} > .oomer/person/${person_name}/.nebula_ip
-		echo ${octet0}.${octet1}.${octet2}.${octet3} >> .oomer/.person_ips
-		echo ${person_name} >> .oomer/.person_names
+		cp .oomer/keyauthority/ca.crt .oomer/user/${user_name}
+		echo ${octet0}.${octet1}.${octet2}.${octet3} > .oomer/user/${user_name}/.nebula_ip
+		echo ${octet0}.${octet1}.${octet2}.${octet3} >> .oomer/.user_ips
+		echo ${user_name} >> .oomer/.user_names
 
-		cd .oomer/person
-		find "${person_name}" -type f -exec tar -rvf temp.tar {} \;
-		echo openssl enc -aes-256-cbc -salt -pbkdf2 -in temp.tar -out $origdir/.oomer/keysencrypted/${person_name}.keys.encrypted -pass stdin <<< "$encryption_passphrase" 
-		openssl enc -aes-256-cbc -salt -pbkdf2 -in temp.tar -out $origdir/.oomer/keysencrypted/${person_name}.keys.encrypted -pass stdin <<< "$encryption_passphrase" 
+		cd .oomer/user
+		find "${user_name}" -type f -exec tar -rvf temp.tar {} \;
+		echo openssl enc -aes-256-cbc -salt -pbkdf2 -in temp.tar -out $origdir/.oomer/keysencrypted/${user_name}.keys.encrypted -pass stdin <<< "$encryption_passphrase" 
+		openssl enc -aes-256-cbc -salt -pbkdf2 -in temp.tar -out $origdir/.oomer/keysencrypted/${user_name}.keys.encrypted -pass stdin <<< "$encryption_passphrase" 
 		rm temp.tar
 		cd $origdir
 
