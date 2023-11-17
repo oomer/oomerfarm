@@ -118,7 +118,11 @@ do
 		if ! test -f .oomer/.lighthouse_ips; then
 			octet2=0
 			octet3=1
-			lighthouse_name_default="lighthouse1"
+			if [[ $new_key_type =="oomerfarm" ]]; then
+				lighthouse_name_default="hub"
+			else
+				lighthouse_name_default="lighthouse1"
+			fi
 		else
 			# read text list of used ips
 			unset -v lighthouse_ip
@@ -174,7 +178,7 @@ do
 			if [[ ${new_key_type} == "oomerfarm" ]];then
 				echo "${octet0}.${octet1}.${octet2}.${octet3}" > $origdir/.oomer/.oomerfarm_lighthouse_ip
 				# [TODO] support more then one lighthouse
-				keybundle_name="oomerfarmhub"
+				keybundle_name="hub"
 			else
 				keybundle_name=${lighthouse_name}
 			fi
@@ -453,6 +457,9 @@ do
 	if [[ ${new_key_type} == "quit" ]]; then
 		if [[ "$OSTYPE" == "darwin"* ]]; then
 			open .oomer/keysencrypted
+		fi
+		if [[ "$OSTYPE" == "msys"* ]]; then
+			explorer .oomer\\keysencrypted
 		fi
 		exit
 	fi
