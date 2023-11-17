@@ -283,7 +283,7 @@ fi
 if [[ "$OSTYPE" == "msys"* ]]; then
         echo $(pwd)
 
-cat <<EOF > ~/Desktop/joinoomerfarm.bat
+cat <<EOF > ~/Desktop/bridgeoomerfarm.bat
 ${oomerfarm_path}\\.oomer\\bin\\nebula.exe -config ${oomerfarm_path}\\.oomer\\user\\${user_key}\\config.yml
 EOF
 
