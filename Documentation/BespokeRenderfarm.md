@@ -6,7 +6,7 @@
 ## For long term security, first create VPN keys on a trusted desktop or laptop
 
 ```sh
-git clone -b "v0.3" https://github.com/oomer/oomerfarm.git
+git clone -b "v0.4" https://github.com/oomer/oomerfarm.git
 
 cd oomerfarm 
 
