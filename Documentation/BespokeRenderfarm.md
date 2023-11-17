@@ -81,9 +81,8 @@ bash bridgeoomerfarm.sh
     - /Volumes/oomerfarm/bella <sup>mac</sup>
     - /mnt/oomerfarm/bella <sup>linux</sup>
 
-#### Install Deadline 10.3.0.13 Client software
-- Follow [Win GUI guide](GuiDeadlineClientInstallWindows.md)
-- Follow [MacOS GUI guide](GuiDeadlineClientInstallMacOS.md)
+#### Install Deadline 10.3.0.15 Client software
+- [Download installer](https://awsthinkbox.com)
 - Optionally [Win CLI guide](CliDeadlineClientInstallWindows.md)
 - Optionally [MacOS CLI guide](CliDeadlineClientInstallMacOS.md)
 
