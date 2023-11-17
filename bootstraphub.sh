@@ -307,7 +307,7 @@ if [[ "$keybundle_url" == *"https://drive.google.com/file/d"* ]]; then
 	fi
 # This should work with URL's pointing to normal website locations or public S3 storage 
 else
-	curl -s -L -O "${keybundle_url}" 
+	curl -L "${keybundle_url}"  -o ${nebula_name}.keys.encrypted
 	if ! ( test -f ${nebula_name}.keys.encrypted ) ; then
 		echo -e "\e[31mFAIL:\e[0m ${nebula_name}.keys.encrypted URL you entered \e[31m${keybundle_url}\e[0m does not exist"
 		exit
