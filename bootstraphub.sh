@@ -609,6 +609,7 @@ if ! test -f /mnt/DeadlineRepository10/ThinkboxEULA.txt ; then
 	${thinkboxrun} --mode unattended --requireSSL false --dbLicenseAcceptance accept --unattendedmodeui none --prefix /mnt/DeadlineRepository10 --dbhost ${nebula_ip} --prepackagedDB ${mongotar} --dbInstallationType prepackagedDB --installmongodb true --dbOverwrite true
 	sed -i "s/bindIpAll: true/bindIp: ${nebula_ip}/g" /opt/Thinkbox/DeadlineDatabase10/mongo/data/config.conf
 	/etc/init.d/Deadline10db restart
+	chcon -t bin_t /opt/Thinkbox/DeadlineDatabase10/mongo/application/bin/mongod
 
 	echo -e "\n\n\e[31mYou accept AWS Thinkbox Deadline EULA when installing:\e[0m"
 	cat /mnt/DeadlineRepository10/ThinkboxEULA.txt
@@ -624,7 +625,6 @@ if ! [[ $skip_advanced == "yes" ]]; then
 		echo -e "\e[32m/mnt/oomerfarm/installers/DeadlineClient-${thinkboxversion}-linux-x64-installer.run --mode unattended --unattendedmodeui none --repositorydir /mnt/DeadlineRepository10  --connectiontype Direct --noguimode true --binariesonly true\e[0m"
 		/mnt/oomerfarm/installers/DeadlineClient-${thinkboxversion}-linux-x64-installer.run --mode unattended --unattendedmodeui none --repositorydir /mnt/DeadlineRepository10  --connectiontype Direct --noguimode true --binariesonly true
 		rm DeadlineClient-${thinkboxversion}-linux-x64-installer.run
-
 
 cat <<EOF > /var/lib/Thinkbox/Deadline10/licenseforwarder.ini
 [Deadline]
