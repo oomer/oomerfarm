@@ -609,6 +609,12 @@ if ! test -f /mnt/DeadlineRepository10/ThinkboxEULA.txt ; then
 	${thinkboxrun} --mode unattended --requireSSL false --dbLicenseAcceptance accept --unattendedmodeui none --prefix /mnt/DeadlineRepository10 --dbhost ${nebula_ip} --prepackagedDB ${mongotar} --dbInstallationType prepackagedDB --installmongodb true --dbOverwrite true
 	sed -i "s/bindIpAll: true/bindIp: ${nebula_ip}/g" /opt/Thinkbox/DeadlineDatabase10/mongo/data/config.conf
 	/etc/init.d/Deadline10db restart
+
+	# [TODO] Thinkbox installs mongod and runs as root, should use low security user 
+	# [TODO] Since files are already created, will have to recursively chown
+	chown root.root /opt/Thinkbox/DeadlineDatabase10/mongo/application/bin/mongod
+	chown root.root /opt/Thinkbox/DeadlineDatabase10/mongo/application/bin/mongo
+	chown root.root /opt/Thinkbox/DeadlineDatabase10/mongo/application/bin/mongos
 	chcon -t bin_t /opt/Thinkbox/DeadlineDatabase10/mongo/application/bin/mongod
 
 	echo -e "\n\n\e[31mYou accept AWS Thinkbox Deadline EULA when installing:\e[0m"
