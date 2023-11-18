@@ -10,13 +10,13 @@ git clone -b "v0.4" https://github.com/oomer/oomerfarm.git
 
 cd oomerfarm 
 
-bash keyoomerfarm.sh
+bash becomesecure.sh
 ```
 
-From folder ***oomerfarm/\_oomerkeys\_/boss***   
+From folder ***oomerfarm/\.oomer\/keysencrypted***   
 - upload to Google Drive
-    - ***hub.keybundle.enc***
-    - ***workers.keybundle.enc*** 
+    - ***hub.keys.encrypted***
+    - ***worker.keys.encrypted*** 
 - Share both using ***Anyone with link*** 
 - Use ***Copy Link***, and paste when asked for URL in bootstraphub.sh and bootstrapworker.sh
 
@@ -36,7 +36,7 @@ cd oomerfarm
 sudo bash bootstraphub.sh
 ```
 * instead of "i_agree_this_is_unsafe" type "hub"
-* Use google drive URL to hub.keybundle.enc
+* Use google drive URL to hub.keys.encrypted
 
 ## For rendering work, setup one or more Linux machines
 
@@ -52,7 +52,7 @@ cd oomerfarm
 sudo bash bootstrapworker.sh
 ```
 * instead of "i_agree_this_is_unsafe" type "hub"
-* Use your google drive url to worker.keybundle.enc
+* Use your google drive url to worker.keys.encrypted
 * assign unique id 1-9999 to each node
 
 ## Submit jobs from desktop/laptop
