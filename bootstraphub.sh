@@ -195,15 +195,29 @@ EOF
 		if [ -z "$smb_user" ]; then
 		    smb_user=$deadline_user_default
 		fi
-		dnf -y install fuse
 
+		if [ "$os_name" == "\"Ubuntu\"" ]; then
+			apt -y install fuse
+		elif [ "$os_name" == "\"AlmaLinux\"" ] || [ "$os_name" == "\"Rocky Linux\"" ]; then
+			apt -y install fuse
+		fi
 	fi
 
 else
 	keybundle_url=$keybundle_url_default
 fi
 
-dnf -y install tar
+os_name=$(awk -F= '$1=="NAME" { print $2 ;}' /etc/os-release)
+if [ "$os_name" == "\"Ubuntu\"" ]; then
+	apt -y update
+	apt -y install tar
+elif [ "$os_name" == "\"AlmaLinux\"" ] || [ "$os_name" == "\"Rocky Linux\"" ]; then
+	dnf -y install tar
+else
+	echo "\e[31mFAIL:\e[0m Unsupported operating system $os_name"
+	exit
+fi
+
 
 # Ensure max security
 # ===================
@@ -216,7 +230,11 @@ firewalld_status=$(systemctl status firewalld)
 
 if [ -z "$firewalld_status" ]; then
 	echo -e "\e[32mInstalling firewalld...\e[0m"
-	dnf -y install firewalld
+	if [ "$os_name" == "\"Ubuntu\"" ]; then
+		apt -y install firewalld
+	elif [ "$os_name" == "\"AlmaLinux\"" ] || [ "$os_name" == "\"Rocky Linux\"" ]; then
+		dnf -y install firewalld
+	fi
 	systemctl enable --now firewalld
 fi
 
@@ -468,10 +486,16 @@ systemctl enable --now nebula
 # Install Samba
 # =============
 echo -e "\n\e[32mInstalling File Server ( Samba )...\e[0m"
-dnf -y install cifs-utils
-dnf -y install kernel-modules
-dnf -y install samba
 
+
+if [ "$os_name" == "\"Ubuntu\"" ]; then
+	apt -y install cifs-utils
+	apt -y install kernel-modules
+	apt -y install samba
+elif [ "$os_name" == "\"AlmaLinux\"" ] || [ "$os_name" == "\"Rocky Linux\"" ]; then
+	dnf -y install cifs-utils
+	dnf -y install samba
+fi
 cat <<EOF > /etc/samba/smb.conf
 ntlm auth = mschapv2-and-ntlmv2-only
 interfaces = 127.0.0.1 ${nebula_ip}/16
