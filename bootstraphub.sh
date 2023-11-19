@@ -23,6 +23,7 @@ fi
 
 skip_advanced="yes"
 skip_advanced_default="yes"
+os_name=$(awk -F= '$1=="NAME" { print $2 ;}' /etc/os-release)
 
 # deadline
 # ======== 
@@ -45,9 +46,13 @@ bellasha256="afb15d150fc086709cc726c052dd40cd115eb8b32060c7a82bdba4f6d9cebd3d"
 # mongodb
 # =======
 mongourl="https://fastdl.mongodb.org/linux/"
-mongotar="mongodb-linux-x86_64-rhel80-4.4.16.tgz"
-mongosha256="78c3283bd570c7c88ac466aa6cc6e93486e061c28a37790e0eebf722ae19a0cb"
-
+if [ "$os_name" == "\"Ubuntu\"" ]; then
+	mongotar="mongodb-linux-x86_64-ubuntu2004-4.4.16.tgz"
+	mongosha256="6924f63437bfe539d778bc8a6b865aa4aab550e530b20ea4f14cace009d39927"
+elif [ "$os_name" == "\"AlmaLinux\"" ] || [ "$os_name" == "\"Rocky Linux\"" ]; then
+	mongotar="mongodb-linux-x86_64-rhel80-4.4.16.tgz"
+	mongosha256="78c3283bd570c7c88ac466aa6cc6e93486e061c28a37790e0eebf722ae19a0cb"
+fi
 # no-so-secret i_agree_this_is_unsafe.keys.encrypted
 # ==================================================
 keybundle_url_default="https://drive.google.com/file/d/1uiVSKuzhJ64mlsK0t4xMFYBX2IkQLB0b/view?usp=sharing"
@@ -207,7 +212,6 @@ else
 	keybundle_url=$keybundle_url_default
 fi
 
-os_name=$(awk -F= '$1=="NAME" { print $2 ;}' /etc/os-release)
 if [ "$os_name" == "\"Ubuntu\"" ]; then
 	apt -y update
 	apt -y install tar
