@@ -524,7 +524,13 @@ smb ports = 445
    directory mask = 0777
 EOF
 
-systemctl enable --now smb
+if [ "$os_name" == "\"Ubuntu\"" ]; then
+	systemctl stop nmbd
+	systemctl disable nmbd
+	systemctl restart smbd
+elif [ "$os_name" == "\"AlmaLinux\"" ] || [ "$os_name" == "\"Rocky Linux\"" ]; then
+	systemctl enable --now smb
+fi	
 
 # ***FIREWALL rules***
 # adopting highly restrictive rules to protect network
