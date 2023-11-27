@@ -7,9 +7,14 @@
 # - allows render submissions and monitoring oomerfarm workers
 # - NOT for hub or worker machines.
 # - Tested on MacoOS Ventura, Windows 10,11
+# - when run under macos or msys windows, do a .oomer install
+# - when run under linux do a /etc/nebula install
+
 
 lighthouse_internet_ip_default="x.x.x.x"
 lighthouse_nebula_ip="10.87.0.1"
+lighthouse_internet_port="42042"
+# additional lighthouses must be added manually
 
 if test -f .oomer/.last_lighthouse_internet_ip; then
 	lighthouse_internet_ip_default=$(cat .oomer/.last_lighthouse_internet_ip)
@@ -41,91 +46,153 @@ nebula_config_create_path=""
 nebula_config_path=""
 
 
-if test -d .oomer/user; then
-        existing_keys="$(ls .oomer/user) skip"
-
-        if ! [ -z existing_keys ];then
-		echo -e "\nChoose user key:"
-                select user_key in $existing_keys
-                do
-                        break
-                done
-		if ! [[ $existing_keys == "skip" ]]; then
-			nebula_config_create_path=.oomer/user/${user_key}/config.yml
-		fi
-        else
-                echo "Invalid state"
-		exit
+# [TODO] currently linux so will require download of encrypted keybundles
+# Will also need macos and windows users that do not run becomesecure.sh to get keys
+if [[ "$OSTYPE" == "linux-gnu"* ]] ; then
+	echo -e "\n\e[36m\e[5mURL\e[0m\e[0m to \e[32mxxxx.keys.encrypted\e[0m"
+        read -p "Enter: " keybundle_url
+        if [ -z "$keybundle_url" ]; then
+                echo -e "\e[31mFAIL:\e[0m URL cannot be blank"
+                exit
         fi
 
-	#if test -d .oomer/server; then
-	#	existing_keys="$(ls .oomer/server) skip"
-	#	if ! [ -z existing_keys ];then
-	#		select server_key in $existing_keys
-	#		do
-	#			break
-	#		done
-	#		if ! [[ $existing_keys == "skip" ]]; then
-	#			nebula_config_create_path=.oomer/server/${server_key}/config.yml
-	#		else
-	#			exit
-	#		fi
-	#	else
-	#		echo "Invalid state"
-	#		exit
-	#	fi
-	#fi
+        echo -e "\nENTER \e[36m\e[5mpassphrase\e[0m\e[0m to decode \e[32mxxxx.key.encypted\e[0m YOU set in \"keyauthority.sh\"  ( keystrokes hidden )"
+        IFS= read -rs encryption_passphrase < /dev/tty
+        if [ -z "$encryption_passphrase" ]; then
+                echo -e "\n\e[31mFAIL:\e[0m Invalid empty passphrase"
+                exit
+        fi
 
-else
-	user_key="i_agree_this_is_unsafe"
-	mkdir -p .oomer/user/i_agree_this_is_unsafe
-	nebula_config_create_path=.oomer/user/${user_key}/config.yml
-	# Your Nebula Virtual Private Network can be accessed by these keys
-	# The user keys are in BOTH oomer and person groups
-	# Nebula built-in firewall allows port 22/tcp ssh access to the hub and worker hosts
-	# hub and workers are only in the oomer group which does not permit ssh access person nodes
-	# all Nebula hosts can ping each other
+	# Get Nebula credentials
+	# ======================
+	if [[ "$keybundle_url" == *"https://drive.google.com/file/d"* ]]; then
+		# if find content-length, then gdrive link is not restricted, this is a guess
+		head=$(curl -s --head ${keybundle_url} | grep "content-length")
+		if [[ "$head" == *"content-length"* ]]; then
+			# Extract Google uuid 
+			googlefileid=$(echo $keybundle_url | egrep -o '(\w|-){26,}')
+			echo $googlefileid
+			head2=$(curl -s --head -L "https://drive.google.com/uc?export=download&id=${googlefileid}" | grep "content-length")
+			if [[ "$head2" == *"content-length"* ]]; then
+				echo "Downloading https://drive.google.com/uc?export=download&id=${googlefileid}"
+				# Hack with set curl fails under ubuntu , not sure how it helps
+				set -x
+				curl -L "https://drive.google.com/uc?export=download&id=$googlefileid" -o ${worker_prefix}.keys.encrypted
+				set +x
+			else
+				echo "FAIL: ${keybundle_url} is not public, Set General Access to Anyone with Link"
+				exit
+			fi
+		else
+			echo "FAIL: ${keybundle_url} is not a valid Google Drive link"
+			exit
+		fi
+	else
+		curl -L -o xxx.keys.encrypted "${keybundle_url}" 
+	fi
 
-cat <<EOF > .oomer/user/i_agree_this_is_unsafe/ca.crt
------BEGIN NEBULA CERTIFICATE-----
-CjcKBW9vbWVyKKCT96kGMKCWj/UGOiDCsJ2dvXr5msWq8IrIDgi7ZGImzOASL4UG
-ICFwLtM1REABEkBqk1Vrrzk33Vja+UPNyG/TBqn5ZzKV1CUjsH2e1k1mMQxwUUgE
-0bGzMkHAJ6gPfQ3YVHHn6oWk/c4F7Z3u6bQN
------END NEBULA CERTIFICATE-----
-EOF
+	# decrypt worker.keybundle.enc
+	# ============================
+	while :
+	do
+	    if openssl enc -aes-256-cbc -pbkdf2 -d -in xxx.keys.encrypted -out xxx.tar -pass file:<( echo -n "$encryption_passphrase" ) ; then
+		rm xxx.keys.encrypted
+		break
+	    else
+		echo "WRONG passphrase entered for worker.keys.encrypted, try again"
+		echo "Enter passphrase for worker.keys.encrypted, then hit return"
+		echo "==============================================================="
+		IFS= read -rs $encryption_passphrase < /dev/tty
+	    fi 
+	done  
 
-cat <<EOF > .oomer/user/i_agree_this_is_unsafe/i_agree_this_is_unsafe.crt
------BEGIN NEBULA CERTIFICATE-----
-CnsKB3BlcnNvbjESCYGU3FKAgPz/DyIFb29tZXIiBnNlcnZlciIGcGVyc29uKNCT
-96kGMJ+Wj/UGOiAPDXUGzvQwXHGXQ10GeDvNhQENyf5d8HkJoEHhX+/ZaEog4ZcT
-EoWXlG8TopKaq7X7FVZ/5Pobx2uVfKvJhwAgGaMSQHRilR4jv5xqcWjkOdXjwpVl
-UYLoUk2n9vXCthBoeawpCQvwi+XWFG6QNrPXu8HDviLfDuxgTee+E1WEWcwmYwM=
------END NEBULA CERTIFICATE-----
-EOF
+	# nebula credentials
+	# ==================
+	if ! test -d /etc/nebula; then
+		mkdir -p /etc/nebula
+	fi
+	tar --strip-components 1 -xvf xxx.tar -C /etc/nebula
 
-cat <<EOF > .oomer/user/i_agree_this_is_unsafe/i_agree_this_is_unsafe.key
------BEGIN NEBULA X25519 PRIVATE KEY-----
-eL5x5N4vQkL9xPEJfdcru5InW+Mfmba2HekGX1I0OoU=
------END NEBULA X25519 PRIVATE KEY-----
-EOF
+	nebulakeypath="$(ls /etc/nebula/*.key)"
+	nebulakeyname="${nebulakeypath##*/}"
+	nebulakeybase="${nebulakeyname%.*}"
+	if [ -z $nebulakeybase ]; then
+		exit
+	fi
+	chown root.root /etc/nebula/${nebulakeybase}.crt
+	chown root.root /etc/nebula/${nebulakeybase}.key
+	rm xxx.tar
 
 fi
 
 
-if [[ "$OSTYPE" == "msys"* ]]; then
-	oomerfarm_path=$(cygpath -w -p $(pwd))
-	ca_path="\\.oomer\\user\\${user_key}\\ca.crt"
-	crt_path="\\.oomer\\user\\${user_key}\\${user_key}.crt"
-	key_path="\\.oomer\\user\\${user_key}\\${user_key}.key"
+if [[ "$OSTYPE" == "darwin"* ]] || [[ "$OSTYPE" == "msys"* ]]; then
+	if test -d .oomer/user; then
+		existing_keys="$(ls .oomer/user) skip"
 
-else
-	oomerfarm_path="."
-	ca_path="/.oomer/user/${user_key}/ca.crt"
-	crt_path="/.oomer/user/${user_key}/${user_key}.crt"
-	key_path="/.oomer/user/${user_key}/${user_key}.key"
-fi
+		if ! [ -z existing_keys ];then
+			echo -e "\nChoose user key:"
+			select user_key in $existing_keys
+			do
+				break
+			done
+			if ! [[ $existing_keys == "skip" ]]; then
+				nebula_config_create_path=.oomer/user/${user_key}/config.yml
+			fi
+		else
+			echo "Invalid state"
+			exit
+		fi
 
-if ! [ -z $nebula_config_create_path ]; then
+	else
+		user_key="i_agree_this_is_unsafe"
+		mkdir -p .oomer/user/i_agree_this_is_unsafe
+		nebula_config_create_path=.oomer/user/${user_key}/config.yml
+		# Your Nebula Virtual Private Network can be accessed by these keys
+		# The user keys are in BOTH oomer and person groups
+		# Nebula built-in firewall allows port 22/tcp ssh access to the hub and worker hosts
+		# hub and workers are only in the oomer group which does not permit ssh access person nodes
+		# all Nebula hosts can ping each other
+
+	cat <<EOF > .oomer/user/i_agree_this_is_unsafe/ca.crt
+	-----BEGIN NEBULA CERTIFICATE-----
+	CjcKBW9vbWVyKKCT96kGMKCWj/UGOiDCsJ2dvXr5msWq8IrIDgi7ZGImzOASL4UG
+	ICFwLtM1REABEkBqk1Vrrzk33Vja+UPNyG/TBqn5ZzKV1CUjsH2e1k1mMQxwUUgE
+	0bGzMkHAJ6gPfQ3YVHHn6oWk/c4F7Z3u6bQN
+	-----END NEBULA CERTIFICATE-----
+	EOF
+
+	cat <<EOF > .oomer/user/i_agree_this_is_unsafe/i_agree_this_is_unsafe.crt
+	-----BEGIN NEBULA CERTIFICATE-----
+	CnsKB3BlcnNvbjESCYGU3FKAgPz/DyIFb29tZXIiBnNlcnZlciIGcGVyc29uKNCT
+	96kGMJ+Wj/UGOiAPDXUGzvQwXHGXQ10GeDvNhQENyf5d8HkJoEHhX+/ZaEog4ZcT
+	EoWXlG8TopKaq7X7FVZ/5Pobx2uVfKvJhwAgGaMSQHRilR4jv5xqcWjkOdXjwpVl
+	UYLoUk2n9vXCthBoeawpCQvwi+XWFG6QNrPXu8HDviLfDuxgTee+E1WEWcwmYwM=
+	-----END NEBULA CERTIFICATE-----
+	EOF
+
+	cat <<EOF > .oomer/user/i_agree_this_is_unsafe/i_agree_this_is_unsafe.key
+	-----BEGIN NEBULA X25519 PRIVATE KEY-----
+	eL5x5N4vQkL9xPEJfdcru5InW+Mfmba2HekGX1I0OoU=
+	-----END NEBULA X25519 PRIVATE KEY-----
+	EOF
+
+	fi
+
+	if [[ "$OSTYPE" == "msys"* ]]; then
+		oomerfarm_path=$(cygpath -w -p $(pwd))
+		ca_path="\\.oomer\\user\\${user_key}\\ca.crt"
+		crt_path="\\.oomer\\user\\${user_key}\\${user_key}.crt"
+		key_path="\\.oomer\\user\\${user_key}\\${user_key}.key"
+
+	else
+		oomerfarm_path="."
+		ca_path="/.oomer/user/${user_key}/ca.crt"
+		crt_path="/.oomer/user/${user_key}/${user_key}.crt"
+		key_path="/.oomer/user/${user_key}/${user_key}.key"
+	fi
+
+	if ! [ -z $nebula_config_create_path ]; then
 
 
 #cat <<EOF > .oomer/user/${user_key}/config.yml
@@ -185,16 +252,21 @@ firewall:
       proto: icmp
       host: any
 EOF
-
-
+	fi
 fi
 
+if [[ "$OSTYPE" == "linux-gnu"* ]]; then
+	nebulabindir="/opt/oomer/bin"
+else
+        nebulabindir=".oomer/bin"
+fi
+mkdir -p ${nebulabindir}
 
 # Download Nebula from github once
 # Ensure integrity of executables that will run as administrator
+# On linux, we create a systemd unit
 # ==============================================================
-if ! ( test -d ".oomer/bin" ); then
-        mkdir -p .oomer/bin
+if ! ( test -f ".oomer/bin/nebula" ) && ! ( test -f "/opt/oomer/bin/nebula" ); then
         echo -e "\nDownloading Nebula ${nebula_version} ..."
         if [[ "$OSTYPE" == "linux-gnu"* ]]; then
                 nebularelease="nebula-linux-amd64.tar.gz"
@@ -210,36 +282,37 @@ if ! ( test -d ".oomer/bin" ); then
                 exit
         fi
 
-        curl -L https://github.com/slackhq/nebula/releases/download/${nebula_version}/${nebularelease} -o .oomer/bin/${nebularelease}
+        curl -L https://github.com/slackhq/nebula/releases/download/${nebula_version}/${nebularelease} -o ${nebulabindir}/${nebularelease}
         if [[ "$OSTYPE" == "linux-gnu"* ]]; then
-                MatchFile="$(echo "${nebulasha256} .oomer/bin/${nebularelease}" | sha256sum --check)"
-                if [ "$MatchFile" == ".oomer/bin/${nebularelease}: OK" ] ; then
+                MatchFile="$(echo "${nebulasha256} ${nebulabindir}/${nebularelease}" | sha256sum --check)"
+
+                if [ "$MatchFile" == "${nebulabindir}/${nebularelease}: OK" ] ; then
                         echo -e "Extracting https://github.com/slackhq/nebula/releases/download/${nebula_version}/${nebularelease}"
-                        tar -xvzf .oomer/bin/${nebularelease} --directory .oomer/bin
+                        tar -xvzf ${nebulabindir}/${nebularelease} --directory ${nebulabindir}
                 else
-                        echo "FAIL: .oomer/bin/${nebularelease} checksum failed, file possibly maliciously altered on github"
+                        echo "FAIL: ${nebulabindir}/${nebularelease} checksum failed, file possibly maliciously altered on github"
                         exit
                 fi
 
         elif [[ "$OSTYPE" == "darwin"* ]] || [[ "$OSTYPE" == "msys"* ]]; then
-                MatchFile="$(echo "${nebulasha256}  .oomer/bin/${nebularelease}" | shasum -a 256 --check)"
-                if [ "$MatchFile" == ".oomer/bin/${nebularelease}: OK" ] ; then
+                MatchFile="$(echo "${nebulasha256}  ${nebulabindir}/${nebularelease}" | shasum -a 256 --check)"
+                if [ "$MatchFile" == "${nebulabindir}/${nebularelease}: OK" ] ; then
                         echo -e "Extracting https://github.com/slackhq/nebula/releases/download/${nebula_version}/${nebularelease}"
-                        unzip .oomer/bin/${nebularelease} -d .oomer/bin
+                        unzip ${nebulabindir}/${nebularelease} -d ${nebulabindir}
                 else
-                        echo "FAIL: .oomer/bin/${nebularelease} checksum failed, file possibly maliciously altered on github"
+                        echo "FAIL: ${nebulabindir}/${nebularelease} checksum failed, file possibly maliciously altered on github"
                         exit
                 fi
         else
-                echo -e "FAIL: unpacking .oomer/bin/${nebula-release}"
+                echo -e "FAIL: unpacking ${nebulabindir}/${nebularelease}"
                 exit
         fi
-        chmod +x .oomer/bin/nebula-cert
-        chmod +x .oomer/bin/nebula
-        rm .oomer/bin/${nebularelease}
+        chmod +x ${nebulabindir}/nebula-cert
+        chmod +x ${nebulabindir}/nebula
+        #rm ${nebulabindir}/${nebularelease}
 fi
 
-
+# This section double checks final hash on executable
 if [[ "$OSTYPE" == "linux-gnu"* ]]; then
         executable="nebula"
         nebulasha256="a12789f4f1e803e39a446aa31c66b07e681d6567042928c5250fda9cd2096ca7"
@@ -255,16 +328,16 @@ else
 fi
 
 if [[ "$OSTYPE" == "linux-gnu"* ]]; then
-        MatchFile="$(echo "${nebulasha256}  .oomer/bin/${executable}" | sha256sum --check)"
-        if ! $[ "$MatchFile" == ".oomer/bin/${executable}: OK" ] ; then
-                echo -e "\n.oomer/bin/${executable} has been corrupted or maliciously tampered with"
+        MatchFile="$(echo "${nebulasha256}  ${nebulabindir}/${executable}" | sha256sum --check)"
+        if ! [ "$MatchFile" == "${nebulabindir}/${executable}: OK" ] ; then
+                echo -e "\n${nebulabindir}/${executable} has been corrupted or maliciously tampered with"
                 echo "Aborting"
                 exit
         fi
 elif [[ "$OSTYPE" == "darwin"* ]] || [[ "$OSTYPE" == "msys"* ]]; then
-        MatchFile="$(echo "${nebulasha256}  .oomer/bin/${executable}" | shasum -a 256 --check)"
-        if ! [ "$MatchFile" == ".oomer/bin/${executable}: OK" ] ; then
-                echo -e "\n.oomer/bin/${executable} has been corrupted or maliciously tampered with"
+        MatchFile="$(echo "${nebulasha256} ${nebulabindir}/${executable}" | shasum -a 256 --check)"
+        if ! [ "$MatchFile" == "${nebulabindir}/${executable}: OK" ] ; then
+                echo -e "\n${nebulabindir}/${executable} has been corrupted or maliciously tampered with"
                 echo "Aborting"
                 exit
         fi
@@ -273,11 +346,11 @@ else
 fi
 
 
-if [[ "$OSTYPE" == "linux-gnu"* ]] || [[ "$OSTYPE" == "darwin"* ]] ; then
+if [[ "$OSTYPE" == "darwin"* ]] ; then
 	echo -e "\n"
 	echo -e "Do not run this script if it did not come from  https://github.com/oomer/oomerfarm"
 	echo "Current user, must be admin. Enter password to elevate the permissions of this script"
-        sudo .oomer/bin/nebula -config .oomer/user/${user_key}/config.yml
+        sudo ${nebulabindir}/nebula -config .oomer/user/${user_key}/config.yml
 fi
 
 if [[ "$OSTYPE" == "msys"* ]]; then
@@ -291,3 +364,83 @@ EOF
 	echo -e "Do not run this script if it did not come from  https://github.com/oomer/oomerfarm"
 fi
 
+if [[ "$OSTYPE" == "linux-gnu"* ]]; then
+# Create Nebula systemd unit 
+# ====
+cat <<EOF > /etc/systemd/system/nebula.service
+[Unit]
+Description=Nebula Launcher Service with dynamically chosen certificates 
+After=network.target
+
+[Service]
+Type=simple
+Restart=always
+RestartSec=35
+ExecStart=/opt/oomer/bin/nebula -config /etc/nebula/config.yml
+ExecStartPost=/bin/sleep 2
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+# Write config file
+# Security best practices #3: strict firewall rules
+# outbound nebula traffic limited to Deadline host
+# inbound rules to protect
+# use port 42042 to avoid conflict if using dnclient simultaneouly
+# =
+cat <<EOF > /etc/nebula/config.yml
+pki:
+  ca: /etc/nebula/ca.crt
+  cert: /etc/nebula/${nebulakeybase}.crt
+  key: /etc/nebula/${nebulakeybase}.key
+static_host_map:
+  "$lighthouse_nebula_ip": ["$lighthouse_internet_ip:${lighthouse_internet_port}"]
+lighthouse:
+  am_lighthouse: false
+  interval: 60
+  hosts: 
+    - "${lighthouse_nebula_ip}"
+listen:
+  host: 0.0.0.0
+  port: 42042
+punchy:
+  punch: true
+relay:
+  am_relay: false
+  use_relays: false
+tun:
+  disabled: false
+  dev: nebula_tun
+  drop_local_broadcast: false
+  drop_multicast: false
+  tx_queue: 500
+  mtu: 1300
+logging:
+  level: info
+  format: text
+firewall:
+  conntrack:
+    tcp_timeout: 12m
+    udp_timeout: 3m
+    default_timeout: 10m
+  outbound:
+    - port: any
+      proto: any
+      host: any
+  inbound:
+    - port: any
+      proto: icmp
+      host: any
+
+    - port: 22
+      proto: tcp
+      groups: 
+        - oomer
+        - person
+EOF
+	chmod go-rwx /etc/nebula/config.yml
+	systemctl enable nebula.service
+	systemctl restart nebula.service
+
+fi
