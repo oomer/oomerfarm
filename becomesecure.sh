@@ -118,7 +118,7 @@ do
 		if ! test -f .oomer/.lighthouse_ips; then
 			octet2=0
 			octet3=1
-			if [[ $new_key_type =="oomerfarm" ]]; then
+			if [[ $new_key_type == "oomerfarm" ]]; then
 				lighthouse_name_default="hub"
 			else
 				lighthouse_name_default="lighthouse1"
@@ -214,7 +214,7 @@ do
 	# since ip address needs to be unique and name needs to be unique
 
 	if [[ ${new_key_type} == "server" ]]; then
-		if ! test -f .oomer/.server; then
+		if ! test -f .oomer/.server_ips; then
 			octet2=1
 			octet3=1
 			server_name_default="server1"
