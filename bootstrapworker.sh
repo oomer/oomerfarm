@@ -284,7 +284,7 @@ if [[ "$keybundle_url" == *"https://drive.google.com/file/d"* ]]; then
 		exit
 	fi
 else
-	curl -L -o workers.keys.encrypted "${keybundle_url}" 
+	curl -L -o worker.keys.encrypted "${keybundle_url}" 
 fi
 
 
