@@ -209,7 +209,7 @@ fi
 
 
 has_getenforce=$(which getenforce)
-if ! [ -z $has_getenforce]; then
+if ! [ -z $has_getenforce ]; then
 	getenforce=$(getenforce)
 fi
 
