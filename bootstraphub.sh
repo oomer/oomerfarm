@@ -16,7 +16,9 @@ smb_user_default="oomerfarm"
 smb_user=$smb_user_default
 linux_password="oomerfarm"	
 
-if ! [[ "$OSTYPE" == "linux-gnu"* ]]; then
+redhat_platform_id=$(awk -F= '$1=="PLATFORM_ID" { print $2 ;}' /etc/os-release)
+
+if ! [ "$redhat_platform_id" == "\"platform:el8\"" ] ; then
 	echo -e "\e[31mFAIL:\e[0m This can only be installed on \e[5mAlma or Rocky Linux 8.x\e[0m"
 	exit
 fi
@@ -129,7 +131,7 @@ if ! [ "$nebula_name" = "i_agree_this_is_unsafe" ]; then
 		exit
 	fi
 
-	echo -e "\nENTER \e[36m\e[5mpassphrase\e[0m\e[0m to decode \e[32mhub.keys.encrypted\e[0m YOU set in \"keyauthority.sh\"  ( keystrokes hidden )"
+	echo -e "\nENTER \e[36m\e[5mpassphrase\e[0m\e[0m to decode \e[32mhub.keys.encrypted\e[0m YOU set in \"becomesecure.sh\"  ( keystrokes hidden )"
 	IFS= read -rs encryption_passphrase < /dev/tty
 	if [ -z "$encryption_passphrase" ]; then
 		echo -e "\n\e[31mFAIL:\e[0m Invalid empty passphrase"
@@ -378,7 +380,7 @@ if ! [[ "${testkeybundle}" == *"Not found"* ]]; then
 else
         echo -e "\e[31mFAIL:\e[0m ${nebula_name}.keys.encrypted missing"
 	echo  "${keybundle_url} might be corrupted or not shared publicly"
-	echo  "Use keyauthority.sh to generate keys, reupload"
+	echo  "Use becomesecure.sh to generate keys, reupload"
 	echo  "Check your Google Drive file link is \"Anyone who has link\""
 	exit
 fi
@@ -765,13 +767,13 @@ if [ "$nebula_name" == "i_agree_this_is_unsafe" ]; then
         echo -e "The \e[32mhub\e[0m only tracks jobs and servers files"
         echo -e "\e[36mNow you need some powerful Linux machines to do rendering\e[0m"
         echo -e " - ssh and run \e[32mbash bootstrapworker.sh\e[0m"
-        echo -e "To submit jobs, from desktop/laptop, join the VPN by running \e[36mbash joinoomerfarm.sh\e[0m" 
-	echo -e "\e[34mKeep window open to keep VPN alive\e[0m"
+        echo -e "To submit jobs, from desktop/laptop, join the VPN by running \e[36mbash bridgeoomerfarm.sh\e[0m" 
         echo -e " - with username \e[36moomerfarm\e[0m password \e[36moomerfarm\e[0m"
         echo -e " - mount folder \e[36msmb://hub.oomer.org/DeadlineRepository10\e[0m ( Windows //hub.oomer.org/DeadlineRespository )"
         echo -e " - mount folder \e[36msmb://hub.oomer.org/oomerfarm\e[0m ( Windows //hub.oomer.org/oomerfarm )"
         echo -e " - install Deadline Client software \e[36mhttps://www.awsthinkbox.com\e[0m"
         echo -e "You are on the \e[31mnot-so-secret keys\e[0m. Deploy a \e[32msecure renderfarm\e[0m by following instructions at https://github.com/oomer/oomerfarm"
+
 else
         echo -e "\n\e[32mOomerfarm hub setup completed. Ready to distribute renderfarm work\e[0m"
         echo -e "Remaining steps:"
@@ -780,8 +782,7 @@ else
         echo -e "2. \e[32m[YOU ARE HERE]\e[0m on this computer you ran \e[36mbash bootstraphub.sh\e[0m"
         echo -e "\e[36mNow you need some powerful Linux machines to do rendering\e[0m"
         echo -e "3. ssh and run \e[32mbash bootstrapworker.sh\e[0m"
-        echo -e "4. To submit jobs, from desktop/laptop, run \e[36mbash joinoomerfarm.sh\e[0m to join VPN"
-	echo -e "\e[34mKeep window open to keep VPN alive\e[0m"
+        echo -e "4. To submit jobs, from desktop/laptop, run \e[36mbash bridgeoomerfarm.sh\e[0m to join VPN"
 	if [ "$linux_password" == "oomerfarm" ]; then
         	echo -e " - with username \e[36moomerfarm\e[0m password \e[36moomerfarm\e[0m"
 	else
