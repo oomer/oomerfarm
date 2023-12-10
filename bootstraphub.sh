@@ -46,10 +46,12 @@ bellasha256="afb15d150fc086709cc726c052dd40cd115eb8b32060c7a82bdba4f6d9cebd3d"
 # mongodb
 # =======
 mongourl="https://fastdl.mongodb.org/linux/"
-if [ "$os_name" == "\"Ubuntu\"" ]; then
+if [ "$os_name" == "\"Ubuntu\"" ] || [ "$os_name" == "\"Debian GNU/Linux\"" ]; then
+	apt -y install curl
 	mongotar="mongodb-linux-x86_64-ubuntu2004-4.4.16.tgz"
 	mongosha256="6924f63437bfe539d778bc8a6b865aa4aab550e530b20ea4f14cace009d39927"
 elif [ "$os_name" == "\"AlmaLinux\"" ] || [ "$os_name" == "\"Rocky Linux\"" ]; then
+	dnf -y install curl
 	mongotar="mongodb-linux-x86_64-rhel80-4.4.16.tgz"
 	mongosha256="78c3283bd570c7c88ac466aa6cc6e93486e061c28a37790e0eebf722ae19a0cb"
 fi
@@ -201,7 +203,7 @@ EOF
 		    smb_user=$deadline_user_default
 		fi
 
-		if [ "$os_name" == "\"Ubuntu\"" ]; then
+		if [ "$os_name" == "\"Ubuntu\"" ] || [ "$os_name" == "\"Debian GNU/Linux\"" ]; then
 			apt -y install fuse
 		elif [ "$os_name" == "\"AlmaLinux\"" ] || [ "$os_name" == "\"Rocky Linux\"" ]; then
 			apt -y install fuse
@@ -212,7 +214,7 @@ else
 	keybundle_url=$keybundle_url_default
 fi
 
-if [ "$os_name" == "\"Ubuntu\"" ]; then
+if [ "$os_name" == "\"Ubuntu\"" ] || [ "$os_name" == "\"Debian GNU/Linux\"" ]; then
 	apt -y update
 	apt -y install tar
 elif [ "$os_name" == "\"AlmaLinux\"" ] || [ "$os_name" == "\"Rocky Linux\"" ]; then
@@ -234,7 +236,7 @@ firewalld_status=$(systemctl status firewalld)
 
 if [ -z "$firewalld_status" ]; then
 	echo -e "\e[32mInstalling firewalld...\e[0m"
-	if [ "$os_name" == "\"Ubuntu\"" ]; then
+	if [ "$os_name" == "\"Ubuntu\"" ] || [ "$os_name" == "\"Debian GNU/Linux\"" ]; then
 		apt -y install firewalld
 	elif [ "$os_name" == "\"AlmaLinux\"" ] || [ "$os_name" == "\"Rocky Linux\"" ]; then
 		dnf -y install firewalld
@@ -285,7 +287,8 @@ if ! [[ $skip_advanced == "yes" ]]; then
 		if [ "$MatchFile" = "/usr/local/bin/goofys: OK" ] ; then
 			chmod +x /usr/local/bin/goofys
 			mkdir -p /mnt/s3
-			chown root.root /usr/local/bin/goofys
+			chown root /usr/local/bin/goofys
+			chown :root /usr/local/bin/goofys
 			chcon -t bin_t /usr/local/bin/goofys # SELinux security clearance
 		else
 			echo "FAIL"
@@ -357,9 +360,13 @@ if ! [[ "${testkeybundle}" == *"Not found"* ]]; then
 	tar --to-stdout -xvf ${nebula_name}.tar ${nebula_name}/${nebula_name}.crt > ${nebula_name}.crt
 	ERROR=$( tar --to-stdout -xvf ${nebula_name}.tar ${nebula_name}/${nebula_name}.key > ${nebula_name}.key 2>&1 )
 	if ! [ "$ERROR" == *"Fail"* ]; then
-	    chown root.root "${nebula_name}.key"
-	    chown root.root "${nebula_name}.crt"
-	    chown root.root "ca.crt"
+	    chown root "${nebula_name}.key"
+	    chown root "${nebula_name}.crt"
+	    chown root "ca.crt"
+
+	    chown :root "${nebula_name}.key"
+	    chown :root "${nebula_name}.crt"
+	    chown :root "ca.crt"
 	    chmod go-rwx "${nebula_name}.key"
 	    mv ca.crt /etc/nebula
 	    mv "${nebula_name}.crt" /etc/nebula
@@ -492,7 +499,7 @@ systemctl enable --now nebula
 echo -e "\n\e[32mInstalling File Server ( Samba )...\e[0m"
 
 
-if [ "$os_name" == "\"Ubuntu\"" ]; then
+if [ "$os_name" == "\"Ubuntu\"" ] || [ "$os_name" == "\"Debian GNU/Linux\"" ]; then
 	apt -y install cifs-utils
 	apt -y install kernel-modules
 	apt -y install samba
@@ -524,7 +531,7 @@ smb ports = 445
    directory mask = 0777
 EOF
 
-if [ "$os_name" == "\"Ubuntu\"" ]; then
+if [ "$os_name" == "\"Ubuntu\"" ] || [ "$os_name" == "\"Debian GNU/Linux\"" ]; then
 	systemctl stop nmbd
 	systemctl disable nmbd
 	systemctl restart smbd
@@ -586,9 +593,14 @@ if ! ( test -d /mnt/DeadlineRepository10 ); then
 	mkdir -p /mnt/oomerfarm/bella
 	mkdir -p /mnt/oomerfarm/bella/renders
 	mkdir -p /mnt/oomerfarm/installers
-	chown oomerfarm.oomerfarm /mnt/oomerfarm
-	chown oomerfarm.oomerfarm /mnt/oomerfarm/bella
-	chown oomerfarm.oomerfarm /mnt/oomerfarm/bella/renders
+
+	chown oomerfarm /mnt/oomerfarm
+	chown oomerfarm /mnt/oomerfarm/bella
+	chown oomerfarm /mnt/oomerfarm/bella/renders
+
+	chown :oomerfarm /mnt/oomerfarm
+	chown :oomerfarm /mnt/oomerfarm/bella
+	chown :oomerfarm /mnt/oomerfarm/bella/renders
 	chcon -R -t samba_share_t /mnt/DeadlineRepository10/
 	chcon -R -t samba_share_t /mnt/oomerfarm/
 fi
@@ -646,9 +658,13 @@ if ! test -f /mnt/DeadlineRepository10/ThinkboxEULA.txt ; then
 
 	# [TODO] Thinkbox installs mongod and runs as root, should use low security user 
 	# [TODO] Since files are already created, will have to recursively chown
-	chown root.root /opt/Thinkbox/DeadlineDatabase10/mongo/application/bin/mongod
-	chown root.root /opt/Thinkbox/DeadlineDatabase10/mongo/application/bin/mongo
-	chown root.root /opt/Thinkbox/DeadlineDatabase10/mongo/application/bin/mongos
+	chown root /opt/Thinkbox/DeadlineDatabase10/mongo/application/bin/mongod
+	chown root /opt/Thinkbox/DeadlineDatabase10/mongo/application/bin/mongo
+	chown root /opt/Thinkbox/DeadlineDatabase10/mongo/application/bin/mongos
+	chown :root /opt/Thinkbox/DeadlineDatabase10/mongo/application/bin/mongod
+	chown :root /opt/Thinkbox/DeadlineDatabase10/mongo/application/bin/mongo
+	chown :root /opt/Thinkbox/DeadlineDatabase10/mongo/application/bin/mongos
+
 	chcon -t bin_t /opt/Thinkbox/DeadlineDatabase10/mongo/application/bin/mongod
 
 	echo -e "\n\n\e[31mYou accept AWS Thinkbox Deadline EULA when installing:\e[0m"
@@ -671,7 +687,8 @@ cat <<EOF > /var/lib/Thinkbox/Deadline10/licenseforwarder.ini
 LicenseForwarderProcessID=92562
 LicenseForwarderMessagingPort=40635
 EOF
-	chown oomerfarm.oomerfarm /var/lib/Thinkbox/Deadline10/licenseforwarder.ini
+	chown oomerfarm /var/lib/Thinkbox/Deadline10/licenseforwarder.ini
+	chown :oomerfarm /var/lib/Thinkbox/Deadline10/licenseforwarder.ini
 
 cat <<EOF > /var/lib/Thinkbox/Deadline10/deadline.ini
 [Deadline]
@@ -739,7 +756,8 @@ else
 fi
 
 curl -L https://bellarender.com/doc/scenes/orange-juice/orange-juice.bsz -o /mnt/oomerfarm/bella/orange-juice.bsz
-chown oomerfarm.oomerfarm /mnt/oomerfarm/bella/orange-juice.bsz
+chown oomerfarm /mnt/oomerfarm/bella/orange-juice.bsz
+chown :oomerfarm /mnt/oomerfarm/bella/orange-juice.bsz
 
 if [ "$nebula_name" == "i_agree_this_is_unsafe" ]; then
         echo -e "\n\e[32mFinished oomerfarm hub setup. Ready to distribute renderfarm work\e[0m"
