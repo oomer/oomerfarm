@@ -10,8 +10,15 @@
 
 # Tested on AWS, Azure, Google, Oracle, Vultr, Digital Ocaan, Linode, Heztner, Server-Factory, Crunchbits
 
+redhat_platform_id=$(awk -F= '$1=="PLATFORM_ID" { print $2 ;}' /etc/os-release)
+
+
 if ! [[ "$OSTYPE" == "linux-gnu"* ]]; then
-        echo -e "FAIL: Run this on Linux preferably AlmaLinux 8.x"
+        echo -e "FAIL: Run this on a Red Hat Enterprise Linux 8 or 9 derivative"
+	echo "tested on:"
+	echo -e "\tAlmaLinux 8.x/9.x"
+	echo -e "\tRockyLinux 8.x/9.x"
+	echo -e "\tOracle Linux Server 8.x/9.x"
         exit
 fi
 
@@ -231,11 +238,12 @@ if [ "$os_name" == "\"Ubuntu\"" ]; then
 	#selinux-activate
 	apt -y  install cifs-utils
 	apt -y install mesa-vulkan-drivers 
-	apt -y install freeglut3-dev
+	apt -y install libgl1-mesa-glx
+	#apt -y install freeglut3-dev
 	apt -y install libffi7
 	apt -y install fuse
 	ln -s /usr/lib/x86_64-linux-gnu/libffi.so.7 /usr/lib/libffi.so.6
-elif [ "$os_name" == "\"AlmaLinux\"" ] || [ "$os_name" == "\"Rocky Linux\"" ]; then
+elif [ "$redhat_platform_id" == "\"platform:el8\"" ] || [ "$redhat_platform_id" == "\"platform:el9\"" ]; then
 	echo -e "\e[32mDiscovered $os_name\e[0m"
 	dnf -y update
 	dnf -y install tar
