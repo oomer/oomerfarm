@@ -11,7 +11,7 @@
 
 ```sh
 sudo dnf -y install git
-git clone -b "v0.4" https://github.com/oomer/oomerfarm.git
+git clone -b "v0.5" https://github.com/oomer/oomerfarm.git
 cd oomerfarm 
 sudo bash bootstraphub.sh
 ```
@@ -22,7 +22,7 @@ sudo bash bootstraphub.sh
 
 ```sh
 sudo dnf -y install git
-git clone -b "v0.4" https://github.com/oomer/oomerfarm.git
+git clone -b "v0.5" https://github.com/oomer/oomerfarm.git
 cd oomerfarm 
 sudo bash bootstrapworker.sh
 ```
@@ -31,7 +31,7 @@ sudo bash bootstrapworker.sh
 #### Connect to private oomerfarm VPN
 - From Linux/MacOS shell or [ git-bash ]( https://git-scm.com )<sup>Win</sup>
 ```sh
-git clone "v0.4" https://github.com/oomer/oomerfarm.git
+git clone "v0.5" https://github.com/oomer/oomerfarm.git
 cd oomerfarm 
 bash bridgeoomerfarm.sh
 ```

@@ -6,7 +6,7 @@
 ## For long term security, first create VPN keys on a trusted desktop or laptop
 
 ```sh
-git clone -b "v0.4" https://github.com/oomer/oomerfarm.git
+git clone -b "v0.5" https://github.com/oomer/oomerfarm.git
 
 cd oomerfarm 
 
@@ -29,7 +29,7 @@ While a **hub** server can be spun up as needed, just like **workers**, the **hu
 ```sh
 sudo dnf -y install git
 
-git clone -b "v0.4" https://github.com/oomer/oomerfarm.git
+git clone -b "v0.5" https://github.com/oomer/oomerfarm.git
 
 cd oomerfarm 
 
@@ -45,7 +45,7 @@ sudo bash bootstraphub.sh
 ```sh
 sudo dnf -y install git
 
-git clone -b "v0.4" https://github.com/oomer/oomerfarm.git
+git clone -b "v0.5" https://github.com/oomer/oomerfarm.git
 
 cd oomerfarm 
 

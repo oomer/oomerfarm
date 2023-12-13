@@ -1,7 +1,7 @@
 # oomerfarm: Simple bash scripts to deploy a personal renderfarm 
 
 [ WORK IN PROGRESS ]
-[ BETA release v0.4 ]
+[ BETA release v0.5 ]
 
 >A renderfarm takes a workload, distributes it over a network and provides these benefits.
   1. Frees up desktop/laptop cpu
@@ -28,7 +28,7 @@
 
 3. Spin up some fast cloud computers and run ***bootstrapworker.sh*** on each to get the renderfarm churning. Here is a [timelapse](https://a4g4.c14.e2-1.dev/public/oomerfarm/Googlet2d-standard-60x3-timelapse.mp4) at 2x speed, spinning up 3 Google instances. In real time it took 5 minutes per instances. 
 
-4. When your ready for a permanent oomerfarm, run ***becomesecure.sh*** on your desktop/laptop to create create bespoke private keys to secure your castle.
+4. When you are ready for a permanent oomerfarm, run ***becomesecure.sh*** on your desktop/laptop to create bespoke private keys to secure your castle.
 
 5. So there you go: 4 bash scripts, all starting with the letter ***b*** to empower your personal renderfarm.
     - bootstraphub.sh
