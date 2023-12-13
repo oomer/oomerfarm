@@ -154,28 +154,28 @@ if [[ "$OSTYPE" == "darwin"* ]] || [[ "$OSTYPE" == "msys"* ]]; then
 		# hub and workers are only in the oomer group which does not permit ssh access person nodes
 		# all Nebula hosts can ping each other
 
-	cat <<EOF > .oomer/user/i_agree_this_is_unsafe/ca.crt
-	-----BEGIN NEBULA CERTIFICATE-----
-	CjcKBW9vbWVyKKCT96kGMKCWj/UGOiDCsJ2dvXr5msWq8IrIDgi7ZGImzOASL4UG
-	ICFwLtM1REABEkBqk1Vrrzk33Vja+UPNyG/TBqn5ZzKV1CUjsH2e1k1mMQxwUUgE
-	0bGzMkHAJ6gPfQ3YVHHn6oWk/c4F7Z3u6bQN
-	-----END NEBULA CERTIFICATE-----
-	EOF
+cat <<EOF > .oomer/user/i_agree_this_is_unsafe/ca.crt
+-----BEGIN NEBULA CERTIFICATE-----
+CjcKBW9vbWVyKKCT96kGMKCWj/UGOiDCsJ2dvXr5msWq8IrIDgi7ZGImzOASL4UG
+ICFwLtM1REABEkBqk1Vrrzk33Vja+UPNyG/TBqn5ZzKV1CUjsH2e1k1mMQxwUUgE
+0bGzMkHAJ6gPfQ3YVHHn6oWk/c4F7Z3u6bQN
+-----END NEBULA CERTIFICATE-----
+EOF
 
-	cat <<EOF > .oomer/user/i_agree_this_is_unsafe/i_agree_this_is_unsafe.crt
-	-----BEGIN NEBULA CERTIFICATE-----
-	CnsKB3BlcnNvbjESCYGU3FKAgPz/DyIFb29tZXIiBnNlcnZlciIGcGVyc29uKNCT
-	96kGMJ+Wj/UGOiAPDXUGzvQwXHGXQ10GeDvNhQENyf5d8HkJoEHhX+/ZaEog4ZcT
-	EoWXlG8TopKaq7X7FVZ/5Pobx2uVfKvJhwAgGaMSQHRilR4jv5xqcWjkOdXjwpVl
-	UYLoUk2n9vXCthBoeawpCQvwi+XWFG6QNrPXu8HDviLfDuxgTee+E1WEWcwmYwM=
-	-----END NEBULA CERTIFICATE-----
-	EOF
+cat <<EOF > .oomer/user/i_agree_this_is_unsafe/i_agree_this_is_unsafe.crt
+-----BEGIN NEBULA CERTIFICATE-----
+CnsKB3BlcnNvbjESCYGU3FKAgPz/DyIFb29tZXIiBnNlcnZlciIGcGVyc29uKNCT
+96kGMJ+Wj/UGOiAPDXUGzvQwXHGXQ10GeDvNhQENyf5d8HkJoEHhX+/ZaEog4ZcT
+EoWXlG8TopKaq7X7FVZ/5Pobx2uVfKvJhwAgGaMSQHRilR4jv5xqcWjkOdXjwpVl
+UYLoUk2n9vXCthBoeawpCQvwi+XWFG6QNrPXu8HDviLfDuxgTee+E1WEWcwmYwM=
+-----END NEBULA CERTIFICATE-----
+EOF
 
-	cat <<EOF > .oomer/user/i_agree_this_is_unsafe/i_agree_this_is_unsafe.key
-	-----BEGIN NEBULA X25519 PRIVATE KEY-----
-	eL5x5N4vQkL9xPEJfdcru5InW+Mfmba2HekGX1I0OoU=
-	-----END NEBULA X25519 PRIVATE KEY-----
-	EOF
+cat <<EOF > .oomer/user/i_agree_this_is_unsafe/i_agree_this_is_unsafe.key
+-----BEGIN NEBULA X25519 PRIVATE KEY-----
+eL5x5N4vQkL9xPEJfdcru5InW+Mfmba2HekGX1I0OoU=
+-----END NEBULA X25519 PRIVATE KEY-----
+EOF
 
 	fi
 
@@ -192,6 +192,7 @@ if [[ "$OSTYPE" == "darwin"* ]] || [[ "$OSTYPE" == "msys"* ]]; then
 		key_path="/.oomer/user/${user_key}/${user_key}.key"
 	fi
 
+	echo "oooo"
 	if ! [ -z $nebula_config_create_path ]; then
 
 
@@ -335,7 +336,7 @@ if [[ "$OSTYPE" == "linux-gnu"* ]]; then
                 exit
         fi
 elif [[ "$OSTYPE" == "darwin"* ]] || [[ "$OSTYPE" == "msys"* ]]; then
-        MatchFile="$(echo "${nebulasha256} ${nebulabindir}/${executable}" | shasum -a 256 --check)"
+        MatchFile="$(echo "${nebulasha256}  ${nebulabindir}/${executable}" | shasum -a 256 --check)"
         if ! [ "$MatchFile" == "${nebulabindir}/${executable}: OK" ] ; then
                 echo -e "\n${nebulabindir}/${executable} has been corrupted or maliciously tampered with"
                 echo "Aborting"
