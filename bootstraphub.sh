@@ -127,6 +127,9 @@ if ! [ "$nebula_name" = "i_agree_this_is_unsafe" ]; then
 		echo "==================================================="
 		echo "Change SELINUX=disabled to SELINUX=enforcing"
 		echo -e "then \e[5mREBOOT\e[0m ( SELinux chcon on boot drive takes awhile)"
+		echo -e "On some Linux distros, selinux is force disabled"
+		echo -e "run this to fix:"
+		echo -e "grubby --update-kernel ALL --remove-args selinux"
 		echo "=================================================="
 		exit
 	fi
