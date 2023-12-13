@@ -224,7 +224,7 @@ fi
 firewalld_status=$(systemctl status firewalld)
 
 os_name=$(awk -F= '$1=="NAME" { print $2 ;}' /etc/os-release)
-if [ "$os_name" == "\"Ubuntu\"" ]; then
+if [ "$os_name" == "\"Ubuntu\"" ] || [ "$os_name" == "\"Debian GNU/Linux\"" ]; then
 	# [ TODO ] switch from apparmor to selinux
 	echo -e "\e[32mDiscovered $os_name\e[0m. Support of Ubuntu is alpha quality"
 	apt -y update
