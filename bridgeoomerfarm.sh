@@ -322,7 +322,7 @@ elif [[ "$OSTYPE" == "darwin"* ]]; then
         nebulasha256="98872776c04167019d6bd129a68ce37da1efd3788092d72e90a021177af5c117"
 elif [[ "$OSTYPE" == "msys"* ]]; then
         executable="nebula.exe"
-        nebulasha256="14df59dba34dd1c06374bdccdb865e02968079c06ca7779e6c0eaa39218aa5d1"
+        nebulasha256="67f17b204d22f21f160e283cfff777b98f3be74b742740ab37610e061b3351ff"
 else
         echo -e "FAIL: Operating system should either be Linux, MacOS or Windows with msys"
         exit
