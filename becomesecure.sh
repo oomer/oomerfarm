@@ -294,11 +294,12 @@ do
 	# worker keys assert that they are secure as a group, not as an individual node
 	# if the system is compromised, then the group should be revoked
 	# this approach means that unlike server, lighthouse, and personal nebula nodes, workers do not
-	# carry a unique provate key, rather they carry ALL worker keys 
+	# carry a unique private key, rather they carry ALL worker keys 
 	# nebula's systemd unit dynamically chooses a private key based on HOSTNAME
 	# this simplification allows the end-user to create 2 undesirable situations
 	# 1. Naming instance wrongname0001 with no corresponding /etc/nebula/wrongname0001.key
 	# 2. Naming 2 instances with the same name worker0001 and worker0001, leading to nebula failure
+	# Don't do this
 
 	if [[ ${new_key_type} == "worker" ]] || [[ ${new_key_type} == "oomerfarm" ]] ; then
 		workernum_default=10
@@ -325,14 +326,16 @@ do
 			[[ $REPLY ]] && worker_ip+=("$REPLY")
 			last_used=${worker_ip[$(( ${#worker_ip[@]} - 1)) ]}
 			echo "last used$last_used"
-			worker_last_count=$(( ${#worker_ip[@]} + 1))
+			worker_last_count=$(( ${#worker_ip[@]} ))
 			echo "worker_last_count$worker_last_count"
 			IFS='.' read -ra octet <<< "$last_used"
 			octet0=${octet[0]}
 			octet1=${octet[1]}
 			octet2=${octet[2]}
 			octet3=${octet[3]}
+			echo $octet3
 			((octet3++))
+			echo $octet3
 			if [[ octet3 -eq 255 ]]; then
 				((octet2++))
 				octet3=1
