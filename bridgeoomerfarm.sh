@@ -271,13 +271,13 @@ if ! ( test -f ".oomer/bin/nebula" ) && ! ( test -f "/opt/oomer/bin/nebula" ); t
         echo -e "\nDownloading Nebula ${nebula_version} ..."
         if [[ "$OSTYPE" == "linux-gnu"* ]]; then
                 nebularelease="nebula-linux-amd64.tar.gz"
-                nebulasha256="4600c23344a07c9eda7da4b844730d2e5eb6c36b806eb0e54e4833971f336f70"
+                nebulasha256="cfe834de4d6071da18748640be2828bf2fdcba3befcb3122f1be529b8c074db8"
         elif [[ "$OSTYPE" == "darwin"* ]]; then
                 nebularelease="nebula-darwin.zip"
-                nebulasha256="e4e349f23ff7137c5e749c8a3b32631956aff2d88cef09254b02bbdd100e7b9c"
+                nebulasha256="dc42eafb0cc22840f6839fe5ec1c54181b7e065e01cfe2517f997d5004ffb8f2"
         elif [[ "$OSTYPE" == "msys"* ]]; then
                 nebularelease="nebula-windows-amd64.zip"
-                nebulasha256="e65b7de82a4d99b8c6657ffaf4c0437a4c576ab3e3ceca022fbdf45fae438b03"
+                nebulasha256="f2de6645c77072383755b5db48e2e3bc9a7378e69fda882b80e7b07c33f44014"
         else
                 echo -e "FAIL: Operating system should either be Linux, MacOS or Windows with msys"
                 exit
@@ -316,13 +316,13 @@ fi
 # This section double checks final hash on executable
 if [[ "$OSTYPE" == "linux-gnu"* ]]; then
         executable="nebula"
-        nebulasha256="a12789f4f1e803e39a446aa31c66b07e681d6567042928c5250fda9cd2096ca7"
+        nebulasha256="977dbf7fab54d04be06afe48bb99a1c660c264555c7a841348d08d330dae4b2d"
 elif [[ "$OSTYPE" == "darwin"* ]]; then
         executable="nebula"
-        nebulasha256="a973d80a4af76a2d40f7e5fd217503e7738ba0753f690d602781c29cf4a38eb8"
+        nebulasha256="98872776c04167019d6bd129a68ce37da1efd3788092d72e90a021177af5c117"
 elif [[ "$OSTYPE" == "msys"* ]]; then
         executable="nebula.exe"
-        nebulasha256="39a78919d817ee3a45a3dc0ff9ec473ae1d4ae2dbd82fbacd396ffc604d6d808"
+        nebulasha256="14df59dba34dd1c06374bdccdb865e02968079c06ca7779e6c0eaa39218aa5d1"
 else
         echo -e "FAIL: Operating system should either be Linux, MacOS or Windows with msys"
         exit
