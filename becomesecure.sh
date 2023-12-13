@@ -1,6 +1,6 @@
 #!/bin/bash
 
-nebula_version="v1.7.2"
+nebula_version="v1.8.0"
 octet0=10
 octet1=87
 mask=16
@@ -18,13 +18,13 @@ if ! ( test -f ".oomer/bin/nebula-cert" ); then
 	echo -e "\nDownloading Nebula ${nebula_version} ..."
 	if [[ "$OSTYPE" == "linux-gnu"* ]]; then
 		nebularelease="nebula-linux-amd64.tar.gz"
-		nebulasha256="4600c23344a07c9eda7da4b844730d2e5eb6c36b806eb0e54e4833971f336f70"
+		nebulasha256="cfe834de4d6071da18748640be2828bf2fdcba3befcb3122f1be529b8c074db8"
 	elif [[ "$OSTYPE" == "darwin"* ]]; then
 		nebularelease="nebula-darwin.zip"
-		nebulasha256="e4e349f23ff7137c5e749c8a3b32631956aff2d88cef09254b02bbdd100e7b9c"
+		nebulasha256="dc42eafb0cc22840f6839fe5ec1c54181b7e065e01cfe2517f997d5004ffb8f2"
 	elif [[ "$OSTYPE" == "msys"* ]]; then
 		nebularelease="nebula-windows-amd64.zip"
-		nebulasha256="e65b7de82a4d99b8c6657ffaf4c0437a4c576ab3e3ceca022fbdf45fae438b03"
+		nebulasha256="f2de6645c77072383755b5db48e2e3bc9a7378e69fda882b80e7b07c33f44014"
 	else 
 		echo -e "FAIL: Operating system should either be Linux, MacOS or Windows with msys"
 		exit
