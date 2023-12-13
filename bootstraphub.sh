@@ -118,6 +118,7 @@ if ! ( curl -s --head --fail -o /dev/null ${mongourl}${mongotar} ); then
 fi
 
 if ! [ "$nebula_name" = "i_agree_this_is_unsafe" ]; then
+	echo "hello"
 	# abort if selinux is not enforced
 	# selinux provides a os level security sandbox and is very restrictive
 	# especially important since renderfarm jobs can included arbitrary code execution on the workers
@@ -592,23 +593,22 @@ firewall-cmd -q --zone nebula --add-port 1716/tcp --permanent
 firewall-cmd -q --reload
 
 # Prep Deadline Repo
-if ! ( test -d /mnt/DeadlineRepository10 ); then
-	mkdir -p /mnt/DeadlineRepository10
-	mkdir -p /mnt/oomerfarm
-	mkdir -p /mnt/oomerfarm/bella
-	mkdir -p /mnt/oomerfarm/bella/renders
-	mkdir -p /mnt/oomerfarm/installers
+# selinux beat me again because missed chcon and could mount but not see samba shares contents
+mkdir -p /mnt/DeadlineRepository10
+mkdir -p /mnt/oomerfarm
+mkdir -p /mnt/oomerfarm/bella
+mkdir -p /mnt/oomerfarm/bella/renders
+mkdir -p /mnt/oomerfarm/installers
 
-	chown oomerfarm /mnt/oomerfarm
-	chown oomerfarm /mnt/oomerfarm/bella
-	chown oomerfarm /mnt/oomerfarm/bella/renders
+chown oomerfarm /mnt/oomerfarm
+chown oomerfarm /mnt/oomerfarm/bella
+chown oomerfarm /mnt/oomerfarm/bella/renders
 
-	chown :oomerfarm /mnt/oomerfarm
-	chown :oomerfarm /mnt/oomerfarm/bella
-	chown :oomerfarm /mnt/oomerfarm/bella/renders
-	chcon -R -t samba_share_t /mnt/DeadlineRepository10/
-	chcon -R -t samba_share_t /mnt/oomerfarm/
-fi
+chown :oomerfarm /mnt/oomerfarm
+chown :oomerfarm /mnt/oomerfarm/bella
+chown :oomerfarm /mnt/oomerfarm/bella/renders
+chcon -R -t samba_share_t /mnt/DeadlineRepository10/
+chcon -R -t samba_share_t /mnt/oomerfarm/
 
 # Set password, confirm password
 (echo ${linux_password}; echo ${linux_password}) | smbpasswd -a oomerfarm -s
