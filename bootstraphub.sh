@@ -10,7 +10,8 @@ nebula_ip_default="10.87.0.1"
 nebula_ip=$nebula_ip_default
 nebula_public_port_default="42042"
 nebula_public_port=$nebula_public_port_default
-nebula_version_default="v1.7.2"
+nebula_version_default="v1.8.0"
+nebulasha256="cfe834de4d6071da18748640be2828bf2fdcba3befcb3122f1be529b8c074db8"
 nebula_version=$nebula_version_default
 smb_user_default="oomerfarm"
 smb_user=$smb_user_default
@@ -60,7 +61,6 @@ fi
 # no-so-secret i_agree_this_is_unsafe.keys.encrypted
 # ==================================================
 keybundle_url_default="https://drive.google.com/file/d/1uiVSKuzhJ64mlsK0t4xMFYBX2IkQLB0b/view?usp=sharing"
-nebulasha256="4600c23344a07c9eda7da4b844730d2e5eb6c36b806eb0e54e4833971f336f70"
 
 # Use AWS service to get public ip
 public_ip=$(curl -s https://checkip.amazonaws.com)
