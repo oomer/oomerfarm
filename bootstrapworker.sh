@@ -40,10 +40,10 @@ lighthouse_nebula_ip=$lighthouse_nebula_ip_default
 skip_advanced_default="yes"
 skip_advanced=$skip_advanced_default
 
-nebula_version_default="v1.7.2"
+nebula_version_default="v1.8.0"
 nebula_version=$nebula_version_default
 nebula_tar="nebula-linux-amd64.tar.gz"
-nebulasha256="4600c23344a07c9eda7da4b844730d2e5eb6c36b806eb0e54e4833971f336f70"
+nebulasha256="cfe834de4d6071da18748640be2828bf2fdcba3befcb3122f1be529b8c074db8"
 
 # Linux and smb user
 # ==================
