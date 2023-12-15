@@ -43,8 +43,8 @@ goofyssha256="729688b6bc283653ea70f1b2b6406409ec1460065161c680f3b98b185d4bf364"
 
 # bella
 # =====
-bella_version="23.4.0"
-bellasha256="afb15d150fc086709cc726c052dd40cd115eb8b32060c7a82bdba4f6d9cebd3d"
+bella_version="23.6.0"
+bellasha256="0a548070cd018ade6dec6af1bff2eda38e5a90dd609a82a33108ad9b5c734eb6"
 
 # mongodb
 # =======

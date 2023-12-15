@@ -23,7 +23,7 @@ if ! [[ "$OSTYPE" == "linux-gnu"* ]]; then
 fi
 
 thinkboxversion="10.3.0.15"
-bellaversion="23.4.0"
+bellaversion="23.6.0"
 
 keybundle_url_default="https://drive.google.com/file/d/1p51AmY2BDSsiae-QWx76AxlLCnpi_5xg/view?usp=sharing"
 goofysurl="https://github.com/kahing/goofys/releases/download/v0.24.0/goofys"
