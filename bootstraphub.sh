@@ -30,7 +30,7 @@ os_name=$(awk -F= '$1=="NAME" { print $2 ;}' /etc/os-release)
 
 # deadline
 # ======== 
-thinkboxversion="10.3.1.2"
+thinkboxversion="10.3.2.1"
 thinkboxurl="https://thinkbox-installers.s3.us-west-2.amazonaws.com/Releases/Deadline/10.3/7_${thinkboxversion}/"
 thinkboxtar="Deadline-${thinkboxversion}-linux-installers.tar"
 thinkboxsha256="e78e0d4f02e8f8bf39d72e21aac95e49c73c3b4767b9258a681c60b988f811b8"
