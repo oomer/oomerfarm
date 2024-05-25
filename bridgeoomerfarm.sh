@@ -316,13 +316,13 @@ fi
 # This section double checks final hash on executable
 if [[ "$OSTYPE" == "linux-gnu"* ]]; then
         executable="nebula"
-        nebulasha256="977dbf7fab54d04be06afe48bb99a1c660c264555c7a841348d08d330dae4b2d"
+        nebulasha256="785597e7974deaf4a65e71d198a3f93c4c90c1b225ad64d4600e5ecaa175d85d"
 elif [[ "$OSTYPE" == "darwin"* ]]; then
         executable="nebula"
-        nebulasha256="98872776c04167019d6bd129a68ce37da1efd3788092d72e90a021177af5c117"
+        nebulasha256="57c89d539ec449794fba895252d416fb236cd0c7fa8703b921e4b71a1088be3e"
 elif [[ "$OSTYPE" == "msys"* ]]; then
         executable="nebula.exe"
-        nebulasha256="67f17b204d22f21f160e283cfff777b98f3be74b742740ab37610e061b3351ff"
+        nebulasha256="067e365643109c18a8fcf67d83f04801e57272ef1ad75058814dd9bf6f1ab519"
 else
         echo -e "FAIL: Operating system should either be Linux, MacOS or Windows with msys"
         exit
