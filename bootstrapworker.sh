@@ -22,7 +22,7 @@ if ! [[ "$OSTYPE" == "linux-gnu"* ]]; then
         exit
 fi
 
-thinkboxversion="10.3.1.2"
+thinkboxversion="10.3.2.1"
 bellaversion="24.2.0"
 nebula_version_default="v1.9.0"
 
