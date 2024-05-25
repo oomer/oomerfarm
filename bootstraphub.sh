@@ -30,10 +30,10 @@ os_name=$(awk -F= '$1=="NAME" { print $2 ;}' /etc/os-release)
 
 # deadline
 # ======== 
-thinkboxversion="10.3.0.15"
-thinkboxurl="https://thinkbox-installers.s3.us-west-2.amazonaws.com/Releases/Deadline/10.3/4_${thinkboxversion}/"
+thinkboxversion="10.3.1.2"
+thinkboxurl="https://thinkbox-installers.s3.us-west-2.amazonaws.com/Releases/Deadline/10.3/7_${thinkboxversion}/"
 thinkboxtar="Deadline-${thinkboxversion}-linux-installers.tar"
-thinkboxsha256="6ada6b2fc222974ae5a64101a01ae9d5ab7a297e8f131b22d8512eb767d3e9be"
+thinkboxsha256="e78e0d4f02e8f8bf39d72e21aac95e49c73c3b4767b9258a681c60b988f811b8"
 thinkboxrun="./DeadlineRepository-${thinkboxversion}-linux-x64-installer.run"
 
 # s3 fuse filesystem
@@ -43,20 +43,21 @@ goofyssha256="729688b6bc283653ea70f1b2b6406409ec1460065161c680f3b98b185d4bf364"
 
 # bella
 # =====
-bella_version="23.6.0"
-bellasha256="0a548070cd018ade6dec6af1bff2eda38e5a90dd609a82a33108ad9b5c734eb6"
+bella_version="24.2.0"
+bellasha256="407dfba71665492547053e9d2e81dd05a92437091b1ec236bf46bad9dace6e0d"
 
 # mongodb
 # =======
 mongourl="https://fastdl.mongodb.org/linux/"
 if [ "$os_name" == "\"Ubuntu\"" ] || [ "$os_name" == "\"Debian GNU/Linux\"" ]; then
 	apt -y install curl
-	mongotar="mongodb-linux-x86_64-ubuntu2004-4.4.16.tgz"
-	mongosha256="6924f63437bfe539d778bc8a6b865aa4aab550e530b20ea4f14cace009d39927"
+	#https://fastdl.mongodb.org/linux/
+	mongotar="mongodb-linux-x86_64-ubuntu2004-5.0.22.tgz"
+	mongosha256="c41d0eca291e716bc74c743d774be9ee8944a24dd026402422a3bdfda15d3306"
 elif [ "$os_name" == "\"AlmaLinux\"" ] || [ "$os_name" == "\"Rocky Linux\"" ]; then
 	dnf -y install curl
-	mongotar="mongodb-linux-x86_64-rhel80-4.4.16.tgz"
-	mongosha256="78c3283bd570c7c88ac466aa6cc6e93486e061c28a37790e0eebf722ae19a0cb"
+	mongotar="mongodb-linux-x86_64-rhel80-5.0.22.tgz"
+	mongosha256="eec39e9e44c8e1fa16be1b812261bb6ef9183cd971cc864aa77f7ba27af11938"
 fi
 # no-so-secret i_agree_this_is_unsafe.keys.encrypted
 # ==================================================
@@ -70,7 +71,7 @@ echo -e "\e[31mWARNING:\e[0m Security changes will break any existing server"
 echo -e " - become VPN node at \e[36m${nebula_ip}/16\e[0m"
 echo -e " - deploy VPN lighthouse at \e[36m${public_ip}\e[0m for internet-wide network"
 echo -e " - deploy VPN file server, at \e[36msmb://hub.oomer.org\e[0m, \e[36m//hub.oomer.org\e[0m (win)"
-echo -e " - install MongoDB 4.4.16 \e[37m/opt/Thinkbox/DeadlineDatabase10\e[0m"
+echo -e " - install MongoDB 5.0.22 \e[37m/opt/Thinkbox/DeadlineDatabase10\e[0m"
 echo -e " - install Deadline Repository \e[37m/mnt/DeadlineRepository10\e[0m"
 echo -e " - install Deadline Client \e[37m/opt/Thinkbox/Deadline10\e[0m"
 echo -e " - run License Forwarder for \e[37mUsage Based Licensing\e[0m"

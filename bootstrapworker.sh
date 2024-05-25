@@ -22,8 +22,9 @@ if ! [[ "$OSTYPE" == "linux-gnu"* ]]; then
         exit
 fi
 
-thinkboxversion="10.3.0.15"
-bellaversion="23.6.0"
+thinkboxversion="10.3.1.2"
+bellaversion="24.2.0"
+nebula_version_default="v1.9.0"
 
 keybundle_url_default="https://drive.google.com/file/d/1p51AmY2BDSsiae-QWx76AxlLCnpi_5xg/view?usp=sharing"
 goofysurl="https://github.com/kahing/goofys/releases/download/v0.24.0/goofys"
@@ -40,7 +41,6 @@ lighthouse_nebula_ip=$lighthouse_nebula_ip_default
 skip_advanced_default="yes"
 skip_advanced=$skip_advanced_default
 
-nebula_version_default="v1.8.0"
 nebula_version=$nebula_version_default
 nebula_tar="nebula-linux-amd64.tar.gz"
 nebulasha256="cfe834de4d6071da18748640be2828bf2fdcba3befcb3122f1be529b8c074db8"
