@@ -43,7 +43,7 @@ skip_advanced=$skip_advanced_default
 
 nebula_version=$nebula_version_default
 nebula_tar="nebula-linux-amd64.tar.gz"
-nebulasha256="cfe834de4d6071da18748640be2828bf2fdcba3befcb3122f1be529b8c074db8"
+nebulasha256="f700c0ad7e9f28375ab90111511d3b515671ee4b8e70b0bc92a506e87da975ad"
 
 # Linux and smb user
 # ==================
