@@ -5,7 +5,7 @@
 
 https://github.com/oomer/bellarenderfarm documents the installation steps to get a Deadline renderfarm working. After writing this I felt that this hours long process could be streamlined to a few minutes. 
 
-    oomerfarm wrangles the deployment of the Deadline renderfarm "stack" down to around 20 minutes and overlays a virtual private network to simplify network scaling. This infrastructure is primarily aimed at the lone artist. 
+>oomerfarm wrangles the deployment of the Deadline renderfarm "stack" down to around 20 minutes and overlays a virtual private network to simplify network scaling. This infrastructure is primarily aimed at the lone artist. 
 
 ## Renderfarm benefits 
 A renderfarm takes a workload, distributes it over a network and provides: 
@@ -39,7 +39,6 @@ A renderfarm takes a workload, distributes it over a network and provides:
 1. run ***becomesecure.sh*** on Computer A to begin the rollout of your VPN
 2. run ***bootstraphub.sh*** on Computer B
     - ***Alma/Rocky 8.x Linux***
-![image](img/bootstraphub.svg)
     - this becomes your centralized **Deadline renderfarm** hub with:
         - file server to save scenes and textures
         - render queue database
