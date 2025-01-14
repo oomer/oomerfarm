@@ -23,8 +23,8 @@ if ! [[ "$OSTYPE" == "linux-gnu"* ]]; then
 fi
 
 thinkboxversion="10.3.2.1"
-bellaversion="24.2.0"
-nebula_version_default="v1.9.0"
+bellaversion="24.6.1"
+nebula_version_default="v1.9.5"
 
 keybundle_url_default="https://drive.google.com/file/d/1p51AmY2BDSsiae-QWx76AxlLCnpi_5xg/view?usp=sharing"
 goofysurl="https://github.com/kahing/goofys/releases/download/v0.24.0/goofys"
@@ -43,7 +43,7 @@ skip_advanced=$skip_advanced_default
 
 nebula_version=$nebula_version_default
 nebula_tar="nebula-linux-amd64.tar.gz"
-nebulasha256="f700c0ad7e9f28375ab90111511d3b515671ee4b8e70b0bc92a506e87da975ad"
+nebulasha256="af57ded8f3370f0486bb24011942924b361d77fa34e3478995b196a5441dbf71"
 
 # Linux and smb user
 # ==================

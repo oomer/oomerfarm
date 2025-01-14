@@ -10,8 +10,8 @@ nebula_ip_default="10.87.0.1"
 nebula_ip=$nebula_ip_default
 nebula_public_port_default="42042"
 nebula_public_port=$nebula_public_port_default
-nebula_version_default="v1.9.0"
-nebulasha256="f700c0ad7e9f28375ab90111511d3b515671ee4b8e70b0bc92a506e87da975ad"
+nebula_version_default="v1.9.5"
+nebulasha256="af57ded8f3370f0486bb24011942924b361d77fa34e3478995b196a5441dbf71"
 nebula_version=$nebula_version_default
 smb_user_default="oomerfarm"
 smb_user=$smb_user_default
@@ -43,8 +43,8 @@ goofyssha256="729688b6bc283653ea70f1b2b6406409ec1460065161c680f3b98b185d4bf364"
 
 # bella
 # =====
-bella_version="24.2.0"
-bellasha256="407dfba71665492547053e9d2e81dd05a92437091b1ec236bf46bad9dace6e0d"
+bella_version="24.6.1"
+bellasha256="3ddcff1994dd3f13a7048472ccf7fbb48b0651b1fd627d07f35cab94475c9261"
 
 # mongodb
 # =======

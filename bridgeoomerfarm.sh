@@ -15,6 +15,9 @@ lighthouse_internet_ip_default="x.x.x.x"
 lighthouse_nebula_ip="10.87.0.1"
 lighthouse_internet_port="42042"
 # additional lighthouses must be added manually
+nebula_version="v1.9.5"
+nebula_config_create_path=""
+nebula_config_path=""
 
 if test -f .oomer/.last_lighthouse_internet_ip; then
 	lighthouse_internet_ip_default=$(cat .oomer/.last_lighthouse_internet_ip)
@@ -40,11 +43,6 @@ if [ -z  $lighthouse_internet_ip ]; then
 fi
 echo $lighthouse_internet_ip > .oomer/.last_lighthouse_internet_ip
 echo $lighthouse_internet_ip
-
-nebula_version="v1.9.0"
-nebula_config_create_path=""
-nebula_config_path=""
-
 
 # [TODO] currently linux so will require download of encrypted keybundles
 # Will also need macos and windows users that do not run becomesecure.sh to get keys
@@ -271,13 +269,13 @@ if ! ( test -f ".oomer/bin/nebula" ) && ! ( test -f "/opt/oomer/bin/nebula" ); t
         echo -e "\nDownloading Nebula ${nebula_version} ..."
         if [[ "$OSTYPE" == "linux-gnu"* ]]; then
                 nebularelease="nebula-linux-amd64.tar.gz"
-                nebulasha256="f700c0ad7e9f28375ab90111511d3b515671ee4b8e70b0bc92a506e87da975ad"
+                nebulasha256="af57ded8f3370f0486bb24011942924b361d77fa34e3478995b196a5441dbf71"
         elif [[ "$OSTYPE" == "darwin"* ]]; then
                 nebularelease="nebula-darwin.zip"
-                nebulasha256="0cb110bae40edbc4ce7a2e67389b967cc63931c9b710faa33cd52f2575a12185"
+                nebulasha256="891584c4288e031b0787cfd5ac1da4565caf1627bd934d94b696a340ad92f0d7"
         elif [[ "$OSTYPE" == "msys"* ]]; then
                 nebularelease="nebula-windows-amd64.zip"
-                nebulasha256="feacd0292ce1afb9fd121fae4f885f35e05ee773a28c129fdaa363d9aebae1dd"
+                nebulasha256="5a42e4600e8a47db2b103c607d95509c7ae403f56e2952d05089f492e53bcebb"
         else
                 echo -e "FAIL: Operating system should either be Linux, MacOS or Windows with msys"
                 exit
@@ -316,13 +314,13 @@ fi
 # This section double checks final hash on executable
 if [[ "$OSTYPE" == "linux-gnu"* ]]; then
         executable="nebula"
-        nebulasha256="785597e7974deaf4a65e71d198a3f93c4c90c1b225ad64d4600e5ecaa175d85d"
+        nebulasha256="b09f11bc185aa5534079f64c9ab43137c2c7768330b3f3db422b11fcd58d6018"
 elif [[ "$OSTYPE" == "darwin"* ]]; then
         executable="nebula"
-        nebulasha256="57c89d539ec449794fba895252d416fb236cd0c7fa8703b921e4b71a1088be3e"
+        nebulasha256="47faf818ee0ada55bb260065c837e218018f2e1bb6ad673e938b6b0d998c4c6f"
 elif [[ "$OSTYPE" == "msys"* ]]; then
         executable="nebula.exe"
-        nebulasha256="067e365643109c18a8fcf67d83f04801e57272ef1ad75058814dd9bf6f1ab519"
+        nebulasha256="0af9da8bd17d4f92188627619022a7a9ea4517d9bd9dc0323ee0ecd01571ce6e"
 else
         echo -e "FAIL: Operating system should either be Linux, MacOS or Windows with msys"
         exit
