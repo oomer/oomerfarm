@@ -19,8 +19,8 @@ linux_password="oomerfarm"
 
 redhat_platform_id=$(awk -F= '$1=="PLATFORM_ID" { print $2 ;}' /etc/os-release)
 
-if ! [ "$redhat_platform_id" == "\"platform:el8\"" ] ; then
-	echo -e "\e[31mFAIL:\e[0m This can only be installed on \e[5mAlma or Rocky Linux 8.x\e[0m"
+if ! [ "$redhat_platform_id" == "\"platform:el9\"" ] ; then
+	echo -e "\e[31mFAIL:\e[0m This can only be installed on \e[5mAlma or Rocky Linux 9.x\e[0m"
 	exit
 fi
 
@@ -30,10 +30,10 @@ os_name=$(awk -F= '$1=="NAME" { print $2 ;}' /etc/os-release)
 
 # deadline
 # ======== 
-thinkboxversion="10.3.2.1"
-thinkboxurl="https://thinkbox-installers.s3.us-west-2.amazonaws.com/Releases/Deadline/10.3/7_${thinkboxversion}/"
+thinkboxversion="10.4.0.10"
+thinkboxurl="https://thinkbox-installers.s3.us-west-2.amazonaws.com/Releases/Deadline/10.4/2_${thinkboxversion}/"
 thinkboxtar="Deadline-${thinkboxversion}-linux-installers.tar"
-thinkboxsha256="e78e0d4f02e8f8bf39d72e21aac95e49c73c3b4767b9258a681c60b988f811b8"
+thinkboxsha256="0f4fc064cbd223a26c03ee1410f9c27a1ba16027e2bbed2d6e2ca443f18bf701"
 thinkboxrun="./DeadlineRepository-${thinkboxversion}-linux-x64-installer.run"
 
 # s3 fuse filesystem
@@ -49,16 +49,11 @@ bellasha256="3ddcff1994dd3f13a7048472ccf7fbb48b0651b1fd627d07f35cab94475c9261"
 # mongodb
 # =======
 mongourl="https://fastdl.mongodb.org/linux/"
-if [ "$os_name" == "\"Ubuntu\"" ] || [ "$os_name" == "\"Debian GNU/Linux\"" ]; then
-	apt -y install curl
-	#https://fastdl.mongodb.org/linux/
-	mongotar="mongodb-linux-x86_64-ubuntu2004-5.0.22.tgz"
-	mongosha256="c41d0eca291e716bc74c743d774be9ee8944a24dd026402422a3bdfda15d3306"
-elif [ "$os_name" == "\"AlmaLinux\"" ] || [ "$os_name" == "\"Rocky Linux\"" ]; then
-	dnf -y install curl
-	mongotar="mongodb-linux-x86_64-rhel80-5.0.22.tgz"
-	mongosha256="eec39e9e44c8e1fa16be1b812261bb6ef9183cd971cc864aa77f7ba27af11938"
-fi
+dnf -y install curl
+dnf -y install initscripts
+mongotar="mongodb-linux-x86_64-rhel90-6.0.16.tgz"
+mongosha256="c3c99fd25eb8b1ab5e1b9225abfc70e071fe0cac3f56d6c608577b48f822e11e"
+
 # no-so-secret i_agree_this_is_unsafe.keys.encrypted
 # ==================================================
 keybundle_url_default="https://drive.google.com/file/d/1uiVSKuzhJ64mlsK0t4xMFYBX2IkQLB0b/view?usp=sharing"
