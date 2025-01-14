@@ -601,8 +601,8 @@ Restart=always
 RestartSec=5
 User=oomerfarm
 LimitNOFILE=200000
-ExecStart=/usr/bin/bash -l -c "/opt/Thinkbox/Deadline10/bin/deadlinelauncher -daemon -nogui"
-ExecStop=/opt/Thinkbox/Deadline10/bin/deadlinelauncher -shutdownall
+ExecStart=/usr/bin/bash -l -c "/opt/Thinkbox/Deadline10/bin/deadlineworker -nogui -name oomerfarm"
+ExecStop=/opt/Thinkbox/Deadline10/bin/deadlineworker -s -name oomerfarm
 SuccessExitStatus=143
 
 [Install]
