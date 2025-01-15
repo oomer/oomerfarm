@@ -236,7 +236,8 @@ if [ "$os_name" == "\"Ubuntu\"" ] || [ "$os_name" == "\"Debian GNU/Linux\"" ]; t
 	fi
 	#apt -y install policycoreutils selinux-utils selinux-basics
 	#selinux-activate
-	apt -y  install cifs-utils
+	apt -y install cifs-utils
+	apt -y install curl
 	apt -y install mesa-vulkan-drivers 
 	apt -y install libgl1-mesa-glx
 	#apt -y install freeglut3-dev
