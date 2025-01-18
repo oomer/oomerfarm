@@ -10,6 +10,11 @@
 
 # Tested on AWS, Azure, Google, Oracle, Vultr, Digital Ocaan, Linode, Heztner, Server-Factory, Crunchbits
 
+# [x] 2025 Jan 18 tested Tensordock Ubuntu 22.04
+# [x] 2025 Jan 18 tested GCP RockyLinux 8
+# [x] 2025 Jan 18 tested Proxmox Alma Linux 9.4 
+# [x] 2025 Jan 18 tested WSL2 Ubuntu 22.04
+
 #Helper to discover distribution
 source /etc/os-release
 echo $PLATFORM_ID
@@ -238,7 +243,7 @@ if [ "$PLATFORM_ID" == "platform:el8" ] || [ "$PLATFORM_ID" == "platform:el9" ];
     fi
     dnf install -y mesa-vulkan-drivers mesa-libGL
     dnf install -y cifs-utils
-    dnf install -y fuse
+    #dnf install -y fuse
     systemctl enable --now firewalld
 elif [ "$os_name" == "\"Ubuntu\"" ] || [ "$os_name" == "\"Debian GNU/Linux\"" ]; then
     # [ TODO ] securiyt check apparmor 
@@ -309,7 +314,7 @@ done
 if ! test -d /etc/nebula; then
     mkdir -p /etc/nebula
 fi
-tar --strip-components 1 -xvf worker.tar -C /etc/nebula
+tar --no-same-owner --strip-components 1 -xvf worker.tar -C /etc/nebula
 chown root.root /etc/nebula/*.crt
 chown root.root /etc/nebula/*.key
 rm worker.tar
