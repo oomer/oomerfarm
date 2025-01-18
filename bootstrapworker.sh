@@ -15,23 +15,24 @@
 # [x] 2025 Jan 18 tested Proxmox Alma Linux 9.4 
 # [x] 2025 Jan 18 tested WSL2 Ubuntu 22.04
 
+# Cannot work on unprivilegd lxc because CIFS mounts must be made by host kernel user root 0 
+# https://forum.proxmox.com/threads/tutorial-unprivileged-lxcs-mount-cifs-shares.101795/
+
 #Helper to discover distribution
 source /etc/os-release
-echo $PLATFORM_ID
 os_name=$(awk -F= '$1=="NAME" { print $2 ;}' /etc/os-release)
 
 if ! [[ "$OSTYPE" == "linux-gnu"* ]]; then
     echo -e "FAIL: Run this on a Red Hat Enterprise Linux 8 or 9 derivative"
     echo "tested on:"
-    echo -e "\tAlmaLinux 8.x/9.x"
-    echo -e "\tRockyLinux 8.x/9.x"
+    echo -e "\tAlma/RockyLinux 8.x/9.x"
+    echo -e "\tUbuntu 20.04/22.04/24.04"
     echo -e "\tOracle Linux Server 8.x/9.x"
     exit
 fi
 
 thinkboxversion="10.4.0.10"
 bellaversion="24.6.1"
-nebula_version_default="v1.9.5"
 
 #keybundle_url_default="https://drive.google.com/file/d/1p51AmY2BDSsiae-QWx76AxlLCnpi_5xg/view?usp=sharing"
 #goofysurl="https://github.com/kahing/goofys/releases/download/v0.24.0/goofys"
@@ -48,6 +49,7 @@ lighthouse_nebula_ip=$lighthouse_nebula_ip_default
 skip_advanced_default="yes"
 skip_advanced=$skip_advanced_default
 
+nebula_version_default="v1.9.5"
 nebula_version=$nebula_version_default
 nebula_tar="nebula-linux-amd64.tar.gz"
 nebulasha256="af57ded8f3370f0486bb24011942924b361d77fa34e3478995b196a5441dbf71"
@@ -73,15 +75,15 @@ hub_name_default="hub"
 # [ ] avoid passing password in command line args which are viewable inside /proc
 # [TODO] add a force option to overwrite existing credential, otherwise delete /etc/nebula/smb_credentials to reset
 
-echo -e "\n\e[32mTurns this machine into a renderfarm worker\e[0m, polls \e[32mhub\e[0m for render jobs"
+echo -e "\e[32mTurns this machine into a renderfarm worker\e[0m, polls \e[32mhub\e[0m for render jobs"
 echo -e "\e[31mWARNING:\e[0m Security changes will break any existing services"
-echo -e " - becomes VPN node with address in \e[36m10.10.0.0/16\e[0m subnet"
+echo -e " - becomes VPN node with address in \e[36m10.87.0.0/16\e[0m subnet"
 echo -e " - install Deadline Client \e[37m/opt/Thinkbox/Deadline10\e[0m"
-echo -e " - \e[37mfirewall\e[0m blocks ALL non-oomerfarm ports"
-echo -e " - enforce \e[37mselinux\e[0m for maximal security"
+echo -e " - \e[37mfirewall\e[0m blocks ALL non-oomerfarm ports on Alma/Rocky"
+echo -e " - enforce \e[37mSELinux\e[0m for maximal security on Alma/Rocky"
 echo -e " - You agree to the \e[37mAWS Thinkbox EULA\e[0m by installing Deadline"
-echo -e " - Optionally mounts \e[37m/mnt/s3\e[0m"
-echo -e " - Optionally installs \e[37mHoudini\e[0m"
+#echo -e " - Optionally mounts \e[37m/mnt/s3\e[0m"
+#echo -e " - Optionally installs \e[37mHoudini\e[0m"
 echo -e "\e[32mContinue on\e[0m \e[37m$(hostname)?\e[0m"
 
 read -p "(Enter Yes) " accept
@@ -94,9 +96,8 @@ echo -e "\e[36m\e[5moomerfarm worker id\e[0m\e[0m"
 read -p "Enter number between 1-9999:" worker_id
 if (( $worker_id >= 1 && $worker_id <= 9999 )) ; then
     worker_name=$(printf "worker%04d" $worker_id)
-    echo ${worker_name}
+    echo "Worker will be called" ${worker_name}
     hostnamectl --static --transient set-hostname ${worker_name}
-    echo ${worker_name}
 else
     echo -e "\e[31mFAIL:\e[0m worker id need to be between 1 and 9999 inclusive"
     exit
@@ -109,7 +110,7 @@ if [ -z  $lighthouse_internet_ip ]; then
     exit
 fi
 
-echo -e "\nOn a trusted computer, generate secret keys ( NOT this computer ) using \e[36mbecomesecure.sh\e[0m BEFORE running this script."
+echo -e "\nOn a trusted computer, generate secret keys ( NOT this computer ) \nusing \e[36mbecomesecure.sh\e[0m BEFORE running this script."
 hub_name=$hub_name_default
 
 #echo -e "\n\e[32mTest Drive:\e[0m \e[36m${hub_name_default}\e[0m are not-so-secret keys securing oomerfarm with a VPN. Since they allow intrusion without your knowledge only use them to test oomerfarm. Analogy: house keys can be lost and your locks continue to work, BUT a stranger who finds your keys AND knows where you live can easily enter. Hit enter below to use \e[36mi_agree_this_is_unsafe\e[0m with security by obscurity"
@@ -126,7 +127,7 @@ if ! [ "$hub_name" = "i_agree_this_is_unsafe" ]; then
 # especially important since renderfarm jobs can included arbitrary code execution on the workers
 
     if [ "$PLATFORM_ID" == "platform:el8" ] || [ "$PLATFORM_ID" == "platform:el9" ]; then
-        #test_selinux=$( getenforce )
+        test_selinux=$( getenforce )
         if [ "$test_selinux" == "Disabled" ] || [ "$test_selinux" == "Permissive" ];  then
             echo -e "\n\e[31mFAIL:\e[0m Selinux is disabled, edit /etc/selinux/config"
             echo "==================================================="
@@ -138,14 +139,14 @@ if ! [ "$hub_name" = "i_agree_this_is_unsafe" ]; then
     fi
 
 
-    echo -e "\nENTER \e[36m\e[5mpassphrase\e[0m\e[0m to decode \e[32mworker.key.encypted\e[0m YOU set in \"keyauthority.sh\"  ( keystrokes hidden )"
+    echo -e "\nENTER \e[36m\e[5mpassphrase\e[0m\e[0m to decode \e[32mworker.key.encypted\e[0m that YOU \nset with \"becomesecure.sh\"  \n( keystrokes hidden )"
     IFS= read -rs encryption_passphrase < /dev/tty
     if [ -z "$encryption_passphrase" ]; then
         echo -e "\n\e[31mFAIL:\e[0m Invalid empty passphrase"
         exit
     fi
 
-    echo -e "\n\e[36m\e[5mURL\e[0m\e[0m to \e[32mworker.keys.encrypted\e[0m"
+    echo -e "\n\e[36m\e[5mURL\e[0m\e[0m to \e[32mworker.keys.encrypted\e[0m \nthat YOU uploaded and shared on Google Drive"
     read -p "Enter: " keybundle_url
     if [ -z "$keybundle_url" ]; then
         echo -e "\e[31mFAIL:\e[0m URL cannot be blank"
@@ -226,7 +227,6 @@ else
     keybundle_url=$keybundle_url_default
 fi
 
-echo "FOO" "H"$PLATFORM_ID"H"
 if [ "$PLATFORM_ID" == "platform:el8" ] || [ "$PLATFORM_ID" == "platform:el9" ]; then
     #if [ "$os_name" == "\"AlmaLinux\"" ] || [ "$os_name" == "\"Rocky Linux\"" ]; then
     has_getenforce=$(which getenforce)
