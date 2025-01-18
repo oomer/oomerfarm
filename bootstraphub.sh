@@ -5,7 +5,7 @@
 # Turns this machine into a renderfarm hub
 # ========================================
 
-encryption_passphrase="oomerfarm"	
+encryption_passphrase="oomerfarm"   
 nebula_ip_default="10.87.0.1"
 nebula_ip=$nebula_ip_default
 nebula_public_port_default="42042"
@@ -15,14 +15,18 @@ nebulasha256="af57ded8f3370f0486bb24011942924b361d77fa34e3478995b196a5441dbf71"
 nebula_version=$nebula_version_default
 smb_user_default="oomerfarm"
 smb_user=$smb_user_default
-linux_password="oomerfarm"	
+linux_password="oomerfarm"  
 
-redhat_platform_id=$(awk -F= '$1=="PLATFORM_ID" { print $2 ;}' /etc/os-release)
+#Helper to discover distribution
+source /etc/os-release
 
-if ! [ "$redhat_platform_id" == "\"platform:el9\"" ] ; then
-	echo -e "\e[31mFAIL:\e[0m This can only be installed on \e[5mAlma or Rocky Linux 9.x\e[0m"
-	exit
-fi
+#redhat_platform_id=$(awk -F= '$1=="PLATFORM_ID" { print $2 ;}' /etc/os-release)
+
+
+#if ! [ "$redhat_platform_id" == "\"platform:el9\"" ] ; then
+#   echo -e "\e[31mFAIL:\e[0m This can only be installed on \e[5mAlma or Rocky Linux 9.x\e[0m"
+#   exit
+#fi
 
 skip_advanced="yes"
 skip_advanced_default="yes"
@@ -48,17 +52,36 @@ bellasha256="3ddcff1994dd3f13a7048472ccf7fbb48b0651b1fd627d07f35cab94475c9261"
 
 # mongodb
 # =======
+mongoversion=6.0.16
 mongourl="https://fastdl.mongodb.org/linux/"
-dnf -y install curl
-dnf -y install initscripts
-mongotar="mongodb-linux-x86_64-rhel90-6.0.16.tgz"
-mongosha256="c3c99fd25eb8b1ab5e1b9225abfc70e071fe0cac3f56d6c608577b48f822e11e"
+if [ "$redhat_platform_id" == "platform:el9" ] ; then
+    mongotar="mongodb-linux-x86_64-rhel90-${mongoversion}.tgz"
+    mongosha256="c3c99fd25eb8b1ab5e1b9225abfc70e071fe0cac3f56d6c608577b48f822e11e"
+elif [ "$redhat_platform_id" == "platform:el8" ] ; then
+    mongotar="mongodb-linux-x86_64-rhel80-${mongoversion}.tgz"
+    mongosha256="e2dccbaeca3fbc6cd89372de21261fda25df27b5b2e40a96c547a07e36eb035e"
+elif [ "$PRETTY_NAME" == "Ubuntu 20.04 LTS" ] ; then
+    mongotar="mongodb-linux-x86_64-ubuntu2004-${mongoversion}.tgz"
+    mongosha256="4d628c6be90be25311a8aa417e74448d5b13814f8a790129d67bf84ef4feebb5"
+elif [ "$PRETTY_NAME" == "Ubuntu 22.04 LTS" ] || [ "$PRETTY_NAME" == "Ubuntu 24.04 LTS" ]; then
+    mongotar="mongodb-linux-x86_64-ubuntu2204-${mongoversion}.tgz"
+    mongosha256="f49a1380c535794340d68d02a1eb3835016db8a87e3b2ff7a8a7c4b6cb9d1bcf"
+elif [ "$PRETTY_NAME" == "Ubuntu 22.04 LTS" ] ; then
+    mongotar="mongodb-linux-x86_64-ubuntu2204-${mongoversion}.tgz"
+    mongosha256="f49a1380c535794340d68d02a1eb3835016db8a87e3b2ff7a8a7c4b6cb9d1bcf"
+else
+    echo -e "\e[31mFAIL:\e[0m This can only be installed on \e[5mAlma or Rocky Linux 8.x 9.x\e[0m"
+    echo -e "\e[31mFAIL:\e[0m This can only be installed on \e[5mUbuntu 20.04 22.04\e[0m"
+    exit
+fi
 
 # no-so-secret i_agree_this_is_unsafe.keys.encrypted
 # ==================================================
+# - [ ] bypass for now to simplify
 keybundle_url_default="https://drive.google.com/file/d/1uiVSKuzhJ64mlsK0t4xMFYBX2IkQLB0b/view?usp=sharing"
 
 # Use AWS service to get public ip
+# - [ ] use an open source option now amazon
 public_ip=$(curl -s https://checkip.amazonaws.com)
 
 echo -e "\n\e[32mTurns this machine into a renderfarm\e[0m \e[36m\e[5mhub\e[0m\e[0m"
@@ -66,164 +89,189 @@ echo -e "\e[31mWARNING:\e[0m Security changes will break any existing server"
 echo -e " - become VPN node at \e[36m${nebula_ip}/16\e[0m"
 echo -e " - deploy VPN lighthouse at \e[36m${public_ip}\e[0m for internet-wide network"
 echo -e " - deploy VPN file server, at \e[36msmb://hub.oomer.org\e[0m, \e[36m//hub.oomer.org\e[0m (win)"
-echo -e " - install MongoDB 5.0.22 \e[37m/opt/Thinkbox/DeadlineDatabase10\e[0m"
+echo -e " - install MongoDB ${mongoversion} \e[37m/opt/Thinkbox/DeadlineDatabase10\e[0m"
 echo -e " - install Deadline Repository \e[37m/mnt/DeadlineRepository10\e[0m"
 echo -e " - install Deadline Client \e[37m/opt/Thinkbox/Deadline10\e[0m"
 echo -e " - run License Forwarder for \e[37mUsage Based Licensing\e[0m"
 echo -e " - \e[37mfirewall\e[0m blocks ALL non-oomerfarm ports"
 echo -e " - enforce \e[37mselinux\e[0m for maximal security"
-echo -e " - Only runs on RHEL/Alma/Rocky 8.x Linux"
+echo -e " - More secure on Alma/Rocky 8.x 9,x Linux due to SELINUX setup"
+echo -e " - Ubuntu 20.04 22.04 tested but less secure until AppArmor is integrated"
 echo -e " - You agree to the \e[37mAWS Thinkbox EULA\e[0m by installing Deadline"
-echo -e " - Optionally mounts \e[37m/mnt/s3\e[0m"
-echo -e " - Optionally installs \e[37mHoudini\e[0m"
+#echo -e " - Optionally mounts \e[37m/mnt/s3\e[0m"
+#echo -e " - Optionally installs \e[37mHoudini\e[0m"
 echo -e "\e[32mContinue on\e[0m \e[37m$(hostname)?\e[0m"
 
 read -p "(Enter Yes) " accept
 if [ "$accept" != "Yes" ]; then
-        echo -e "\n\e[31mFAIL:\e[0m Script aborted because Yes was not entered"
+    echo -e "\n\e[31mFAIL:\e[0m Script aborted because Yes was not entered"
         exit
 fi
 
-nebula_name_default="i_agree_this_is_unsafe"
-
-echo -e "\n\e[32mSecure Method:\e[0m On a trusted computer, generate secret keys ( not this computer ) using \e[36mkeyoomerfarm.sh\e[0m BEFORE running this script. Type \e[36mhub\e[0m below for the secure method"
-
-echo -e "\n\e[32mTest Drive:\e[0m \e[36m${nebula_name_default}\e[0m are not-so-secret keys securing oomerfarm with a VPN. Since they allow intrusion without your knowledge only use them to test oomerfarm. Analogy: house keys can be lost and your locks continue to work, BUT a stranger who finds your keys AND knows where you live can easily enter. Hit enter below to use \e[36mi_agree_this_is_unsafe\e[0m with security by obscurity"
-
-echo -e "\nENTER \e[36m\e[5mhub\e[0m\e[0m or \e[36m\e[5m${nebula_name_default}\e[0m\e[0m"
-read -p "(default: $nebula_name_default:) " nebula_name
-if [ -z "$nebula_name" ]; then
-	nebula_name=$nebula_name_default
+#if [ "$os_name" == "\"Ubuntu\"" ] || [ "$os_name" == "\"Debian GNU/Linux\"" ]; then
+if [ "$os_name" == "\"Ubuntu\"" ]; then
+    apt -y update
+    apt -y install tar curl
+elif [ "$os_name" == "\"AlmaLinux\"" ] || [ "$os_name" == "\"Rocky Linux\"" ]; then
+    dnf -y install tar curl initscripts
+else
+    echo "\e[31mFAIL:\e[0m Unsupported operating system $os_name"
+    exit
 fi
+
+
+nebula_name_default="i_agree_this_is_unsafe"
+nebula_name="hub"
+
+#echo -e "\n\e[32mSecure Method:\e[0m On a trusted computer, generate secret keys ( not this computer ) using \e[36mbecomesecure.sh\e[0m BEFORE running this script. Type \e[36mhub\e[0m below for the secure method"
+#
+#echo -e "\n\e[32mTest Drive:\e[0m \e[36m${nebula_name_default}\e[0m are not-so-secret keys securing oomerfarm with a VPN. Since they allow intrusion without your knowledge only use them to test oomerfarm. Analogy: house keys can be lost and your locks continue to work, BUT a stranger who finds your keys AND knows where you live can easily enter. Hit enter below to use \e[36mi_agree_this_is_unsafe\e[0m with security by obscurity"
+#
+#echo -e "\nENTER \e[36m\e[5mhub\e[0m\e[0m or \e[36m\e[5m${nebula_name_default}\e[0m\e[0m"
+#read -p "(default: $nebula_name_default:) " nebula_name
+#if [ -z "$nebula_name" ]; then
+#    nebula_name=$nebula_name_default
+#fi
 
 # probe to see if downloadable depenencies exist
 # ==============================================
 if ! ( curl -s --head --fail -o /dev/null ${thinkboxurl}${thinkboxtar} ); then
-	echo -e "\e[31mFAIL:\e[0m No file found at ${thinkboxurl}${thinkboxtar}"
-	echo -e "Usually means Amazon has releases a new version"
-	echo -e "and removed the old link"
-	echo -e "This script needs updating but until then you can"
-	echo -e "Go to https://awsthinkbox.com -> Downloads ->"
-	echo -e "Choose Deadline Linux"
-	exit
+    echo -e "\e[31mFAIL:\e[0m No file found at ${thinkboxurl}${thinkboxtar}"
+    echo -e "Usually means Amazon has releases a new version"
+    echo -e "and removed the old link"
+    echo -e "This script needs updating but until then you can"
+    echo -e "Go to https://awsthinkbox.com -> Downloads ->"
+    echo -e "Choose Deadline Linux"
+    exit
 fi
 
 if ! ( curl -s --head --fail -o /dev/null ${mongourl}${mongotar} ); then
-	echo -e "FAIL: No file found at ${mongourl}${mongotar}"
-	exit
+    echo -e "FAIL: No file found at ${mongourl}${mongotar}"
+    exit
 fi
 
 if ! [ "$nebula_name" = "i_agree_this_is_unsafe" ]; then
-	echo "hello"
-	# abort if selinux is not enforced
-	# selinux provides a os level security sandbox and is very restrictive
-	# especially important since renderfarm jobs can included arbitrary code execution on the workers
-	test_selinux=$( getenforce )
-	if [ "$test_selinux" == "Disabled" ] || [ "$test_selinux" == "Permissive" ];  then
-		echo -e "\n\e[31mFAIL:\e[0m Selinux is disabled, edit /etc/selinux/config"
-		echo "==================================================="
-		echo "Change SELINUX=disabled to SELINUX=enforcing"
-		echo -e "then \e[5mREBOOT\e[0m ( SELinux chcon on boot drive takes awhile)"
-		echo -e "On some Linux distros, selinux is force disabled"
-		echo -e "run this to fix:"
-		echo -e "grubby --update-kernel ALL --remove-args selinux"
-		echo "=================================================="
-		exit
-	fi
 
-	echo -e "\nENTER \e[36m\e[5mpassphrase\e[0m\e[0m to decode \e[32mhub.keys.encrypted\e[0m YOU set in \"becomesecure.sh\"  ( keystrokes hidden )"
-	IFS= read -rs encryption_passphrase < /dev/tty
-	if [ -z "$encryption_passphrase" ]; then
-		echo -e "\n\e[31mFAIL:\e[0m Invalid empty passphrase"
-		exit
-	fi
-
-	echo -e "\n\e[36m\e[5mURL\e[0m\e[0m to \e[32mhub.keys.encrypted\e[0m"
-        read -p "Enter: " keybundle_url
-	if [ -z "$keybundle_url" ]; then
-		echo -e "\e[31mFAIL:\e[0m URL cannot be blank"
-		exit
-	fi
-
-        echo -e "\n\e[36m\e[5mSkip\e[0m\e[0m advanced setup:"
-        read -p "(default: $skip_advanced_default): " skip_advanced
-        if [ -z "$skip_advanced" ]; then
-            skip_advanced=$skip_advanced_default
+    # EXTRA SECURITY for Redhat like
+    if [ "$os_name" == "\"AlmaLinux\"" ] || [ "$os_name" == "\"Rocky Linux\"" ]; then
+    # abort if selinux is not enforced
+    # selinux provides a os level security sandbox and is very restrictive
+    # especially important since renderfarm jobs can included arbitrary code execution on the workers
+        test_selinux=$( getenforce )
+        if [ "$test_selinux" == "Disabled" ] || [ "$test_selinux" == "Permissive" ];  then
+           echo -e "\n\e[31mFAIL:\e[0m Selinux is disabled, edit /etc/selinux/config"
+           echo "==================================================="
+           echo "Change SELINUX=disabled to SELINUX=enforcing"
+           echo -e "then \e[5mREBOOT\e[0m ( SELinux chcon on boot drive takes awhile)"
+           echo -e "On some Linux distros, selinux is force disabled"
+           echo -e "run this to fix:"
+           echo -e "grubby --update-kernel ALL --remove-args selinux"
+           echo "=================================================="
+           exit
         fi
 
-	if ! [[ $skip_advanced == "yes" ]]; then
-		echo -e "\n\e[36m\e[5mS3 Endpoint URL\e[0m\e[0m"
-		read -p "Enter:" s3_endpoint
-		if [ -z  $s3_endpoint ]; then
-			echo "FAIL: s3_endpoint url must be set"
-			exit
-		fi
+        # Enable Firewalld
+        firewalld_status=$(systemctl status firewalld)
 
-		echo -e "\n\e[36m\e[5mS3 Access Key Id\e[0m\e[0m"
-		read -p "Enter:" s3_access_key_id
-		if [ -z  $s3_access_key_id ]; then
-			echo "FAIL: s3_access_key_id must be set"
-			exit
-		fi
+        if [ -z "$firewalld_status" ]; then
+           echo -e "\e[32mInstalling firewalld...\e[0m"
+           if [ "$os_name" == "\"Ubuntu\"" ] || [ "$os_name" == "\"Debian GNU/Linux\"" ]; then
+               apt -y install firewalld
+           elif [ "$os_name" == "\"AlmaLinux\"" ] || [ "$os_name" == "\"Rocky Linux\"" ]; then
+               dnf -y install firewalld
+           fi
+           systemctl enable --now firewalld
+        fi
 
-		echo -e "\n\e[36m\e[5mS3 Secret Access Key\e[0m\e[0m"
-		read -p "Enter:" s3_secret_access_key
-		if [ -z  $s3_secret_access_key ]; then
-			echo "FAIL: s3_secret_access_key must be set"
-			exit
-		fi
-        	mkdir -p /root/.aws
+        if ! [[ "$firewalld_status" == *"running"* ]]; then
+           systemctl enable --now firewalld
+        fi
+    fi
+
+    echo -e "\nENTER \e[36m\e[5mpassphrase\e[0m\e[0m to decode \e[32mhub.keys.encrypted\e[0m YOU set in \"becomesecure.sh\"  ( keystrokes hidden )"
+    IFS= read -rs encryption_passphrase < /dev/tty
+    if [ -z "$encryption_passphrase" ]; then
+        echo -e "\n\e[31mFAIL:\e[0m Invalid empty passphrase"
+        exit
+    fi
+
+    echo -e "\n\e[36m\e[5mURL\e[0m\e[0m to \e[32mhub.keys.encrypted\e[0m"
+        read -p "Enter: " keybundle_url
+    if [ -z "$keybundle_url" ]; then
+        echo -e "\e[31mFAIL:\e[0m URL cannot be blank"
+        exit
+    fi
+
+    skip_advanced=$skip_advanced_default
+    #echo -e "\n\e[36m\e[5mSkip\e[0m\e[0m advanced setup:"
+    #read -p "(default: $skip_advanced_default): " skip_advanced
+    #if [ -z "$skip_advanced" ]; then
+    #    skip_advanced=$skip_advanced_default
+    #fi
+
+    if ! [[ $skip_advanced == "yes" ]]; then
+        echo -e "\n\e[36m\e[5mS3 Endpoint URL\e[0m\e[0m"
+        read -p "Enter:" s3_endpoint
+        if [ -z  $s3_endpoint ]; then
+            echo "FAIL: s3_endpoint url must be set"
+            exit
+        fi
+
+        echo -e "\n\e[36m\e[5mS3 Access Key Id\e[0m\e[0m"
+        read -p "Enter:" s3_access_key_id
+        if [ -z  $s3_access_key_id ]; then
+            echo "FAIL: s3_access_key_id must be set"
+            exit
+        fi
+
+        echo -e "\n\e[36m\e[5mS3 Secret Access Key\e[0m\e[0m"
+        read -p "Enter:" s3_secret_access_key
+        if [ -z  $s3_secret_access_key ]; then
+            echo "FAIL: s3_secret_access_key must be set"
+            exit
+        fi
+        mkdir -p /root/.aws
 cat <<EOF > /root/.aws/credentials
 [default]
 aws_access_key_id=${s3_access_key_id}
 aws_secret_access_key=${s3_secret_access_key}
 EOF
-        	chmod go-rwx /root/.aws/credentials
+        chmod go-rwx /root/.aws/credentials
 
-		echo -e "\n\e[36m\e[5mSet password\e[0m\e[0m to access hub file server ( keystrokes hidden )"
-		IFS= read -rs linux_password < /dev/tty
-		if [ -z "$linux_password" ]; then
-		    echo -e "\n\e[31mFAIL:\e[0m invalid empty password"
-		    exit
-		fi
+        echo -e "\n\e[36m\e[5mSet password\e[0m\e[0m to access hub file server ( keystrokes hidden )"
+        IFS= read -rs linux_password < /dev/tty
+        if [ -z "$linux_password" ]; then
+            echo -e "\n\e[31mFAIL:\e[0m invalid empty password"
+            exit
+        fi
 
-		echo -e "\nSet VPN \e[36m\e[5mIP address\e[0m\e[0m"
-		read -p "(default: $nebula_ip_default): " nebula_ip
-		if [ -z "$nebula_ip" ]; then
-		    nebula_ip=$nebula_ip_default
-		fi
+        echo -e "\nSet VPN \e[36m\e[5mIP address\e[0m\e[0m"
+        read -p "(default: $nebula_ip_default): " nebula_ip
+        if [ -z "$nebula_ip" ]; then
+            nebula_ip=$nebula_ip_default
+        fi
 
-		echo -e "\nSet VPN public \e[36m\e[5mudp port\e[0m\e[0m"
-		read -p "(default: $nebula_public_port_default): " nebula_public_port
-		if [ -z "$nebula_public_port" ]; then
-		    nebula_public_port=$nebula_public_port_default
-		fi
+        echo -e "\nSet VPN public \e[36m\e[5mudp port\e[0m\e[0m"
+        read -p "(default: $nebula_public_port_default): " nebula_public_port
+        if [ -z "$nebula_public_port" ]; then
+            nebula_public_port=$nebula_public_port_default
+        fi
 
-		echo -e "\nSet \e[36m\e[5musername\e[0m\e[0m"
-		read -p "(default: $smb_user_default): " deadline_user
-		if [ -z "$smb_user" ]; then
-		    smb_user=$deadline_user_default
-		fi
+        echo -e "\nSet \e[36m\e[5musername\e[0m\e[0m"
+        read -p "(default: $smb_user_default): " deadline_user
+        if [ -z "$smb_user" ]; then
+            smb_user=$deadline_user_default
+        fi
 
-		if [ "$os_name" == "\"Ubuntu\"" ] || [ "$os_name" == "\"Debian GNU/Linux\"" ]; then
-			apt -y install fuse
-		elif [ "$os_name" == "\"AlmaLinux\"" ] || [ "$os_name" == "\"Rocky Linux\"" ]; then
-			apt -y install fuse
-		fi
-	fi
+        if [ "$os_name" == "\"Ubuntu\"" ]; then
+            apt -y install fuse
+        elif [ "$os_name" == "\"AlmaLinux\"" ] || [ "$os_name" == "\"Rocky Linux\"" ]; then
+            apt -y install fuse
+        fi
+    fi
 
 else
-	keybundle_url=$keybundle_url_default
-fi
-
-if [ "$os_name" == "\"Ubuntu\"" ] || [ "$os_name" == "\"Debian GNU/Linux\"" ]; then
-	apt -y update
-	apt -y install tar
-elif [ "$os_name" == "\"AlmaLinux\"" ] || [ "$os_name" == "\"Rocky Linux\"" ]; then
-	dnf -y install tar
-else
-	echo "\e[31mFAIL:\e[0m Unsupported operating system $os_name"
-	exit
+    keybundle_url=$keybundle_url_default
 fi
 
 
@@ -233,28 +281,11 @@ fi
 # disallow ssh password authentication
 sed -i -E 's/#?PasswordAuthentication yes/PasswordAuthentication no/' /etc/ssh/sshd_config 
 
-# enable firewalld
-firewalld_status=$(systemctl status firewalld)
-
-if [ -z "$firewalld_status" ]; then
-	echo -e "\e[32mInstalling firewalld...\e[0m"
-	if [ "$os_name" == "\"Ubuntu\"" ] || [ "$os_name" == "\"Debian GNU/Linux\"" ]; then
-		apt -y install firewalld
-	elif [ "$os_name" == "\"AlmaLinux\"" ] || [ "$os_name" == "\"Rocky Linux\"" ]; then
-		dnf -y install firewalld
-	fi
-	systemctl enable --now firewalld
-fi
-
-if ! [[ "$firewalld_status" == *"running"* ]]; then
-	systemctl enable --now firewalld
-fi
-
 test_user=$( id "${smb_user}" )
 # id will return blank if no user is found
 if [ -z "$test_user" ]; then
-	echo -e "\e[32mCreating user:\e[0m ${smb_user}"
-	groupadd -g 3000 ${smb_user}
+    echo -e "\e[32mCreating user:\e[0m ${smb_user}"
+    groupadd -g 3000 ${smb_user}
         useradd -g 3000 -u 3000 -m ${smb_user}
 fi
 echo "${smb_user}:${linux_password}" | chpasswd
@@ -278,34 +309,38 @@ mv nebula /usr/local/bin/nebula
 chmod +x /usr/local/bin/
 mv nebula-cert /usr/local/bin/
 chmod +x /usr/local/bin/nebula-cert
-chcon -t bin_t /usr/local/bin/nebula # SELinux security clearance
 rm -f nebula-linux-amd64.tar.gz
 
-# Install goofys needed for Houdini and UBL
+# SELinux extra security
+if [ "$os_name" == "\"AlmaLinux\"" ] || [ "$os_name" == "\"Rocky Linux\"" ]; then
+    chcon -t bin_t /usr/local/bin/nebula # SELinux security clearance
+fi
+
+# OPTIONAL Install goofys for Houdini and UBL
 if ! [[ $skip_advanced == "yes" ]]; then
-	if ! ( test -f /usr/local/bin/goofys ); then
-		curl -L -o /usr/local/bin/goofys https://github.com/kahing/goofys/releases/download/v0.24.0/goofys
-		MatchFile="$(echo "${goofyssha256} /usr/local/bin/goofys" | sha256sum --check)"
-		if [ "$MatchFile" = "/usr/local/bin/goofys: OK" ] ; then
-			chmod +x /usr/local/bin/goofys
-			mkdir -p /mnt/s3
-			chown root /usr/local/bin/goofys
-			chown :root /usr/local/bin/goofys
-			chcon -t bin_t /usr/local/bin/goofys # SELinux security clearance
-		else
-			echo "FAIL"
-			echo "goofys checksum is wrong, may indicate download failure of malicious alteration"
-			exit
-		fi
-	fi
+    if ! ( test -f /usr/local/bin/goofys ); then
+        curl -L -o /usr/local/bin/goofys https://github.com/kahing/goofys/releases/download/v0.24.0/goofys
+        MatchFile="$(echo "${goofyssha256} /usr/local/bin/goofys" | sha256sum --check)"
+        if [ "$MatchFile" = "/usr/local/bin/goofys: OK" ] ; then
+            chmod +x /usr/local/bin/goofys
+            mkdir -p /mnt/s3
+            chown root /usr/local/bin/goofys
+            chown :root /usr/local/bin/goofys
+            chcon -t bin_t /usr/local/bin/goofys # SELinux security clearance
+        else
+            echo "FAIL"
+            echo "goofys checksum is wrong, may indicate download failure of malicious alteration"
+            exit
+        fi
+    fi
 
         grep -qxF "goofys#oomerfarm /mnt/s3 fuse ro,_netdev,allow_other,--file-mode=0666,--dir-mode=0777,--endpoint=$s3_endpoint 0 0" /etc/fstab || echo "goofys#oomerfarm /mnt/s3 fuse ro,_netdev,allow_other,--file-mode=0666,--dir-mode=0777,--endpoint=$s3_endpoint 0 0" >> /etc/fstab
         systemctl daemon-reload
         mkdir -p /mnt/s3
         mount /mnt/s3
-	mkdir -p /etc/deadline
-	cp -n /mnt/s3/houdini/mantra.pfx /etc/deadline
-	cp -n /mnt/s3/houdini/houdini.pfx /etc/deadline
+    mkdir -p /etc/deadline
+    cp -n /mnt/s3/houdini/mantra.pfx /etc/deadline
+    cp -n /mnt/s3/houdini/houdini.pfx /etc/deadline
 fi
 
 
@@ -315,30 +350,30 @@ fi
 # Google drive links require complicated traveral
 # Google cannot direct share large files or else this would be abused
 if [[ "$keybundle_url" == *"https://drive.google.com/file/d"* ]]; then
-	# if find content-length, then gdrive link is not restricted, this is a guess
-	head=$(curl -s --head ${keybundle_url} | grep "content-length")
-	if [[ "$head" == *"content-length"* ]]; then
-		# Extract Google uuid 
-		googlefileid=$(echo $keybundle_url | egrep -o '(\w|-){26,}')
-		head2=$(curl -s --head -L "https://drive.google.com/uc?export=download&id=${googlefileid}" | grep "content-length")
-		if [[ "$head2" == *"content-length"* ]]; then
-			echo -e "\e[32mDownloading secret keys https://drive.google.com/uc?export=download&id=${googlefileid}\e[0m"
-			curl -L "https://drive.google.com/uc?export=download&id=${googlefileid}" -o ${nebula_name}.keys.encrypted
-		else
-			echo -e "\e[31mFAIL:\e[0m ${keybundle_url} is not public, Set General Access to Anyone with Link"
-			exit
-		fi
-	else
-		echo -e "\e[31mFAIL:\e[0m ${keybundle_url} is not a valid Google Drive link"
-		exit
-	fi
+    # if find content-length, then gdrive link is not restricted, this is a guess
+    head=$(curl -s --head ${keybundle_url} | grep "content-length")
+    if [[ "$head" == *"content-length"* ]]; then
+        # Extract Google uuid 
+        googlefileid=$(echo $keybundle_url | egrep -o '(\w|-){26,}')
+        head2=$(curl -s --head -L "https://drive.google.com/uc?export=download&id=${googlefileid}" | grep "content-length")
+        if [[ "$head2" == *"content-length"* ]]; then
+            echo -e "\e[32mDownloading secret keys https://drive.google.com/uc?export=download&id=${googlefileid}\e[0m"
+            curl -L "https://drive.google.com/uc?export=download&id=${googlefileid}" -o ${nebula_name}.keys.encrypted
+        else
+            echo -e "\e[31mFAIL:\e[0m ${keybundle_url} is not public, Set General Access to Anyone with Link"
+            exit
+        fi
+    else
+        echo -e "\e[31mFAIL:\e[0m ${keybundle_url} is not a valid Google Drive link"
+        exit
+    fi
 # This should work with URL's pointing to normal website locations or public S3 storage 
 else
-	curl -L "${keybundle_url}"  -o ${nebula_name}.keys.encrypted
-	if ! ( test -f ${nebula_name}.keys.encrypted ) ; then
-		echo -e "\e[31mFAIL:\e[0m ${nebula_name}.keys.encrypted URL you entered \e[31m${keybundle_url}\e[0m does not exist"
-		exit
-	fi
+    curl -L "${keybundle_url}"  -o ${nebula_name}.keys.encrypted
+    if ! ( test -f ${nebula_name}.keys.encrypted ) ; then
+        echo -e "\e[31mFAIL:\e[0m ${nebula_name}.keys.encrypted URL you entered \e[31m${keybundle_url}\e[0m does not exist"
+        exit
+    fi
 fi
 
 # decrypt keys.encrypted
@@ -346,7 +381,7 @@ fi
 while :
 do
     if openssl enc -aes-256-cbc -pbkdf2 -d -in ${nebula_name}.keys.encrypted -out ${nebula_name}.tar -pass file:<( echo -n "$encryption_passphrase" ) ; then
-	rm ${nebula_name}.keys.encrypted
+    rm ${nebula_name}.keys.encrypted
         break
     else
         echo "WRONG passphrase entered for ${nebula_name}.keys.encrypted, try again"
@@ -358,31 +393,31 @@ done
 
 testkeybundle=$( tar -tf ${nebula_name}.tar ${nebula_name}/${nebula_name}.key 2>&1 )
 if ! [[ "${testkeybundle}" == *"Not found"* ]]; then
-	tar --to-stdout -xvf ${nebula_name}.tar ${nebula_name}/ca.crt > ca.crt
-	tar --to-stdout -xvf ${nebula_name}.tar ${nebula_name}/${nebula_name}.crt > ${nebula_name}.crt
-	ERROR=$( tar --to-stdout -xvf ${nebula_name}.tar ${nebula_name}/${nebula_name}.key > ${nebula_name}.key 2>&1 )
-	if ! [ "$ERROR" == *"Fail"* ]; then
-	    chown root "${nebula_name}.key"
-	    chown root "${nebula_name}.crt"
-	    chown root "ca.crt"
+    tar --to-stdout -xvf ${nebula_name}.tar ${nebula_name}/ca.crt > ca.crt
+    tar --to-stdout -xvf ${nebula_name}.tar ${nebula_name}/${nebula_name}.crt > ${nebula_name}.crt
+    ERROR=$( tar --to-stdout -xvf ${nebula_name}.tar ${nebula_name}/${nebula_name}.key > ${nebula_name}.key 2>&1 )
+    if ! [ "$ERROR" == *"Fail"* ]; then
+        chown root "${nebula_name}.key"
+        chown root "${nebula_name}.crt"
+        chown root "ca.crt"
 
-	    chown :root "${nebula_name}.key"
-	    chown :root "${nebula_name}.crt"
-	    chown :root "ca.crt"
-	    chmod go-rwx "${nebula_name}.key"
-	    mv ca.crt /etc/nebula
-	    mv "${nebula_name}.crt" /etc/nebula
-	    mv "${nebula_name}.key" /etc/nebula
-	    rm ${nebula_name}.tar
-	else
-	    rm ${nebula_name}.tar
-	fi 
+        chown :root "${nebula_name}.key"
+        chown :root "${nebula_name}.crt"
+        chown :root "ca.crt"
+        chmod go-rwx "${nebula_name}.key"
+        mv ca.crt /etc/nebula
+        mv "${nebula_name}.crt" /etc/nebula
+        mv "${nebula_name}.key" /etc/nebula
+        rm ${nebula_name}.tar
+    else
+        rm ${nebula_name}.tar
+    fi 
 else
         echo -e "\e[31mFAIL:\e[0m ${nebula_name}.keys.encrypted missing"
-	echo  "${keybundle_url} might be corrupted or not shared publicly"
-	echo  "Use becomesecure.sh to generate keys, reupload"
-	echo  "Check your Google Drive file link is \"Anyone who has link\""
-	exit
+    echo  "${keybundle_url} might be corrupted or not shared publicly"
+    echo  "Use becomesecure.sh to generate keys, reupload"
+    echo  "Check your Google Drive file link is \"Anyone who has link\""
+    exit
 fi
 
 # create Nebula config file
@@ -502,12 +537,12 @@ echo -e "\n\e[32mInstalling File Server ( Samba )...\e[0m"
 
 
 if [ "$os_name" == "\"Ubuntu\"" ] || [ "$os_name" == "\"Debian GNU/Linux\"" ]; then
-	apt -y install cifs-utils
-	apt -y install kernel-modules
-	apt -y install samba
+    apt -y install cifs-utils
+    #apt -y install kernel-modules
+    apt -y install samba
 elif [ "$os_name" == "\"AlmaLinux\"" ] || [ "$os_name" == "\"Rocky Linux\"" ]; then
-	dnf -y install cifs-utils
-	dnf -y install samba
+    dnf -y install cifs-utils
+    dnf -y install samba
 fi
 cat <<EOF > /etc/samba/smb.conf
 ntlm auth = mschapv2-and-ntlmv2-only
@@ -533,63 +568,62 @@ smb ports = 445
    directory mask = 0777
 EOF
 
-if [ "$os_name" == "\"Ubuntu\"" ] || [ "$os_name" == "\"Debian GNU/Linux\"" ]; then
-	systemctl stop nmbd
-	systemctl disable nmbd
-	systemctl restart smbd
+if [ "$os_name" == "\"Ubuntu\"" ]; then
+    systemctl stop nmbd
+    systemctl disable nmbd
+    systemctl restart smbd
 elif [ "$os_name" == "\"AlmaLinux\"" ] || [ "$os_name" == "\"Rocky Linux\"" ]; then
-	systemctl enable --now smb
-fi	
+    systemctl enable --now smb
 
-# ***FIREWALL rules***
-# adopting highly restrictive rules to protect network
-echo -e "\n\e[32mTurning up Firewall security...\e[0m"
+    # ***FIREWALL rules***
+    # adopting highly restrictive rules to protect network
+    echo -e "\n\e[32mTurning up Firewall security...\e[0m"
 
-# Wipe all services and ports except ssh and 22/tcp, may break system
-for systemdservice in $(firewall-cmd --list-services --zone public);
-do 
-	if ! [[ "$systemdservice" == "ssh" ]]; then
-		firewall-cmd -q --zone public --remove-service ${systemdservice} --permanent
-	fi
-done
-for systemdport in $(firewall-cmd --list-ports --zone public);
-do 
-	if ! [[ "$systemdport" == "22/tcp" ]]; then
-		firewall-cmd -q --zone public --remove-port ${systemdport} --permanent
-	fi
-done
-firewall-cmd -q --reload
+    # Wipe all services and ports except ssh and 22/tcp, may break system
+    for systemdservice in $(firewall-cmd --list-services --zone public);
+    do 
+       if ! [[ "$systemdservice" == "ssh" ]]; then
+           firewall-cmd -q --zone public --remove-service ${systemdservice} --permanent
+       fi
+    done
+    for systemdport in $(firewall-cmd --list-ports --zone public);
+    do 
+       if ! [[ "$systemdport" == "22/tcp" ]]; then
+           firewall-cmd -q --zone public --remove-port ${systemdport} --permanent
+       fi
+    done
+    firewall-cmd -q --reload
 
+    # Allow Nebula VPN connections over internet
+    firewall-cmd -q --zone=public --add-port=${nebula_public_port}/udp --permanent
 
-# Allow Nebula VPN connections over internet
-firewall-cmd -q --zone=public --add-port=${nebula_public_port}/udp --permanent
+    # Add Nebula zone on "nebula_tun"
+    firewall-cmd -q --new-zone nebula --permanent
+    firewall-cmd -q --zone nebula --add-interface nebula_tun --permanent
 
-# Add Nebula zone on "nebula_tun"
-firewall-cmd -q --new-zone nebula --permanent
-firewall-cmd -q --zone nebula --add-interface nebula_tun --permanent
+    # Allow ssh connections over VPN
+    firewall-cmd -q --zone nebula --add-service ssh --permanent
 
-# Allow ssh connections over VPN
-firewall-cmd -q --zone nebula --add-service ssh --permanent
+    # Allow smb/cifs connections over VPN
+    firewall-cmd -q --zone nebula --add-port 445/tcp --permanent
 
-# Allow smb/cifs connections over VPN
-firewall-cmd -q --zone nebula --add-port 445/tcp --permanent
+    # Allow MongoDB connections over VPN
+    firewall-cmd -q --zone nebula --add-port 27100/tcp --permanent
 
-# Allow MongoDB connections over VPN
-firewall-cmd -q --zone nebula --add-port 27100/tcp --permanent
+    # deadline license forwarder for Usage Based Licensing
+    firewall-cmd -q --zone nebula --add-port 17004/tcp --permanent
+    firewall-cmd -q --zone nebula --add-port 40645/tcp --permanent
 
-# deadline license forwarder for Usage Based Licensing
-firewall-cmd -q --zone nebula --add-port 17004/tcp --permanent
-firewall-cmd -q --zone nebula --add-port 40645/tcp --permanent
+    # houdini UBL passthrough
+    firewall-cmd -q --zone nebula --add-port 1714/tcp --permanent
+    firewall-cmd -q --zone nebula --add-port 1715/tcp --permanent
+    firewall-cmd -q --zone nebula --add-port 1716/tcp --permanent
 
-# houdini UBL passthrough
-firewall-cmd -q --zone nebula --add-port 1714/tcp --permanent
-firewall-cmd -q --zone nebula --add-port 1715/tcp --permanent
-firewall-cmd -q --zone nebula --add-port 1716/tcp --permanent
+    firewall-cmd -q --reload
+fi  
 
-firewall-cmd -q --reload
 
 # Prep Deadline Repo
-# selinux beat me again because missed chcon and could mount but not see samba shares contents
 mkdir -p /mnt/DeadlineRepository10
 mkdir -p /mnt/oomerfarm
 mkdir -p /mnt/oomerfarm/bella
@@ -603,8 +637,11 @@ chown oomerfarm /mnt/oomerfarm/bella/renders
 chown :oomerfarm /mnt/oomerfarm
 chown :oomerfarm /mnt/oomerfarm/bella
 chown :oomerfarm /mnt/oomerfarm/bella/renders
-chcon -R -t samba_share_t /mnt/DeadlineRepository10/
-chcon -R -t samba_share_t /mnt/oomerfarm/
+# SELinux beat me again because missed chcon and could mount but not see samba shares contents
+if [ "$os_name" == "\"AlmaLinux\"" ] || [ "$os_name" == "\"Rocky Linux\"" ]; then
+    chcon -R -t samba_share_t /mnt/DeadlineRepository10/
+    chcon -R -t samba_share_t /mnt/oomerfarm/
+fi
 
 # Set password, confirm password
 (echo ${linux_password}; echo ${linux_password}) | smbpasswd -a oomerfarm -s
@@ -613,83 +650,87 @@ echo -e "\e[32mDownloading ${mongourl}${mongotar}\e[0m"
 curl -O ${mongourl}${mongotar}
 MatchFile="$(echo "${mongosha256} ${mongotar}" | sha256sum --check)"
 if ! [[ "$MatchFile" == "${mongotar}: OK" ]] ; then
-	echo -e "\nChecksum for MongoDB does not match"
-	echo -e "\nABORTING: The mongodb download failed is corrupted or has been maliciously modified"
-	exit
+    echo -e "\nChecksum for MongoDB does not match"
+    echo -e "\nABORTING: The mongodb download failed is corrupted or has been maliciously modified"
+    exit
 fi
 
 # Get Thinkbox software
 # =====================
 echo -e "\n\e[32mInstalling Deadline Renderfarm Software ...\e[0m"
 if ! test -f /mnt/DeadlineRepository10/ThinkboxEULA.txt ; then
-	echo -e "\nChecking existence of ${thinkboxurl}${thinkboxtar}" 
-	if ! (curl -s --head --fail -o /dev/null "${thinkboxurl}${thinkboxtar}" ); then
-		echo -e "\e[31mFAIL:\e[0m no Thinkbox Software at ${thinkboxurl}${thinkboxtar}"
-			exit
-	fi
+    echo -e "\nChecking existence of ${thinkboxurl}${thinkboxtar}" 
+    if ! (curl -s --head --fail -o /dev/null "${thinkboxurl}${thinkboxtar}" ); then
+        echo -e "\e[31mFAIL:\e[0m no Thinkbox Software at ${thinkboxurl}${thinkboxtar}"
+            exit
+    fi
 
-	echo $thinkboxtar
-	if ! ( test -f "${thinkboxtar}" ); then
-		echo -e "\n\e[32mDownloading AWS Thinkbox Deadline Software 900MB+ ...\e[0m"
-		curl -O ${thinkboxurl}${thinkboxtar}
-	fi
-	MatchFile="$(echo "${thinkboxsha256} ${thinkboxtar}" | sha256sum --check)"
-	echo $MatchFile
-	if [ "$MatchFile" == "${thinkboxtar}: OK" ] ; then
-	    echo -e "\e[32mExtracting ${thinkboxurl}${thinkboxtar}\e[0m\n"
-	    tar --skip-old-files -xzf ${thinkboxtar}
-	else
-	    echo "\e[31mFAIL:\e[0m ${thinkboxtar} checksum failed, file possibly maliciously altered on AWS"
-	    exit
-	fi
+    echo $thinkboxtar
+    if ! ( test -f "${thinkboxtar}" ); then
+        echo -e "\n\e[32mDownloading AWS Thinkbox Deadline Software 900MB+ ...\e[0m"
+        curl -O ${thinkboxurl}${thinkboxtar}
+    fi
+    MatchFile="$(echo "${thinkboxsha256} ${thinkboxtar}" | sha256sum --check)"
+    echo $MatchFile
+    if [ "$MatchFile" == "${thinkboxtar}: OK" ] ; then
+        echo -e "\e[32mExtracting ${thinkboxurl}${thinkboxtar}\e[0m\n"
+        tar --skip-old-files -xzf ${thinkboxtar}
+    else
+        echo "\e[31mFAIL:\e[0m ${thinkboxtar} checksum failed, file possibly maliciously altered on AWS"
+        exit
+    fi
 
-	# Installers for workers
-	mkdir -p /mnt/oomerfarm/installers
+    # Cache Deadline installer for workers on hub
+    # ===========================================
+    mkdir -p /mnt/oomerfarm/installers
         cp DeadlineClient-${thinkboxversion}-linux-x64-installer.run /mnt/oomerfarm/installers
 
-	# Cleanup
-	rm DeadlineClient-${thinkboxversion}-linux-x64-installer.run.sig
-	rm DeadlineRepository-${thinkboxversion}-linux-x64-installer.run.sig
-	rm AWSPortalLink-*-linux-x64-installer.run
-	rm AWSPortalLink-*-linux-x64-installer.run.sig
-	echo -e "\e[32m${thinkboxrun} --mode unattended --requireSSL false --dbLicenseAcceptance accept --unattendedmodeui none --prefix /mnt/DeadlineRepository10 --dbhost ${nebula_ip} --prepackagedDB ${mongotar} --dbInstallationType prepackagedDB --installmongodb true --dbOverwrite true\e[0m"
-	${thinkboxrun} --mode unattended --requireSSL false --dbLicenseAcceptance accept --unattendedmodeui none --prefix /mnt/DeadlineRepository10 --dbhost ${nebula_ip} --prepackagedDB ${mongotar} --dbInstallationType prepackagedDB --installmongodb true --dbOverwrite true
-	sed -i "s/bindIpAll: true/bindIp: ${nebula_ip}/g" /opt/Thinkbox/DeadlineDatabase10/mongo/data/config.conf
-	/etc/init.d/Deadline10db restart
+    # Cleanup
+    # =======
+    rm DeadlineClient-${thinkboxversion}-linux-x64-installer.run.sig
+    rm DeadlineRepository-${thinkboxversion}-linux-x64-installer.run.sig
+    rm AWSPortalLink-*-linux-x64-installer.run
+    rm AWSPortalLink-*-linux-x64-installer.run.sig
+    echo -e "\e[32m${thinkboxrun} --mode unattended --requireSSL false --dbLicenseAcceptance accept --unattendedmodeui none --prefix /mnt/DeadlineRepository10 --dbhost ${nebula_ip} --prepackagedDB ${mongotar} --dbInstallationType prepackagedDB --installmongodb true --dbOverwrite true\e[0m"
+    ${thinkboxrun} --mode unattended --requireSSL false --dbLicenseAcceptance accept --unattendedmodeui none --prefix /mnt/DeadlineRepository10 --dbhost ${nebula_ip} --prepackagedDB ${mongotar} --dbInstallationType prepackagedDB --installmongodb true --dbOverwrite true
+    sed -i "s/bindIpAll: true/bindIp: ${nebula_ip}/g" /opt/Thinkbox/DeadlineDatabase10/mongo/data/config.conf
+    /etc/init.d/Deadline10db restart
 
-	# [TODO] Thinkbox installs mongod and runs as root, should use low security user 
-	# [TODO] Since files are already created, will have to recursively chown
-	chown root /opt/Thinkbox/DeadlineDatabase10/mongo/application/bin/mongod
-	chown root /opt/Thinkbox/DeadlineDatabase10/mongo/application/bin/mongo
-	chown root /opt/Thinkbox/DeadlineDatabase10/mongo/application/bin/mongos
-	chown :root /opt/Thinkbox/DeadlineDatabase10/mongo/application/bin/mongod
-	chown :root /opt/Thinkbox/DeadlineDatabase10/mongo/application/bin/mongo
-	chown :root /opt/Thinkbox/DeadlineDatabase10/mongo/application/bin/mongos
+    # [TODO] Thinkbox installs mongod and runs as root, should use low security user 
+    # [TODO] Since files are already created, will have to recursively chown
+    chown root /opt/Thinkbox/DeadlineDatabase10/mongo/application/bin/mongod
+    chown root /opt/Thinkbox/DeadlineDatabase10/mongo/application/bin/mongos
+    chown :root /opt/Thinkbox/DeadlineDatabase10/mongo/application/bin/mongod
+    chown :root /opt/Thinkbox/DeadlineDatabase10/mongo/application/bin/mongos
 
-	chcon -t bin_t /opt/Thinkbox/DeadlineDatabase10/mongo/application/bin/mongod
+    # SELinux extra security
+    # ======================
+    if [ "$os_name" == "\"AlmaLinux\"" ] || [ "$os_name" == "\"Rocky Linux\"" ]; then
+        chcon -t bin_t /opt/Thinkbox/DeadlineDatabase10/mongo/application/bin/mongod
+    fi
 
-	echo -e "\n\n\e[31mYou accept AWS Thinkbox Deadline EULA when installing:\e[0m"
-	cat /mnt/DeadlineRepository10/ThinkboxEULA.txt
+    echo -e "\n\n\e[31mYou accept AWS Thinkbox Deadline EULA when installing:\e[0m"
+    cat /mnt/DeadlineRepository10/ThinkboxEULA.txt
 else
-	echo -e "\e[35mDeadline Repository exists...skipping installation\e[0m"
+    echo -e "\e[35mDeadline Repository exists...skipping installation\e[0m"
 fi
 
 # Install Deadline license forwarder, forced to install all client software
 if ! [[ $skip_advanced == "yes" ]]; then
-	if ! test -d /opt/Thinkbox/Deadline10/bin ; then
-		echo -e "\e[32mInstalling DeadlineClient-${thinkboxversion}-linux-x64-installer.run\e[0m"
-		chmod +x /mnt/oomerfarm/installers/DeadlineClient-${thinkboxversion}-linux-x64-installer.run
-		echo -e "\e[32m/mnt/oomerfarm/installers/DeadlineClient-${thinkboxversion}-linux-x64-installer.run --mode unattended --unattendedmodeui none --repositorydir /mnt/DeadlineRepository10  --connectiontype Direct --noguimode true --binariesonly true\e[0m"
-		/mnt/oomerfarm/installers/DeadlineClient-${thinkboxversion}-linux-x64-installer.run --mode unattended --unattendedmodeui none --repositorydir /mnt/DeadlineRepository10  --connectiontype Direct --noguimode true --binariesonly true
-		rm DeadlineClient-${thinkboxversion}-linux-x64-installer.run
+    if ! test -d /opt/Thinkbox/Deadline10/bin ; then
+        echo -e "\e[32mInstalling DeadlineClient-${thinkboxversion}-linux-x64-installer.run\e[0m"
+        chmod +x /mnt/oomerfarm/installers/DeadlineClient-${thinkboxversion}-linux-x64-installer.run
+        echo -e "\e[32m/mnt/oomerfarm/installers/DeadlineClient-${thinkboxversion}-linux-x64-installer.run --mode unattended --unattendedmodeui none --repositorydir /mnt/DeadlineRepository10  --connectiontype Direct --noguimode true --binariesonly true\e[0m"
+        /mnt/oomerfarm/installers/DeadlineClient-${thinkboxversion}-linux-x64-installer.run --mode unattended --unattendedmodeui none --repositorydir /mnt/DeadlineRepository10  --connectiontype Direct --noguimode true --binariesonly true
+        rm DeadlineClient-${thinkboxversion}-linux-x64-installer.run
 
 cat <<EOF > /var/lib/Thinkbox/Deadline10/licenseforwarder.ini
 [Deadline]
 LicenseForwarderProcessID=92562
 LicenseForwarderMessagingPort=40635
 EOF
-	chown oomerfarm /var/lib/Thinkbox/Deadline10/licenseforwarder.ini
-	chown :oomerfarm /var/lib/Thinkbox/Deadline10/licenseforwarder.ini
+    chown oomerfarm /var/lib/Thinkbox/Deadline10/licenseforwarder.ini
+    chown :oomerfarm /var/lib/Thinkbox/Deadline10/licenseforwarder.ini
 
 cat <<EOF > /var/lib/Thinkbox/Deadline10/deadline.ini
 [Deadline]
@@ -727,10 +768,10 @@ SuccessExitStatus=143
 [Install]
 WantedBy=multi-user.target
 EOF
-		systemctl enable --now deadlinelicenseforwarder
-	else
- 		echo -e "\e[35mDeadline Client software already exists in /opt/Thinkbox/Deadline10/bin ...skipping installation\e[0m"
-	fi
+        systemctl enable --now deadlinelicenseforwarder
+    else
+        echo -e "\e[35mDeadline Client software already exists in /opt/Thinkbox/Deadline10/bin ...skipping installation\e[0m"
+    fi
 fi
 
 mkdir -p /mnt/DeadlineRepository10/custom/plugins/BellaRender
@@ -743,17 +784,19 @@ cp DeadlineRepository10/custom/scripts/Submission/BellaRender.py /mnt/DeadlineRe
 # [TODO] switch to ssl for better security
 #sed -i "s/Authenticate=.*/Authenticate=False/g" /mnt/DeadlineRepository10/settings/connection.ini
 
+# Cache Bella Installer for workers on hub
+# ========================================
 echo -e "\e[32mDownloading Bella path tracer ...\e[0m"
 curl -O https://downloads.bellarender.com/bella_cli-${bella_version}.tar.gz
 MatchFile="$(echo "${bellasha256} bella_cli-${bella_version}.tar.gz" | sha256sum --check)"
 mkdir -p /mnt/oomerfarm/installers
 if [ "$MatchFile" = "bella_cli-${bella_version}.tar.gz: OK" ] ; then
-	cp bella_cli-${bella_version}.tar.gz /mnt/oomerfarm/installers/
-	rm bella_cli-${bella_version}.tar.gz 
+    cp bella_cli-${bella_version}.tar.gz /mnt/oomerfarm/installers/
+    rm bella_cli-${bella_version}.tar.gz 
 else
-	rm bella_cli-${bella_version}.tar.gz 
-	echo "\e[31mFAIL:\e[0m bella checksum failed, may be corrupted or malware"
-	exit
+    rm bella_cli-${bella_version}.tar.gz 
+    echo "\e[31mFAIL:\e[0m bella checksum failed, may be corrupted or malware"
+    exit
 fi
 
 curl -L https://bellarender.com/doc/scenes/orange-juice/orange-juice.bsz -o /mnt/oomerfarm/bella/orange-juice.bsz
@@ -782,11 +825,11 @@ else
         echo -e "\e[36mNow you need some powerful Linux machines to do rendering\e[0m"
         echo -e "3. ssh and run \e[32mbash bootstrapworker.sh\e[0m"
         echo -e "4. To submit jobs, from desktop/laptop, run \e[36mbash bridgeoomerfarm.sh\e[0m to join VPN"
-	if [ "$linux_password" == "oomerfarm" ]; then
-        	echo -e " - with username \e[36moomerfarm\e[0m password \e[36moomerfarm\e[0m"
-	else
-        	echo -e " - with username \e[36moomerfarm\e[0m password \e[36mYOU\e[0m set above"
-	fi
+    if [ "$linux_password" == "oomerfarm" ]; then
+        echo -e " - with username \e[36moomerfarm\e[0m password \e[36moomerfarm\e[0m"
+    else
+        echo -e " - with username \e[36moomerfarm\e[0m password \e[36mYOU\e[0m set above"
+    fi
         echo -e " - mount folder \e[36msmb://hub.oomer.org/DeadlineRepository10\e[0m ( Windows //hub.oomer.org/DeadlineRepository ) "
         echo -e " - mount folder \e[36msmb://hub.oomer.org/oomerfarm\e[0m ( Windows //hub.oomer.org/oomerfarm )"
         echo -e " - install Deadline Client software \e[36mhttps://www.awsthinkbox.com\e[0m"
