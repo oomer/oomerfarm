@@ -10,25 +10,27 @@
 
 # Tested on AWS, Azure, Google, Oracle, Vultr, Digital Ocaan, Linode, Heztner, Server-Factory, Crunchbits
 
-redhat_platform_id=$(awk -F= '$1=="PLATFORM_ID" { print $2 ;}' /etc/os-release)
-
+#Helper to discover distribution
+source /etc/os-release
+echo $PLATFORM_ID
+os_name=$(awk -F= '$1=="NAME" { print $2 ;}' /etc/os-release)
 
 if ! [[ "$OSTYPE" == "linux-gnu"* ]]; then
-        echo -e "FAIL: Run this on a Red Hat Enterprise Linux 8 or 9 derivative"
-	echo "tested on:"
-	echo -e "\tAlmaLinux 8.x/9.x"
-	echo -e "\tRockyLinux 8.x/9.x"
-	echo -e "\tOracle Linux Server 8.x/9.x"
-        exit
+    echo -e "FAIL: Run this on a Red Hat Enterprise Linux 8 or 9 derivative"
+    echo "tested on:"
+    echo -e "\tAlmaLinux 8.x/9.x"
+    echo -e "\tRockyLinux 8.x/9.x"
+    echo -e "\tOracle Linux Server 8.x/9.x"
+    exit
 fi
 
 thinkboxversion="10.4.0.10"
 bellaversion="24.6.1"
 nebula_version_default="v1.9.5"
 
-keybundle_url_default="https://drive.google.com/file/d/1p51AmY2BDSsiae-QWx76AxlLCnpi_5xg/view?usp=sharing"
-goofysurl="https://github.com/kahing/goofys/releases/download/v0.24.0/goofys"
-goofyssha256="729688b6bc283653ea70f1b2b6406409ec1460065161c680f3b98b185d4bf364"
+#keybundle_url_default="https://drive.google.com/file/d/1p51AmY2BDSsiae-QWx76AxlLCnpi_5xg/view?usp=sharing"
+#goofysurl="https://github.com/kahing/goofys/releases/download/v0.24.0/goofys"
+#goofyssha256="729688b6bc283653ea70f1b2b6406409ec1460065161c680f3b98b185d4bf364"
 
 worker_prefix=worker
 encryption_passphrase="oomerfarm"
@@ -55,6 +57,7 @@ smb_credentials=$smb_credentials_default
 worker_auto_shutdown=0
 worker_name_default=$(hostname)
 hub_name_default="i_agree_this_is_unsafe"
+hub_name_default="hub"
 
 # Security best practice #1: add non-privileged/no-shell user to run daemons/systemd units/etc
 # Runs deadline systemd unit
@@ -85,184 +88,173 @@ fi
 echo -e "\e[36m\e[5moomerfarm worker id\e[0m\e[0m"
 read -p "Enter number between 1-9999:" worker_id
 if (( $worker_id >= 1 && $worker_id <= 9999 )) ; then
-	worker_name=$(printf "worker%04d" $worker_id)
-	echo ${worker_name}
-	hostnamectl --static --transient set-hostname ${worker_name}
-	echo ${worker_name}
+    worker_name=$(printf "worker%04d" $worker_id)
+    echo ${worker_name}
+    hostnamectl --static --transient set-hostname ${worker_name}
+    echo ${worker_name}
 else
-	echo -e "\e[31mFAIL:\e[0m worker id need to be between 1 and 9999 inclusive"
-	exit
+    echo -e "\e[31mFAIL:\e[0m worker id need to be between 1 and 9999 inclusive"
+    exit
 fi
 
 echo -e "\n\e[36m\e[5mhub internet address\e[0m\e[0m"
 read -p "Enter: x.x.x.x:" lighthouse_internet_ip
 if [ -z  $lighthouse_internet_ip ]; then
-        echo "Cannot continue without public ip address of hub"
-        exit
+    echo "Cannot continue without public ip address of hub"
+    exit
 fi
 
-echo -e "\n\e[32mSecure Method:\e[0m On a trusted computer, generate secret keys ( not this computer ) using \e[36mkeyoomerfarm.sh\e[0m BEFORE running this script. Type \e[36mhub\e[0m below for the secure method"
+echo -e "\nOn a trusted computer, generate secret keys ( NOT this computer ) using \e[36mbecomesecure.sh\e[0m BEFORE running this script."
+hub_name=$hub_name_default
 
-echo -e "\n\e[32mTest Drive:\e[0m \e[36m${hub_name_default}\e[0m are not-so-secret keys securing oomerfarm with a VPN. Since they allow intrusion without your knowledge only use them to test oomerfarm. Analogy: house keys can be lost and your locks continue to work, BUT a stranger who finds your keys AND knows where you live can easily enter. Hit enter below to use \e[36mi_agree_this_is_unsafe\e[0m with security by obscurity"
+#echo -e "\n\e[32mTest Drive:\e[0m \e[36m${hub_name_default}\e[0m are not-so-secret keys securing oomerfarm with a VPN. Since they allow intrusion without your knowledge only use them to test oomerfarm. Analogy: house keys can be lost and your locks continue to work, BUT a stranger who finds your keys AND knows where you live can easily enter. Hit enter below to use \e[36mi_agree_this_is_unsafe\e[0m with security by obscurity"
 
-echo -e "\nENTER \e[36m\e[5mhub\e[0m\e[0m or \e[36m\e[5m${hub_name_default}\e[0m\e[0m"
-read -p "(default: $hub_name_default:) " hub_name
-if [ -z "$hub_name" ]; then
-	hub_name=$hub_name_default
-fi
+#echo -e "\nENTER \e[36m\e[5mhub\e[0m\e[0m or \e[36m\e[5m${hub_name_default}\e[0m\e[0m"
+#read -p "(default: $hub_name_default:) " hub_name
+#if [ -z "$hub_name" ]; then
+#   hub_name=$hub_name_default
+#fi
 
 if ! [ "$hub_name" = "i_agree_this_is_unsafe" ]; then
-        # abort if selinux is not enforced
-        # selinux provides a os level security sandbox and is very restrictive
-        # especially important since renderfarm jobs can included arbitrary code execution on the workers
-        test_selinux=$( getenforce )
+# abort if selinux is not enforced
+# selinux provides a os level security sandbox and is very restrictive
+# especially important since renderfarm jobs can included arbitrary code execution on the workers
+
+    if [ "$PLATFORM_ID" == "platform:el8" ] || [ "$PLATFORM_ID" == "platform:el9" ]; then
+        #test_selinux=$( getenforce )
         if [ "$test_selinux" == "Disabled" ] || [ "$test_selinux" == "Permissive" ];  then
-                echo -e "\n\e[31mFAIL:\e[0m Selinux is disabled, edit /etc/selinux/config"
-                echo "==================================================="
-                echo "Change SELINUX=disabled to SELINUX=enforcing"
-                echo -e "then \e[5mREBOOT\e[0m ( SELinux chcon on boot drive takes awhile)"
-                echo "=================================================="
-                exit
+            echo -e "\n\e[31mFAIL:\e[0m Selinux is disabled, edit /etc/selinux/config"
+            echo "==================================================="
+            echo "Change SELINUX=disabled to SELINUX=enforcing"
+            echo -e "then \e[5mREBOOT\e[0m ( SELinux chcon on boot drive takes awhile)"
+            echo "=================================================="
+            exit
+        fi
+    fi
+
+
+    echo -e "\nENTER \e[36m\e[5mpassphrase\e[0m\e[0m to decode \e[32mworker.key.encypted\e[0m YOU set in \"keyauthority.sh\"  ( keystrokes hidden )"
+    IFS= read -rs encryption_passphrase < /dev/tty
+    if [ -z "$encryption_passphrase" ]; then
+        echo -e "\n\e[31mFAIL:\e[0m Invalid empty passphrase"
+        exit
+    fi
+
+    echo -e "\n\e[36m\e[5mURL\e[0m\e[0m to \e[32mworker.keys.encrypted\e[0m"
+    read -p "Enter: " keybundle_url
+    if [ -z "$keybundle_url" ]; then
+        echo -e "\e[31mFAIL:\e[0m URL cannot be blank"
+        exit
+    fi
+
+    #echo -e "\n\e[36m\e[5mSkip\e[0m\e[0m advanced setup:"
+    #read -p "(default: $skip_advanced_default): " skip_advanced
+    #if [ -z "$skip_advanced" ]; then
+    #    skip_advanced=$skip_advanced_default
+    #fi
+
+    if ! [ $skip_advanced == "yes" ]; then
+        echo -e "\n\e[36m\e[5mS3 Endpoint URL\e[0m\e[0m"
+        read -p "Enter:" s3_endpoint
+        if [ -z  $s3_endpoint ]; then
+            echo "FAIL: s3_endpoint url must be set"
+            exit
         fi
 
-
-        echo -e "\nENTER \e[36m\e[5mpassphrase\e[0m\e[0m to decode \e[32mworker.key.encypted\e[0m YOU set in \"keyauthority.sh\"  ( keystrokes hidden )"
-        IFS= read -rs encryption_passphrase < /dev/tty
-        if [ -z "$encryption_passphrase" ]; then
-                echo -e "\n\e[31mFAIL:\e[0m Invalid empty passphrase"
-                exit
+        echo -e "\n\e[36m\e[5mS3 Access Key Id\e[0m\e[0m"
+        read -p "Enter:" s3_access_key_id
+        if [ -z  $s3_access_key_id ]; then
+            echo "FAIL: s3_access_key_id must be set"
+            exit
         fi
 
-        echo -e "\n\e[36m\e[5mURL\e[0m\e[0m to \e[32mworker.keys.encrypted\e[0m"
-        read -p "Enter: " keybundle_url
-        if [ -z "$keybundle_url" ]; then
-                echo -e "\e[31mFAIL:\e[0m URL cannot be blank"
-                exit
+        echo -e "\n\e[36m\e[5mS3 Secret Access Key\e[0m\e[0m"
+        read -p "Enter:" s3_secret_access_key
+        if [ -z  $s3_secret_access_key ]; then
+            echo "FAIL: s3_secret_access_key must be set"
+            exit
         fi
-
-        echo -e "\n\e[36m\e[5mSkip\e[0m\e[0m advanced setup:"
-        read -p "(default: $skip_advanced_default): " skip_advanced
-        if [ -z "$skip_advanced" ]; then
-            skip_advanced=$skip_advanced_default
-        fi
-
-        if ! [[ $skip_advanced == "yes" ]]; then
-                echo -e "\n\e[36m\e[5mS3 Endpoint URL\e[0m\e[0m"
-                read -p "Enter:" s3_endpoint
-                if [ -z  $s3_endpoint ]; then
-                        echo "FAIL: s3_endpoint url must be set"
-                        exit
-                fi
-
-                echo -e "\n\e[36m\e[5mS3 Access Key Id\e[0m\e[0m"
-                read -p "Enter:" s3_access_key_id
-                if [ -z  $s3_access_key_id ]; then
-                        echo "FAIL: s3_access_key_id must be set"
-                        exit
-                fi
-
-                echo -e "\n\e[36m\e[5mS3 Secret Access Key\e[0m\e[0m"
-                read -p "Enter:" s3_secret_access_key
-                if [ -z  $s3_secret_access_key ]; then
-                        echo "FAIL: s3_secret_access_key must be set"
-                        exit
-                fi
-                mkdir -p /root/.aws
+        mkdir -p /root/.aws
 cat <<EOF > /root/.aws/credentials
 [default]
 aws_access_key_id=${s3_access_key_id}
 aws_secret_access_key=${s3_secret_access_key}
 EOF
-                chmod go-rwx /root/.aws/credentials
+        chmod go-rwx /root/.aws/credentials
 
-                echo -e "\nSet \e[36m\e[5musername\e[0m\e[0m"
-		read -p "(default: $deadline_user_default): " deadline_user
-		if [ -z "$deadline_user" ]; then
-		    deadline_user=$deadline_user_default
-		fi
+        echo -e "\nSet \e[36m\e[5musername\e[0m\e[0m"
+        read -p "(default: $deadline_user_default): " deadline_user
+        if [ -z "$deadline_user" ]; then
+            deadline_user=$deadline_user_default
+        fi
 
-		while :
-		do
-                    echo -e "\n\e[36m\e[5mpassword\e[0m\e[0m to access hub file server ( keystrokes hidden )"
-		    IFS= read -p "(default: oomerfarm)" -rs smb_credentials < /dev/tty
-		    if [ -z "$smb_credentials" ]; then
-			smb_credentials=$smb_credentials_default
-			break
-		    else
-		        echo "Verifying: re-enter password"
-		        IFS= read -rs smb_check_credentials < /dev/tty
-		        if [[ "$smb_credentials" == "$smb_check_credentials" ]]; then
-			    break
-		        fi
-		        echo "Passwords do not match! Try again."
-		    fi
-		done
+        while :
+        do
+            echo -e "\n\e[36m\e[5mpassword\e[0m\e[0m to access hub file server ( keystrokes hidden )"
+            IFS= read -p "(default: oomerfarm)" -rs smb_credentials < /dev/tty
+            if [ -z "$smb_credentials" ]; then
+            smb_credentials=$smb_credentials_default
+            break
+            else
+                echo "Verifying: re-enter password"
+                IFS= read -rs smb_check_credentials < /dev/tty
+                if [ "$smb_credentials" == "$smb_check_credentials" ]; then
+                break
+                fi
+                echo "Passwords do not match! Try again."
+            fi
+        done
 
-                echo -e "\nSet VPN \e[36m\e[5mIP address\e[0m\e[0m"
-		read -p "(default: $lighthouse_nebula_ip_default): " lighthouse_nebula_ip
-		if [ -z "$lighthouse_nebula_ip" ]; then
-		    lighthouse_nebula_ip=$lighthouse_nebula_ip_default
-		fi
+        echo -e "\nSet VPN \e[36m\e[5mIP address\e[0m\e[0m"
+        read -p "(default: $lighthouse_nebula_ip_default): " lighthouse_nebula_ip
+        if [ -z "$lighthouse_nebula_ip" ]; then
+            lighthouse_nebula_ip=$lighthouse_nebula_ip_default
+        fi
 
-                echo -e "\nSet VPN public \e[36m\e[5mudp port\e[0m\e[0m"
-		read -p "(default: $lighthouse_internet_port_default): " lighthouse_internet_port
-		if [ -z "$lighthouse_internet_port" ]; then
-		    lighthouse_internet_port=$lighthouse_internet_port_default
-		fi
-	fi
+        echo -e "\nSet VPN public \e[36m\e[5mudp port\e[0m\e[0m"
+        read -p "(default: $lighthouse_internet_port_default): " lighthouse_internet_port
+        if [ -z "$lighthouse_internet_port" ]; then
+            lighthouse_internet_port=$lighthouse_internet_port_default
+        fi
+    fi
 else
-	keybundle_url=$keybundle_url_default
+    keybundle_url=$keybundle_url_default
 fi
 
-
-has_getenforce=$(which getenforce)
-if ! [ -z $has_getenforce ]; then
-	getenforce=$(getenforce)
-fi
-
-
-firewalld_status=$(systemctl status firewalld)
-
-os_name=$(awk -F= '$1=="NAME" { print $2 ;}' /etc/os-release)
-if [ "$os_name" == "\"Ubuntu\"" ] || [ "$os_name" == "\"Debian GNU/Linux\"" ]; then
-	# [ TODO ] switch from apparmor to selinux
-	echo -e "\e[32mDiscovered $os_name\e[0m. Support of Ubuntu is alpha quality"
-	apt -y update
-	#systemctl stop apparmor
-	#systemctl disable apparmor
-	apt -y install sysstat
-	if [ -z "$firewalld_status" ]; then
-		apt -y install firewalld
-	fi
-	#apt -y install policycoreutils selinux-utils selinux-basics
-	#selinux-activate
-	apt -y install cifs-utils
-	apt -y install curl
-	apt -y install mesa-vulkan-drivers 
-	apt -y install libgl1-mesa-glx
-	#apt -y install freeglut3-dev
-	apt -y install libffi7
-	apt -y install fuse
-	ln -s /usr/lib/x86_64-linux-gnu/libffi.so.7 /usr/lib/libffi.so.6
-elif [ "$redhat_platform_id" == "\"platform:el8\"" ] || [ "$redhat_platform_id" == "\"platform:el9\"" ]; then
-	echo -e "\e[32mDiscovered $os_name\e[0m"
-	dnf -y update
-	dnf -y install tar
-	# needed for /usr/local/bin/oomerfarm_shutdown.sh
-	dnf -y install sysstat
-	if [ -z "$firewalld_status" ]; then
-		dnf -y install firewalld
-	fi
-	dnf install -y mesa-vulkan-drivers mesa-libGL
-	dnf install -y cifs-utils
-	dnf install -y fuse
+echo "FOO" "H"$PLATFORM_ID"H"
+if [ "$PLATFORM_ID" == "platform:el8" ] || [ "$PLATFORM_ID" == "platform:el9" ]; then
+    #if [ "$os_name" == "\"AlmaLinux\"" ] || [ "$os_name" == "\"Rocky Linux\"" ]; then
+    has_getenforce=$(which getenforce)
+    if ! [ -z $has_getenforce ]; then
+        getenforce=$(getenforce)
+    fi
+    firewalld_status=$(systemctl status firewalld)
+    echo -e "\e[32mDiscovered $os_name\e[0m"
+    dnf -y update
+    dnf -y install tar
+    dnf -y install sysstat # needed for /usr/local/bin/oomerfarm_shutdown.sh
+    if [ -z "$firewalld_status" ]; then
+        dnf -y install firewalld
+    fi
+    dnf install -y mesa-vulkan-drivers mesa-libGL
+    dnf install -y cifs-utils
+    dnf install -y fuse
+    systemctl enable --now firewalld
+elif [ "$os_name" == "\"Ubuntu\"" ] || [ "$os_name" == "\"Debian GNU/Linux\"" ]; then
+    # [ TODO ] securiyt check apparmor 
+    echo -e "\e[32mDiscovered $os_name\e[0m. Support of Ubuntu is alpha quality"
+    apt -y update
+    apt -y install sysstat # needed for /usr/local/bin/oomerfarm_shutdown.sh
+    apt -y install cifs-utils
+    apt -y install curl
+    apt -y install mesa-vulkan-drivers 
+    apt -y install libgl1
 else
-	echo "\e[31mFAIL:\e[0m Unsupported operating system $os_name"
-	exit
+    echo "\e[31mFAIL:\e[0m Unsupported operating system $os_name"
+    exit
 fi
 
 systemctl enable --now sysstat
-systemctl enable --now firewalld
 echo -e "\e[32mStarting cifs module\e[0m"
 modprobe cifs
 
@@ -271,29 +263,29 @@ echo -e "\e[32mDownloading worker.keys.encrypted\e[0m"
 # Get Nebula credentials
 # ======================
 if [[ "$keybundle_url" == *"https://drive.google.com/file/d"* ]]; then
-	# if find content-length, then gdrive link is not restricted, this is a guess
-	head=$(curl -s --head ${keybundle_url} | grep "content-length")
-	if [[ "$head" == *"content-length"* ]]; then
-		# Extract Google uuid 
-		googlefileid=$(echo $keybundle_url | egrep -o '(\w|-){26,}')
-		echo $googlefileid
-		head2=$(curl -s --head -L "https://drive.google.com/uc?export=download&id=${googlefileid}" | grep "content-length")
-		if [[ "$head2" == *"content-length"* ]]; then
-			echo "Downloading https://drive.google.com/uc?export=download&id=${googlefileid}"
-			# Hack with set curl fails under ubuntu , not sure how it helps
-			set -x
-			curl -L "https://drive.google.com/uc?export=download&id=$googlefileid" -o ${worker_prefix}.keys.encrypted
-			set +x
-		else
-			echo "FAIL: ${keybundle_url} is not public, Set General Access to Anyone with Link"
-			exit
-		fi
-	else
-		echo "FAIL: ${keybundle_url} is not a valid Google Drive link"
-		exit
-	fi
+    # if find content-length, then gdrive link is not restricted, this is a guess
+    head=$(curl -s --head ${keybundle_url} | grep "content-length")
+    if [[ "$head" == *"content-length"* ]]; then
+        # Extract Google uuid 
+        googlefileid=$(echo $keybundle_url | egrep -o '(\w|-){26,}')
+        echo $googlefileid
+        head2=$(curl -s --head -L "https://drive.google.com/uc?export=download&id=${googlefileid}" | grep "content-length")
+        if [[ "$head2" == *"content-length"* ]]; then
+            echo "Downloading https://drive.google.com/uc?export=download&id=${googlefileid}"
+            # Hack with set curl fails under ubuntu , not sure how it helps
+            set -x
+            curl -L "https://drive.google.com/uc?export=download&id=$googlefileid" -o ${worker_prefix}.keys.encrypted
+            set +x
+        else
+            echo "FAIL: ${keybundle_url} is not public, Set General Access to Anyone with Link"
+            exit
+        fi
+    else
+        echo "FAIL: ${keybundle_url} is not a valid Google Drive link"
+        exit
+    fi
 else
-	curl -L -o worker.keys.encrypted "${keybundle_url}" 
+    curl -L -o worker.keys.encrypted "${keybundle_url}" 
 fi
 
 
@@ -302,7 +294,7 @@ fi
 while :
 do
     if openssl enc -aes-256-cbc -pbkdf2 -d -in worker.keys.encrypted -out worker.tar -pass file:<( echo -n "$encryption_passphrase" ) ; then
-	rm worker.keys.encrypted
+    rm worker.keys.encrypted
         break
     else
         echo "WRONG passphrase entered for worker.keys.encrypted, try again"
@@ -315,7 +307,7 @@ done
 # nebula credentials
 # ==================
 if ! test -d /etc/nebula; then
-	mkdir -p /etc/nebula
+    mkdir -p /etc/nebula
 fi
 tar --strip-components 1 -xvf worker.tar -C /etc/nebula
 chown root.root /etc/nebula/*.crt
@@ -331,46 +323,48 @@ domain=WORKGROUP
 EOF
 chmod go-rwx /etc/nebula/smb_credentials
 
-if ! [[ $skip_advanced == "yes" ]]; then
-	# aws_credentials
-	# ===============
-	mkdir -p /root/.aws
+if ! [ $skip_advanced == "yes" ]; then
+    # aws_credentials
+    # ===============
+    mkdir -p /root/.aws
 cat <<EOF > /root/.aws/credentials
 [default]
 aws_access_key_id=${s3_access_key_id}
 aws_secret_access_key=${s3_secret_access_key}
 EOF
-	chmod go-rwx /root/.aws/credentials
+    chmod go-rwx /root/.aws/credentials
 fi
 
-# ***FIREWALL rules***
-# adopting highly restrictive rules to protect network
-echo -e "\n\e[32mTurning up Firewall security...\e[0m"
-# Wipe all services and ports except ssh and 22/tcp, may break your system
-for systemdservice in $(firewall-cmd --list-services);
-do 
-	if ! [[ "$systemdservice" == "ssh" ]]; then
-		firewall-cmd -q --remove-service ${systemdservice} --permanent
-	fi
-done
-for systemdport in $(firewall-cmd --list-ports);
-do 
-	if ! [[ "$systemdport" == "22/tcp" ]]; then
-		firewall-cmd -q --remove-port ${systemdport} --permanent
-	fi
-done
-firewall-cmd --quiet --zone=public --add-port=42042/udp --permanent
-firewall-cmd -q --new-zone nebula --permanent
-firewall-cmd -q --zone nebula --add-interface nebula_tun --permanent
-firewall-cmd -q --zone nebula --add-service ssh --permanent
-firewall-cmd --quiet --reload
+if [ "$PLATFORM_ID" == "platform:el8" ] || [ "$PLATFORM_ID" == "platform:el9" ]; then
+
+    # ***FIREWALL rules***
+    # adopting highly restrictive rules to protect network
+    echo -e "\n\e[32mTurning up Firewall security...\e[0m"
+    # Wipe all services and ports except ssh and 22/tcp, may break your system
+    for systemdservice in $(firewall-cmd --list-services);
+    do 
+        if ! [ "$systemdservice" == "ssh" ]; then
+            firewall-cmd -q --remove-service ${systemdservice} --permanent
+        fi
+    done
+    for systemdport in $(firewall-cmd --list-ports);
+    do 
+        if ! [ "$systemdport" == "22/tcp" ]; then
+            firewall-cmd -q --remove-port ${systemdport} --permanent
+        fi
+    done
+    firewall-cmd --quiet --zone=public --add-port=42042/udp --permanent
+    firewall-cmd -q --new-zone nebula --permanent
+    firewall-cmd -q --zone nebula --add-interface nebula_tun --permanent
+    firewall-cmd -q --zone nebula --add-service ssh --permanent
+    firewall-cmd --quiet --reload
+fi
 
 # Create user
 # ===========
-test_user=$( id "${deadline_user}" )
-# id will return blank if no user is found
+test_user=$( id "${deadline_user}" ) # returns blank if no user found
 if [ -z "$test_user" ]; then
-	echo "CREATE USER:${deadline_user}"
+    echo "CREATE USER:${deadline_user}"
         groupadd -g 3000 ${deadline_user}
         useradd -g 3000 -u 3000 -m ${deadline_user}
 fi
@@ -393,32 +387,37 @@ mv nebula /usr/local/bin/nebula
 chmod +x /usr/local/bin/
 mv nebula-cert /usr/local/bin/
 chmod +x /usr/local/bin/nebula-cert
-if [[ "$getenforce" == "Enforcing" ]]; then
-	chcon -t bin_t /usr/local/bin/nebula # SELinux security clearance
+
+if [ "$PLATFORM_ID" == "platform:el8" ] || [ "$PLATFORM_ID" == "platform:el9" ]; then
+    if [ "$getenforce" == "Enforcing" ]; then
+        chcon -t bin_t /usr/local/bin/nebula # SELinux security clearance
+    fi
 fi
+
 rm -f ${nebula_tar}
-
-
 
 
 # Install goofys needed for advanced setups
 if ! [[ $skip_advanced == "yes" ]]; then
-	if ! ( test -f /usr/local/bin/goofys ); then
-		curl -L -o /usr/local/bin/goofys https://github.com/kahing/goofys/releases/download/v0.24.0/goofys
-		MatchFile="$(echo "${goofyssha256} /usr/local/bin/goofys" | sha256sum --check)"
-		if [ "$MatchFile" = "/usr/local/bin/goofys: OK" ] ; then
-			chmod +x /usr/local/bin/goofys
-			mkdir -p /mnt/s3
-			chown root.root /usr/local/bin/goofys
-			if [[ "$getenforce" == "Enforcing" ]]; then
-				chcon -t bin_t /usr/local/bin/goofys # SELinux security clearance
-			fi
-		else
-			echo "FAIL"
-			echo "goofys checksum is wrong, may indicate download failure of malicious alteration"
-			exit
-		fi
-	fi
+    if ! ( test -f /usr/local/bin/goofys ); then
+        curl -L -o /usr/local/bin/goofys https://github.com/kahing/goofys/releases/download/v0.24.0/goofys
+        MatchFile="$(echo "${goofyssha256} /usr/local/bin/goofys" | sha256sum --check)"
+        if [ "$MatchFile" = "/usr/local/bin/goofys: OK" ] ; then
+            c
+hmod +x /usr/local/bin/goofys
+            mkdir -p /mnt/s3
+            chown root.root /usr/local/bin/goofys
+            if [ "$PLATFORM_ID" == "platform:el8" ] || [ "$PLATFORM_ID" == "platform:el9" ]; then
+                if [ "$getenforce" == "Enforcing" ]; then
+                    chcon -t bin_t /usr/local/bin/goofys # SELinux security clearance
+                fi
+            fi
+        else
+            echo "FAIL"
+            echo "goofys checksum is wrong, may indicate download failure of malicious alteration"
+            exit
+        fi
+    fi
 fi
 
 # Install cifs dependencies
@@ -547,14 +546,15 @@ IOSchedulingClass=idle
 ExecStart=/usr/local/bin/oomerfarm_shutdown.sh
 EOF
 
-systemctl enable --now oomerfarm-shutdown.timer
+# [x] disabled for now
+#systemctl enable --now oomerfarm-shutdown.timer
 
 
 cat <<EOF > /usr/local/bin/oomerfarm_shutdown.sh
 #!/bin/bash
 uptime=$(awk '{print $1}' /proc/uptime)
 if [ ${uptime%.*} -gt 900 ]; then
-	/usr/sbin/shutdown now
+    /usr/sbin/shutdown now
 fi
 EOF
 chmod +x /usr/local/bin/oomerfarm_shutdown.sh
@@ -577,18 +577,22 @@ grep -qxF "//$lighthouse_nebula_ip/oomerfarm /mnt/oomerfarm cifs rw,noauto,x-sys
 mount /mnt/oomerfarm
 
 if ! [[ $skip_advanced == "yes" ]]; then
-	# s3 goofys
-	# =========
-	grep -qxF "goofys#oomerfarm /mnt/s3 fuse ro,_netdev,allow_other,--file-mode=0666,--dir-mode=0777,--endpoint=$s3_endpoint 0 0" /etc/fstab || echo "goofys#oomerfarm /mnt/s3 fuse ro,_netdev,allow_other,--file-mode=0666,--dir-mode=0777,--endpoint=$s3_endpoint 0 0" >> /etc/fstab
-	systemctl daemon-reload
-	mount /mnt/s3
+    # s3 goofys
+    # =========
+    grep -qxF "goofys#oomerfarm /mnt/s3 fuse ro,_netdev,allow_other,--file-mode=0666,--dir-mode=0777,--endpoint=$s3_endpoint 0 0" /etc/fstab || echo "goofys#oomerfarm /mnt/s3 fuse ro,_netdev,allow_other,--file-mode=0666,--dir-mode=0777,--endpoint=$s3_endpoint 0 0" >> /etc/fstab
+    systemctl daemon-reload
+    mount /mnt/s3
 fi
+
+echo -e "\e[32mInstalling Deadline Software\e[0m"
 
 cp /mnt/oomerfarm/installers/DeadlineClient-${thinkboxversion}-linux-x64-installer.run .
 chmod +x DeadlineClient-${thinkboxversion}-linux-x64-installer.run 
 ./DeadlineClient-${thinkboxversion}-linux-x64-installer.run --mode unattended --unattendedmodeui minimal --repositorydir /mnt$optional_subfolder/DeadlineRepository10  --connectiontype Direct --noguimode true
-if [[ "$getenforce" == "Enforcing" ]]; then
-	chcon -t bin_t /opt/Thinkbox/Deadline10/bin/deadlineworker # SELinux security clearance
+if [ "$PLATFORM_ID" == "platform:el8" ] || [ "$PLATFORM_ID" == "platform:el9" ]; then
+    if [[ "$getenforce" == "Enforcing" ]]; then
+        chcon -t bin_t /opt/Thinkbox/Deadline10/bin/deadlineworker # SELinux security clearance
+    fi
 fi
 
 cat <<EOF > /etc/systemd/system/deadline.service 
