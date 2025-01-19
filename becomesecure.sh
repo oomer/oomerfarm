@@ -1,6 +1,6 @@
 #!/bin/bash
 
-nebula_version="v1.9.0"
+nebula_version="v1.9.5"
 octet0=10
 octet1=87
 mask=16
@@ -18,13 +18,13 @@ if ! ( test -f ".oomer/bin/nebula-cert" ); then
 	echo -e "\nDownloading Nebula ${nebula_version} ..."
 	if [[ "$OSTYPE" == "linux-gnu"* ]]; then
 		nebularelease="nebula-linux-amd64.tar.gz"
-		nebulasha256="f700c0ad7e9f28375ab90111511d3b515671ee4b8e70b0bc92a506e87da975ad"
+		nebulasha256="af57ded8f3370f0486bb24011942924b361d77fa34e3478995b196a5441dbf71"
 	elif [[ "$OSTYPE" == "darwin"* ]]; then
 		nebularelease="nebula-darwin.zip"
-		nebulasha256="0cb110bae40edbc4ce7a2e67389b967cc63931c9b710faa33cd52f2575a12185"
+		nebulasha256="891584c4288e031b0787cfd5ac1da4565caf1627bd934d94b696a340ad92f0d7"
 	elif [[ "$OSTYPE" == "msys"* ]]; then
 		nebularelease="nebula-windows-amd64.zip"
-		nebulasha256="feacd0292ce1afb9fd121fae4f885f35e05ee773a28c129fdaa363d9aebae1dd"
+		nebulasha256="5a42e4600e8a47db2b103c607d95509c7ae403f56e2952d05089f492e53bcebb"
 	else 
 		echo -e "FAIL: Operating system should either be Linux, MacOS or Windows with msys"
 		exit
@@ -67,7 +67,10 @@ if ! ( test -f ".oomer/keyauthority/ca.crt" ); then
 	if [ -z $ca_duration ]; then
 		ca_duration=$ca_duration_default
 	fi
+	echo -e "\nCreated certificate authority in .oomer/keyauthority"
  	.oomer/bin/nebula-cert ca -name $ca_name -duration $ca_duration -out-crt .oomer/keyauthority/ca.crt -out-key .oomer/keyauthority/ca.key
+else
+	echo -e "\nSkipping Certificate authority authority as one exists in .oomer/keyauthority"
 fi
 
 # Always ask for encryption passphrase, never store
@@ -96,14 +99,16 @@ while :
 do
 	# oomerfarm is wrapper to make multiple types of keys simultaneously
 	# [simplification] oomerfarm currently can only be invoked once 
-	echo -e "\nCreate new keys:"
 	if test -f .oomer/.oomerfarm_lighthouse_ip; then
+	    echo -e "You have existing keys in .oomer, entering append mode only. You can delete .oomer dir to regenerate keys"
 		select new_key_type in user worker server lighthouse quit
 		do
 			break
 		done
 	else
-		select new_key_type in user worker oomerfarm server lighthouse quit
+	    echo -e "\nCreate new keys: If this is your first run your probably want to only select oomerfarm option"
+	    echo -e "Run this script again to append new keys"
+		select new_key_type in oomerfarm user worker server lighthouse quit
 		do
 			break
 		done
@@ -124,7 +129,8 @@ do
 				lighthouse_name_default="lighthouse1"
 			fi
 		else
-			# read text list of used ips
+			# read text list of used ips stored in dot files in .oomer
+            # [todo] maybe upgrade to sqlite
 			unset -v lighthouse_ip
 			while IFS= read -r; do
 				lighthouse_ip+=("$REPLY")
@@ -302,7 +308,7 @@ do
 	# Don't do this
 
 	if [[ ${new_key_type} == "worker" ]] || [[ ${new_key_type} == "oomerfarm" ]] ; then
-		workernum_default=10
+		workernum_default=100
 		workernum=$workernum_default
 		if ! [[ ${new_key_type} == "oomerfarm" ]] ; then
 			echo -e "/nAdd additional workers ..."
@@ -384,6 +390,7 @@ do
 			find "." -type f -exec tar -rvf temp.tar {} \;
 			openssl enc -aes-256-cbc -salt -pbkdf2 -in "temp.tar" -out ${origdir}/.oomer/keysencrypted/worker.keys.encrypted -pass stdin <<< "$encryption_passphrase" 
 			rm temp.tar
+            echo -e "Worker keys packaged to ${orgi_dir}/.oomer/keysencrypted/workers.keys.encrypted"
 			cd $origdir
 		fi
 	fi
@@ -464,7 +471,13 @@ do
 		if [[ "$OSTYPE" == "msys"* ]]; then
 			explorer .oomer\\keysencrypted
 		fi
+
+        echo -e "\nTo setup a basic oomerfarm, put ${orig_dir}/.oomer/keyencrypted/workers.keys.encrypted and hub.keys.encrypted"  
+        echo -e "onto Google Drive and share publicly. The bootstrap scripts require the URL to these keys"
+        echo -e "along with the decryption passphrase you entered earlier"
 		exit
 	fi
+
+
 
 done
