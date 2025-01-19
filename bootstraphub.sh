@@ -60,13 +60,10 @@ if [ "$redhat_platform_id" == "platform:el9" ] ; then
 elif [ "$redhat_platform_id" == "platform:el8" ] ; then
     mongotar="mongodb-linux-x86_64-rhel80-${mongoversion}.tgz"
     mongosha256="e2dccbaeca3fbc6cd89372de21261fda25df27b5b2e40a96c547a07e36eb035e"
-elif [ "$PRETTY_NAME" == "Ubuntu 20.04 LTS" ] ; then
+elif [ "$VERSION_ID" == "20.04" ] ; then
     mongotar="mongodb-linux-x86_64-ubuntu2004-${mongoversion}.tgz"
     mongosha256="4d628c6be90be25311a8aa417e74448d5b13814f8a790129d67bf84ef4feebb5"
-elif [ "$PRETTY_NAME" == "Ubuntu 22.04 LTS" ] || [ "$PRETTY_NAME" == "Ubuntu 24.04 LTS" ]; then
-    mongotar="mongodb-linux-x86_64-ubuntu2204-${mongoversion}.tgz"
-    mongosha256="f49a1380c535794340d68d02a1eb3835016db8a87e3b2ff7a8a7c4b6cb9d1bcf"
-elif [ "$PRETTY_NAME" == "Ubuntu 22.04 LTS" ] ; then
+elif [ "$VERSION_ID" == "22.04" ] ; then
     mongotar="mongodb-linux-x86_64-ubuntu2204-${mongoversion}.tgz"
     mongosha256="f49a1380c535794340d68d02a1eb3835016db8a87e3b2ff7a8a7c4b6cb9d1bcf"
 else
