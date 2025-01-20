@@ -45,24 +45,52 @@ A renderfarm takes a workload, distributes it over a network and provides:
 
 4. ***bash bridgeoomerfarm.sh*** on Desktop/Laptop  connects to hub
     - Install Deadline 10.4.0.10 client software https://awsthinkbox.com for renderfarm GUI 
+    - client installs cli( use gui once you become more experienced due to choice complexity )
+
+### MacOS CLI install 
+
+```sh
+curl -O https://thinkbox-installers.s3.us-west-2.amazonaws.com/Releases/Deadline/10.4/2_10.4.0.10/Deadline-10.4.0.10-osx-installers.dmg
+
+hdiutil attach Deadline-10.4.0.10-osx-installers.dmg
+
+cd /Volumes/Deadline-10.4.0.10-osx-installers
+
+sudo ./DeadlineClient-10.4.0.10-osx-installer.app/Contents/MacOS/osx-x86_64 --mode unattended --connectiontype Direct --repositorydir //Volumes/DeadlineRepository10 --slavestartup false --unattendedmodeui minimal
+```
+### Windows CLI install ( avoids ambiguity when using GUI installer )
+
+From cmd, git-bash or powershell
+```sh
+curl -O https://thinkbox-installers.s3.us-west-2.amazonaws.com/Releases/Deadline/10.4/2_10.4.0.10/Deadline-10.4.0.10-windows-installers.zip
+
+unzip Deadline-10.4.0.10-windows-installers.zip
+```
+
+Open powershell, as administrator
+
+cd to oomerfarm directory ( same as command line above )
+```sh
+./DeadlineClient-10.4.0.10-windows-installer.exe --mode unattended --connectiontype Direct --repositorydir //hub.oomer.org/DeadlineRepository10 --slavestartup false --unattendedmodeui minimal
+```
+
+
 5. Rent **cloud** computers and run ***bash bootstrapworker.sh***. Here is a [timelapse](https://a4g4.c14.e2-1.dev/public/oomerfarm/Googlet2d-standard-60x3-timelapse.mp4) at 2x speed, spinning up 3 Google instances. 
 
 ## Summary
 
-5. Four bash scripts, all starting with the letter ***b*** to empower your personal renderfarm.
+6. Four bash scripts, all starting with the letter ***b*** to empower your personal renderfarm.
     - becomesecure.sh
     - bootstraphub.sh
     - bootstrapworker.sh
     - bridgeoomerfarm.sh
 
+
+
 ---
 
 ## Step by step guides
 
-[Guide for a test drive renderfarm](Documentation/TestDrive.md)
-
-[Guide for a personal renderfarm](Documentation/BespokeRenderfarm.md)
-
-[Deadline Manual](https://docs.thinkboxsoftware.com/products/deadline/10.3/1_User%20Manual/manual/overview.html)
+[Deadline Manual](https://docs.thinkboxsoftware.com/products/deadline/10.4/1_User%20Manual/manual/overview.html)
 
 [FAQ](Documentation/FAQ.md)
