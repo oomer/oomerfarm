@@ -244,6 +244,7 @@ if [ "$PLATFORM_ID" == "platform:el8" ] || [ "$PLATFORM_ID" == "platform:el9" ];
     dnf install -y mesa-vulkan-drivers mesa-libGL
     dnf install -y cifs-utils
     #dnf install -y fuse
+    dnf install -y file #deadlineworker dependency
     systemctl enable --now firewalld
 elif [ "$os_name" == "\"Ubuntu\"" ] || [ "$os_name" == "\"Debian GNU/Linux\"" ]; then
     # [ TODO ] securiyt check apparmor 
@@ -254,6 +255,7 @@ elif [ "$os_name" == "\"Ubuntu\"" ] || [ "$os_name" == "\"Debian GNU/Linux\"" ];
     apt -y install curl
     apt -y install mesa-vulkan-drivers 
     apt -y install libgl1
+    apt -y install file #deadlineworker dependency
 else
     echo "\e[31mFAIL:\e[0m Unsupported operating system $os_name"
     exit
